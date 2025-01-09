@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "659039923443",
+    "project_id": "discipulus-client",
+    "storage_bucket": "discipulus-client.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:659039923443:android:fe0a7594ef176f437b9b86",
+        "android_client_info": {
+          "package_name": "dev.harrydekat.discipulus"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkFbkNML8pKDmsV_hKIbORr_8B9X8lJHc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
