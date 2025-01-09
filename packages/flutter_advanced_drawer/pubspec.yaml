@@ -1,0 +1,19 @@
+name: flutter_advanced_drawer
+description: An advanced drawer widget, that can be fully customized with size, text, color, radius of corners.
+version: 1.3.6
+homepage: https://github.com/alex-melnyk/flutter_advanced_drawer
+repository: https://github.com/alex-melnyk/flutter_advanced_drawer
+issue_tracker: https://github.com/alex-melnyk/flutter_advanced_drawer/issues
+documentation: https://github.com/alex-melnyk/flutter_advanced_drawer/blob/master/README.md
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: 1.0.4
+
+flutter:
