@@ -38,6 +38,7 @@ dependencies:
     git:
       url: https://github.com/fleather-editor/fleather.git
       path: packages/fleather
+      ref: c391628324db2bf1ba831aa7f990a3967e361dca
   infinite_scroll_pagination: ^4.0.0
   focus_on_it: ^2.0.1
 
@@ -95,6 +96,7 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0
+  image_picker: ^1.1.2
 
   # Unused
   # flutter_carousel_widget: ^2.2.0

@@ -345,24 +345,36 @@ class Intents {
       SharedMedia? media = await handler.getInitialSharedMedia();
 
       handler.sharedMediaStream.listen((SharedMedia media) {
-        if (!navKey.currentContext!.mounted &&
-            !(media.content?.contains("discipulus://") ?? false)) {
+        if (!navKey.currentContext!.mounted) {
           return;
         }
-        WidgetsBinding.instance.addPostFrameCallback((_) =>
-            showComposeMessageSheet(navKey.currentContext!,
-                sharedMedia: media));
+        media.launchMessageSheet();
       });
 
-      //Initial app start
+      // Initial app start
       if (!navKey.currentContext!.mounted) return;
-      if (media != null &&
-          !(media.content?.contains("discipulus://") ?? false)) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => showComposeMessageSheet(navKey.currentContext!,
-              sharedMedia: media),
-        );
-      }
+
+      await media.launchMessageSheet();
+    }
+  }
+}
+
+extension on SharedMedia? {
+  Future<void> launchMessageSheet() async {
+    Uri? uri = Uri.tryParse(this?.content ?? "");
+
+    bool hasAttachments = this?.attachments?.isNotEmpty ?? false;
+    bool hasText = this?.content?.isNotEmpty ?? false;
+
+    if (await isar.profiles.where().count() == 0) return;
+
+    if (this != null &&
+        (hasAttachments || hasText) &&
+        (uri == null || !["discipulus", "m6loapp"].contains(uri.scheme))) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) =>
+            showComposeMessageSheet(navKey.currentContext!, sharedMedia: this),
+      );
     }
   }
 }

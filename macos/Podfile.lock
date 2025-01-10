@@ -10,6 +10,8 @@ PODS:
     - FlutterMacOS
   - dynamic_color (0.0.2):
     - FlutterMacOS
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
   - flutter_apple_handoff (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -45,6 +47,7 @@ DEPENDENCIES:
   - desktop_webview_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_apple_handoff (from `Flutter/ephemeral/.symlinks/plugins/flutter_apple_handoff/darwin`)
   - flutter_apple_spotlight (from `Flutter/ephemeral/.symlinks/plugins/flutter_apple_spotlight/darwin`)
   - flutter_local_notifications (from `Flutter/ephemeral/.symlinks/plugins/flutter_local_notifications/macos`)
@@ -69,6 +72,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
   dynamic_color:
     :path: Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_apple_handoff:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_apple_handoff/darwin
   flutter_apple_spotlight:
@@ -100,6 +105,7 @@ SPEC CHECKSUMS:
   desktop_webview_window: d4365e71bcd4e1aa0c14cf0377aa24db0c16a7e2
   device_info_plus: ce1b7762849d3ec103d0e0517299f2db7ad60720
   dynamic_color: 2eaa27267de1ca20d879fbd6e01259773fb1670f
+  file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
   flutter_apple_handoff: 22c370258056c0899b8ea81cca07426de1ab4a72
   flutter_apple_spotlight: b88ef94588e40dedbaf1419a8dae85ad423dfce1
   flutter_local_notifications: 7062189aabf7f50938a7b8b6614ffa97656eb0bf
