@@ -119,11 +119,11 @@ Future<TokenSet?> showMagisterLoginDialog(BuildContext context) async {
               valueListenable: redirectUrl,
               builder: (context, value, child) {
                 if (value != null) {
-                  //Redirect value has been set!
+                  // Redirect value has been set!
                   returnWithTokenSet(value);
                   return const Center(child: CircleLoaderLoopWidget());
                 }
-                //Waiting for redirectUrl
+                // Waiting for redirectUrl
                 if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
                   return WebViewWidget(controller: webViewController);
                 } else {
@@ -183,6 +183,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   @override
   void dispose() {
     tokenSet.dispose();
+    textState.dispose();
     super.dispose();
   }
 

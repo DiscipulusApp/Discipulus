@@ -10,6 +10,7 @@ import connectivity_plus
 import desktop_webview_window
 import device_info_plus
 import dynamic_color
+import file_selector_macos
 import flutter_apple_handoff
 import flutter_apple_spotlight
 import flutter_local_notifications
@@ -28,6 +29,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   DesktopWebviewWindowPlugin.register(with: registry.registrar(forPlugin: "DesktopWebviewWindowPlugin"))
   DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
   DynamicColorPlugin.register(with: registry.registrar(forPlugin: "DynamicColorPlugin"))
+  FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   SwiftFlutterAppleHandoffPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleHandoffPlugin"))
   SwiftFlutterAppleSpotlightPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleSpotlightPlugin"))
   FlutterLocalNotificationsPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalNotificationsPlugin"))

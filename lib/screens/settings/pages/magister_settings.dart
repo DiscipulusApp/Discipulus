@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:discipulus/api/models/calendar.dart';
@@ -17,10 +16,10 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_picker/image_picker.dart';
 
 class MagisterSettingsPage extends StatefulWidget {
   const MagisterSettingsPage({super.key});
@@ -468,14 +467,14 @@ class __ProfilePictureDialogState extends State<_ProfilePictureDialog> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
-              FilePickerResult? result = await FilePicker.platform.pickFiles(
-                allowMultiple: false,
-                type: FileType.image,
+              final XFile? image = await ImagePicker().pickImage(
+                source: ImageSource.gallery,
+                maxHeight: 512,
+                maxWidth: 512,
               );
 
               Future<String> convertToSquareBase64() async {
-                final imageBytes =
-                    await File(result!.files.single.path!).readAsBytes();
+                final imageBytes = await image!.readAsBytes();
                 final ui.Image originalImage =
                     await decodeImageFromList(imageBytes);
 
@@ -532,7 +531,7 @@ class __ProfilePictureDialogState extends State<_ProfilePictureDialog> {
                 return base64;
               }
 
-              if (result != null) {
+              if (image != null) {
                 activeProfile
                   ..customBase64ProfilePicture = await convertToSquareBase64()
                   ..save();
