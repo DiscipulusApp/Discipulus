@@ -3,8 +3,8 @@ import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
 import 'package:flutter/material.dart';
 
-class OncomingSpecialEventTile extends StatelessWidget {
-  const OncomingSpecialEventTile({
+class UpcomingSpecialEventTile extends StatelessWidget {
+  const UpcomingSpecialEventTile({
     super.key,
     required this.events,
     this.showHomework = true,
