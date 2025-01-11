@@ -4,18 +4,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_apple_handoff/flutter_apple_handoff.dart';
 
-Future<T?> showScrollableModalBottomSheet<T>({
-  required BuildContext context,
-  NSUserActivity? activity,
-  bool isDismissible = true,
-  bool initiallyOpen = false,
-  bool modelSheet = true,
-  required Widget Function(
-    BuildContext context,
-    void Function(void Function()) setState,
-    ScrollController scrollController,
-  ) builder,
-}) async {
+Future<T?> showScrollableModalBottomSheet<T>(
+    {required BuildContext context,
+    NSUserActivity? activity,
+    bool isDismissible = true,
+    bool initiallyOpen = false,
+    bool modelSheet = true,
+    required Widget Function(
+      BuildContext context,
+      void Function(void Function()) setState,
+      ScrollController scrollController,
+    ) builder,
+    Color? backgroundColor}) async {
   Widget child = DraggableScrollableSheet(
     initialChildSize: initiallyOpen
         ? 0.8
@@ -45,6 +45,7 @@ Future<T?> showScrollableModalBottomSheet<T>({
 
     // Show the sheet
     T? value = await showModalBottomSheet(
+      backgroundColor: backgroundColor,
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -73,6 +74,7 @@ Future<T?> showScrollableModalBottomSheet<T>({
     return value;
   } else {
     Scaffold.of(context).showBottomSheet(
+      backgroundColor: backgroundColor,
       elevation: 1,
       showDragHandle: true,
       constraints: const BoxConstraints(maxWidth: 640),

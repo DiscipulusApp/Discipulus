@@ -214,11 +214,16 @@ class ChatInputField extends StatelessWidget {
     required this.textController,
     required this.onSubmitted,
     this.isLoading = false,
+    this.hintText,
+    this.maxLines,
   });
 
   final TextEditingController textController;
   final Function(String content) onSubmitted;
   final bool isLoading;
+  final int? maxLines;
+
+  final String? hintText;
 
   @override
   Widget build(BuildContext context) {
@@ -243,12 +248,12 @@ class ChatInputField extends StatelessWidget {
                     child: Expanded(
                       child: TextField(
                         controller: textController,
-                        decoration: const InputDecoration(
-                          border:
-                              OutlineInputBorder(borderSide: BorderSide.none),
-                          hintText: 'Typ je bericht...',
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(
+                              borderSide: BorderSide.none),
+                          hintText: hintText ?? 'Typ je bericht...',
                         ),
-                        maxLines: null,
+                        maxLines: maxLines,
                         onSubmitted: onSubmitted,
                       ),
                     ),

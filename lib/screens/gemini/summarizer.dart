@@ -1,7 +1,16 @@
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/gemini/chat_screen.dart';
 import 'package:discipulus/screens/gemini/gemini.dart';
 import 'package:discipulus/screens/gemini/instructions.dart';
+import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
+import 'package:discipulus/widgets/global/card.dart';
+import 'package:discipulus/widgets/global/html.dart';
+import 'package:discipulus/widgets/global/list_decoration.dart';
+import 'package:discipulus/widgets/global/tiles/loading_button.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 Future<String?> summarizeText(
@@ -44,5 +53,265 @@ Future<String?> summarizeText(
     return response.text;
   } catch (e) {
     return 'Error: $e';
+  }
+}
+
+Future<void> showSummarizeSheet(
+  BuildContext context, {
+  required String text,
+  String? initialSummary,
+  void Function(String)? onSummary,
+  Iterable<Bron> bronnen = const [],
+}) async {
+  showScrollableModalBottomSheet(
+    backgroundColor: Theme.of(context).colorScheme.surface,
+    context: context,
+    builder: (context, setState, scrollController) {
+      return _SummarizePromptBody(
+        controller: scrollController,
+        initialSummary: initialSummary,
+        text: text,
+        onSummary: onSummary,
+        bronnen: bronnen,
+      );
+    },
+  );
+}
+
+class _SummarizePromptBody extends StatefulWidget {
+  const _SummarizePromptBody({
+    required this.controller,
+    required this.text,
+    this.initialSummary,
+    this.onSummary,
+    this.bronnen = const [],
+  });
+
+  final ScrollController controller;
+  final String text;
+  final String? initialSummary;
+  final void Function(String)? onSummary;
+  final Iterable<Bron> bronnen;
+
+  @override
+  State<_SummarizePromptBody> createState() => _SummarizePromptBodyState();
+}
+
+class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
+  late String? summary = widget.initialSummary;
+  bool isLoading = false;
+  TextEditingController controller = TextEditingController();
+
+  final List<ChatMessage> _messages = [];
+  late GenerativeModel? _model;
+  late ChatSession _chat;
+
+  @override
+  void initState() {
+    super.initState();
+    _model = appSettings.geminiAPIKey != null
+        ? GenerativeModel(
+            model: 'gemini-1.5-flash',
+            apiKey: appSettings.geminiAPIKey!,
+            systemInstruction: GeminiInstructions.textChatter(widget.text),
+            safetySettings: [
+              SafetySetting(
+                  HarmCategory.dangerousContent, HarmBlockThreshold.high),
+              SafetySetting(HarmCategory.harassment, HarmBlockThreshold.high),
+              SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.high),
+              SafetySetting(
+                  HarmCategory.sexuallyExplicit, HarmBlockThreshold.high),
+            ],
+          )
+        : null;
+
+    if (_model != null) {
+      _chat = _model!.startChat();
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage(String text) async {
+    setState(() {
+      _messages.add(ChatMessage(text: text, isUser: true));
+      controller.clear();
+      isLoading = true;
+    });
+
+    widget.controller.animateTo(
+      widget.controller.position.maxScrollExtent,
+      duration: Durations.medium3,
+      curve: Easing.standard,
+    );
+
+    String accumulatedText = "";
+    try {
+      final responseStream = _chat.sendMessageStream(Content.text(text));
+      await for (final response in responseStream) {
+        final chunk = response.text;
+        if (chunk != null) {
+          setState(() {
+            accumulatedText += chunk;
+            if (_messages.isNotEmpty && !_messages.last.isUser) {
+              _messages[_messages.length - 1] =
+                  ChatMessage(text: accumulatedText, isUser: false);
+            } else {
+              _messages.add(ChatMessage(text: chunk, isUser: false));
+            }
+          });
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _messages
+            .add(ChatMessage(text: "Error: ${e.toString()}", isUser: false));
+      });
+    } finally {
+      widget.controller.animateTo(
+        widget.controller.position.maxScrollExtent,
+        duration: Durations.medium3,
+        curve: Easing.standard,
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildMessage(String content, {bool fromUser = true}) {
+    if (fromUser) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomCard(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  content,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+        child: HTMLDisplay(html: content),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView(
+        controller: widget.controller,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const RowTile(icon: Icons.auto_awesome, title: "Gemini"),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          _buildMessage("Maak een samenvattig"),
+          if (summary == null)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24 + 4, vertical: 8),
+              child: FutureBuilder(
+                future: Future(() async {
+                  summary = await summarizeText(widget.text);
+                  widget.onSummary?.call(summary!);
+                  setState(() {});
+                }),
+                builder: (context, snapshot) {
+                  return const Text("Bezig met samenvatten...");
+                },
+              ),
+            ),
+          if (summary != null) ...[
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: HTMLDisplay(html: summary!),
+            ),
+            ListTile(
+              title: const Text("AI Samenvattig"),
+              subtitle: const Text(
+                  "Samenvattigen kunnen fouten bevatten. Controleer altijd de inhoud."),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LoadingButton(
+                    future: () async {
+                      // Summarize with attachments
+                      summary = await summarizeText(
+                        widget.text,
+                        bronnen: widget.bronnen,
+                      );
+                      widget.onSummary?.call(summary!);
+                      setState(() {});
+                    },
+                    child: (isLoading, onTap) => IconButton(
+                      onPressed: isLoading ? null : onTap,
+                      icon: const Icon(Icons.upload_file),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      // Copy the summery
+                      await Clipboard.setData(
+                        ClipboardData(text: summary!.withoutHTML!),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Gekopieerd"),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(
+              indent: 16,
+              endIndent: 16,
+            ),
+            for (var message in _messages)
+              _buildMessage(message.text, fromUser: message.isUser)
+          ],
+          const BottomSheetBottomContentPadding()
+        ],
+      ),
+      persistentFooterButtons: [
+        ChatInputField(
+          maxLines: 1,
+          isLoading: isLoading,
+          hintText: "Schrijf een vervolg prompt...",
+          textController: controller,
+          onSubmitted: _sendMessage,
+        )
+      ],
+    );
   }
 }
