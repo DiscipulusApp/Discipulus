@@ -31,30 +31,6 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
   late final PageController pageController;
   bool showAllBronnen = false;
 
-  // AI
-  Future<void> generateSummery({bool addAttachments = false}) async {
-    setState(() {
-      aiPromtisLoading = true;
-    });
-    try {
-      widget.message
-        ..aiSummary = await summarizeText(
-          "Subject: ${widget.message.onderwerp}\n\nContent:\n${widget.message.inhoud}",
-          bronnen: addAttachments ? widget.message.bronnen : [],
-        )
-        ..save();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          aiPromtisLoading = false;
-        });
-      }
-      rethrow;
-    }
-    aiPromtisLoading = false;
-    if (mounted) setState(() {});
-  }
-
   Future<void> refresh() async {
     await widget.message.fill();
     if (mounted) setState(() {});
@@ -201,10 +177,6 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
         ),
         if (widget.message.heeftBijlagen)
           MoreBronnenTile(bronnen: widget.message.bronnen),
-        // CustomAnimatedSize(
-        //   visible: appSettings.geminiAPIKey != null,
-        //   child: _summerizedMailCard(),
-        // ),
         SingleChildScrollView(
           key: const HeaderKey(noPadding: true),
           scrollDirection: Axis.horizontal,
@@ -230,10 +202,8 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
 
   List<Widget> _messageChips() {
     return [
-      Visibility(
-        visible:
-            appSettings.geminiAPIKey != null && widget.message.inhoud != null,
-        child: ActionChip(
+      if (appSettings.geminiAPIKey != null && widget.message.inhoud != null)
+        ActionChip(
           side: BorderSide(
               color: Theme.of(context).colorScheme.tertiaryContainer),
           backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
@@ -253,7 +223,6 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
             bronnen: widget.message.bronnen,
           ),
         ),
-      ),
       ElasticAnimation(
         child: LoadingButton(
           key: ValueKey(widget.message.isGelezen),
@@ -356,95 +325,6 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
         },
       ),
     ];
-  }
-
-  bool aiPromptisExpanded = false;
-  bool aiPromtisLoading = false;
-
-  Widget _summerizedMailCard() {
-    return AppearAnimation(
-      child: (animation) => FadeTransition(
-        opacity: animation,
-        child: CustomCard(
-            color: Theme.of(context).colorScheme.tertiaryContainer,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                dividerColor: Colors.transparent,
-                colorScheme: Theme.of(context).colorScheme.copyWith(
-                      primary: Theme.of(context).colorScheme.tertiary,
-                      onPrimary: Theme.of(context).colorScheme.onTertiary,
-                    ),
-              ),
-              child: ExpansionTile(
-                onExpansionChanged: (value) async {
-                  setState(() {
-                    aiPromptisExpanded = value;
-                  });
-
-                  if (true) {
-                    // Is expanding
-                    if (widget.message.aiSummary == null) {
-                      // No summery yet, generating one
-                      generateSummery();
-                    }
-                  }
-                },
-                expansionAnimationStyle: AnimationStyle(
-                  curve: Easing.standardAccelerate,
-                  duration: Durations.short3,
-                ),
-                iconColor: Theme.of(context).colorScheme.onTertiaryContainer,
-                leading: const Icon(Icons.auto_awesome),
-                trailing: aiPromptisExpanded
-                    ? Wrap(
-                        children: [
-                          if (widget.message.heeftBijlagen &&
-                              aiPromptisExpanded)
-                            IconButton(
-                              icon: const Icon(Icons.attach_file),
-                              onPressed: aiPromtisLoading
-                                  ? null
-                                  : () => generateSummery(addAttachments: true),
-                            ),
-                          IconButton(
-                            icon: const Icon(Icons.redo),
-                            onPressed:
-                                aiPromtisLoading ? null : generateSummery,
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.all(12).copyWith(right: 0),
-                            child: const Icon(Icons.expand_less),
-                          ),
-                        ],
-                      )
-                    : null,
-                title: const Text(
-                  "AI Samenvatting",
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                children: [
-                  if (widget.message.aiSummary == null || aiPromtisLoading)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      child: LinearProgressIndicator(
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  if (widget.message.aiSummary != null && !aiPromtisLoading)
-                    Padding(
-                      padding: const EdgeInsets.all(12.0).copyWith(top: 0),
-                      child: HTMLDisplay(html: widget.message.aiSummary ?? ""),
-                    ),
-                ],
-              ),
-            )),
-      ),
-    );
   }
 
   Widget _contactSearchAnchor() => SearchAnchor(

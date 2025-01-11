@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/gemini/summarizer.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -39,6 +41,38 @@ class HTMLDisplay extends StatelessWidget {
     );
 
     return SelectionArea(
+      contextMenuBuilder: (context, editableTextState) {
+        final anchors = editableTextState.contextMenuAnchors;
+        final buttonItems = [
+          ...editableTextState.contextMenuButtonItems,
+          if (appSettings.geminiAPIKey != null)
+            ContextMenuButtonItem(
+              label: "Samenvatten",
+              onPressed: () => showSummarizeSheet(context,
+                  text: html, instantSummery: false),
+            ),
+        ];
+
+        final List<Widget> buttons = <Widget>[];
+        for (int i = 0; i < buttonItems.length; i++) {
+          final ContextMenuButtonItem buttonItem = buttonItems[i];
+          buttons.add(TextSelectionToolbarTextButton(
+            padding: TextSelectionToolbarTextButton.getPadding(
+                i, buttonItems.length),
+            onPressed: buttonItem.onPressed,
+            child: Text(AdaptiveTextSelectionToolbar.getButtonLabel(
+                context, buttonItem)),
+          ));
+        }
+
+        return TextSelectionToolbar(
+          anchorAbove: anchors.primaryAnchor,
+          anchorBelow: anchors.secondaryAnchor == null
+              ? anchors.primaryAnchor
+              : anchors.secondaryAnchor!,
+          children: buttons,
+        );
+      },
       child: Html.fromDom(
         document: doc,
         onLinkTap: (url, attributes, element) =>

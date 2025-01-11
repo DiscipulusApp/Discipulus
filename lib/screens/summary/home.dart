@@ -45,12 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: NextLessonTile(),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: WeekHeatmap(
-            extraWeeks: 2,
-          ),
-        ),
+        // Padding(
+        //   padding: EdgeInsets.symmetric(horizontal: 8),
+        //   child: WeekHeatmap(
+        //     extraWeeks: 2,
+        //   ),
+        // ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: RecentMessagesTile(),
