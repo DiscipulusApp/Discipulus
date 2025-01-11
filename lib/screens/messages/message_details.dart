@@ -6,6 +6,7 @@ import 'package:discipulus/screens/gemini/summarizer.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/filters/messages_filter.dart';
@@ -13,6 +14,7 @@ import 'package:discipulus/widgets/global/html.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:discipulus/screens/bronnen/bron_tiles.dart';
+import 'package:discipulus/widgets/global/tiles/loading_button.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
@@ -106,108 +108,6 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
                   showComposeMessageSheet(context, message: widget.message),
               icon: const Icon(Icons.edit),
             ),
-          // if (appSettings.geminiAPIKey != null)
-          //   LoadingButton(
-          //     future: () async {
-          //       // Summarize the mail with gemini.
-          //       widget.message
-          //         ..aiSummary = await summarizeText(
-          //           "Subject: ${widget.message.onderwerp}\n\nContent:\n${widget.message.inhoud}",
-          //           bronnen: addAttachments ? widget.message.bronnen : [],
-          //         )
-          //         ..save();
-          //       if (mounted) setState(() {});
-          //     },
-          //     child: (isLoading, onTap) => IconButton(
-          //       onPressed: () async {
-          //         if (widget.message.heeftBijlagen) {
-          //           bool? attachments = await _showSummerizeBronDialog();
-          //           if (attachments != null) {
-          //             addAttachments = attachments;
-          //             onTap();
-          //           }
-          //         } else {
-          //           onTap();
-          //         }
-          //       },
-          //       icon: isLoading
-          //           ? const SizedBox(
-          //               height: 24,
-          //               width: 24,
-          //               child: CircularProgressIndicator(),
-          //             )
-          //           : const Icon(Icons.auto_awesome),
-          //     ),
-          //   ),
-          IconButton(
-            onPressed: isRefreshing
-                ? null
-                : () async {
-                    isLoadingExternally.value = true;
-                    await widget.message
-                        .markAsRead(read: !widget.message.isGelezen);
-                    isLoadingExternally.value = false;
-                    setState(() {});
-                  },
-            icon: Icon(widget.message.isGelezen
-                ? Icons.mark_email_unread
-                : Icons.mark_email_read),
-          ),
-          MenuAnchor(
-            menuChildren: [
-              if (widget.message.map.value?.id !=
-                  -1) // You can't reply to concepts
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.reply),
-                  onPressed: () => showComposeMessageSheet(
-                    context,
-                    message: widget.message,
-                    verzendoptie: VerzendOptie.beantwoord,
-                  ),
-                  child: const Text("Beantwoorden"),
-                ),
-              if (widget.message.map.value?.id !=
-                  -1) // You can't forward concepts
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.forward),
-                  onPressed: () => showComposeMessageSheet(context,
-                      message: widget.message,
-                      verzendoptie: VerzendOptie.doorgestuurd),
-                  child: const Text("Doorsturen"),
-                ),
-              MenuItemButton(
-                leadingIcon: const Icon(Icons.move_to_inbox),
-                onPressed: () async {
-                  MessagesFolder? folder = await showMessageFolderSelector(
-                    context,
-                    inboxes: await widget
-                        .message.map.value?.profile.value?.berichtMappen
-                        .filter()
-                        .findAll(),
-                    initialFolder: widget.message.map.value,
-                  );
-                  if (folder != null) {
-                    await widget.message.moveToFolder(folder.id);
-                    if (mounted) setState(() {});
-                  }
-                },
-                child: const Text("Verplaatsen"),
-              ),
-              MenuItemButton(
-                leadingIcon: const Icon(Icons.delete),
-                onPressed: () async {
-                  await widget.message.remove();
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Verwijderen"),
-              )
-            ],
-            child: const Icon(Icons.more_vert),
-            builder: (context, controller, child) => IconButton(
-              icon: child!,
-              onPressed: () => controller.open(),
-            ),
-          ),
         ],
       ),
       children: [
@@ -301,9 +201,20 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
         ),
         if (widget.message.heeftBijlagen)
           MoreBronnenTile(bronnen: widget.message.bronnen),
-        CustomAnimatedSize(
-          visible: appSettings.geminiAPIKey != null,
-          child: _summerizedMailCard(),
+        // CustomAnimatedSize(
+        //   visible: appSettings.geminiAPIKey != null,
+        //   child: _summerizedMailCard(),
+        // ),
+        SingleChildScrollView(
+          key: const HeaderKey(noPadding: true),
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              spacing: 8,
+              children: _messageChips(),
+            ),
+          ),
         ),
         if ((widget.message.inhoud ?? "") != "")
           Padding(
@@ -315,6 +226,136 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
           ),
       ],
     );
+  }
+
+  List<Widget> _messageChips() {
+    return [
+      Visibility(
+        visible:
+            appSettings.geminiAPIKey != null && widget.message.inhoud != null,
+        child: ActionChip(
+          side: BorderSide(
+              color: Theme.of(context).colorScheme.tertiaryContainer),
+          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+          avatar: Icon(
+            Icons.auto_awesome,
+            color: Theme.of(context).colorScheme.onTertiaryContainer,
+          ),
+          label: const Text("Samenvatting"),
+          onPressed: () => showSummarizeSheet(
+            context,
+            text: widget.message.inhoud!,
+            initialSummary: widget.message.aiSummary,
+            onSummary: (summary) {
+              widget.message.aiSummary = summary;
+              widget.message.save();
+            },
+            bronnen: widget.message.bronnen,
+          ),
+        ),
+      ),
+      ElasticAnimation(
+        child: LoadingButton(
+          key: ValueKey(widget.message.isGelezen),
+          future: () async {
+            isLoadingExternally.value = true;
+            await widget.message.markAsRead(read: !widget.message.isGelezen);
+            isLoadingExternally.value = false;
+            setState(() {});
+          },
+          child: (isLoading, onTap) => ActionChip(
+            avatar: isLoading
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 4,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  )
+                : Icon(
+                    widget.message.isGelezen
+                        ? Icons.mark_email_unread
+                        : Icons.mark_email_read,
+                  ),
+            label: Text(
+              widget.message.isGelezen
+                  ? "Markeer ongelezen"
+                  : "Markeer gelezen",
+            ),
+            onPressed: isLoading ? null : onTap,
+          ),
+        ),
+      ),
+      ActionChip(
+        avatar: const Icon(Icons.reply),
+        label: const Text("Beantwoorden"),
+        onPressed: () => showComposeMessageSheet(
+          context,
+          message: widget.message,
+          verzendoptie: VerzendOptie.beantwoord,
+        ),
+      ),
+      ActionChip(
+        avatar: const Icon(Icons.move_to_inbox),
+        label: const Text("Verplaatsen"),
+        onPressed: () async {
+          MessagesFolder? folder = await showMessageFolderSelector(
+            context,
+            inboxes: await widget
+                .message.map.value?.profile.value?.berichtMappen
+                .filter()
+                .findAll(),
+            initialFolder: widget.message.map.value,
+          );
+          if (folder != null) {
+            await widget.message.moveToFolder(folder.id);
+            if (mounted) setState(() {});
+          }
+        },
+      ),
+      ActionChip(
+        avatar: const Icon(Icons.forward),
+        label: const Text("Doorsturen"),
+        onPressed: () => showComposeMessageSheet(context,
+            message: widget.message, verzendoptie: VerzendOptie.doorgestuurd),
+      ),
+      ActionChip(
+        avatar: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+        label: const Text("Verwijderen"),
+        onPressed: () async {
+          bool? shouldDelete = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text("Weet je het zeker?"),
+              content: const Text(
+                  "Weet je zeker dat je dit bericht wilt verwijderen?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("Annuleren"),
+                ),
+                FilledButton(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStatePropertyAll(
+                        Theme.of(context).colorScheme.error),
+                    foregroundColor: WidgetStatePropertyAll(
+                      Theme.of(context).colorScheme.onError,
+                    ),
+                  ),
+                  onPressed: () async => Navigator.of(context).pop(true),
+                  child: const Text("Verwijderen"),
+                ),
+              ],
+            ),
+          );
+          if (shouldDelete == true && mounted) {
+            await widget.message.remove();
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+    ];
   }
 
   bool aiPromptisExpanded = false;
