@@ -110,6 +110,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
           .startGreaterThan(DateTime.now())
           .and()
           .infoTypeBetween(InfoType.test, InfoType.oralExam)
+          .sortByStart()
           .findAll())
     ]).then((value) {
       if (mounted) setState(() {});
@@ -183,7 +184,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: OncomingSpecialEventTile(
+              child: UpcomingSpecialEventTile(
                 events: tests,
               ),
             ),

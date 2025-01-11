@@ -75,9 +75,11 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
             .filter()
             .eindeGreaterThan(DateTime.now())
             .anyOf(
-          [InfoType.homework, ...InfoType.tests],
-          (q, infoType) => q.infoTypeEqualTo(infoType),
-        ).findAll());
+              [InfoType.homework, ...InfoType.tests],
+              (q, infoType) => q.infoTypeEqualTo(infoType),
+            )
+            .sortByStart()
+            .findAll());
       }
     }
   }
@@ -189,7 +191,7 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
                         width: double.infinity,
                         child: Padding(
                           padding: const EdgeInsets.all(4),
-                          child: OncomingSpecialEventTile(events: events),
+                          child: UpcomingSpecialEventTile(events: events),
                         ),
                       ),
                     ),
