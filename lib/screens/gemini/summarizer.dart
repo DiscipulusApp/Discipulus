@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
@@ -62,36 +64,38 @@ Future<void> showSummarizeSheet(
   String? initialSummary,
   void Function(String)? onSummary,
   Iterable<Bron> bronnen = const [],
+  bool instantSummery = true,
 }) async {
   showScrollableModalBottomSheet(
     backgroundColor: Theme.of(context).colorScheme.surface,
     context: context,
     builder: (context, setState, scrollController) {
       return _SummarizePromptBody(
-        controller: scrollController,
-        initialSummary: initialSummary,
-        text: text,
-        onSummary: onSummary,
-        bronnen: bronnen,
-      );
+          controller: scrollController,
+          initialSummary: initialSummary,
+          text: text,
+          onSummary: onSummary,
+          bronnen: bronnen,
+          instantSummery: instantSummery);
     },
   );
 }
 
 class _SummarizePromptBody extends StatefulWidget {
-  const _SummarizePromptBody({
-    required this.controller,
-    required this.text,
-    this.initialSummary,
-    this.onSummary,
-    this.bronnen = const [],
-  });
+  const _SummarizePromptBody(
+      {required this.controller,
+      required this.text,
+      this.initialSummary,
+      this.onSummary,
+      this.bronnen = const [],
+      this.instantSummery = true});
 
   final ScrollController controller;
   final String text;
   final String? initialSummary;
   final void Function(String)? onSummary;
   final Iterable<Bron> bronnen;
+  final bool instantSummery;
 
   @override
   State<_SummarizePromptBody> createState() => _SummarizePromptBodyState();
@@ -136,6 +140,14 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
     super.dispose();
   }
 
+  void _scrollToEnd() => WidgetsBinding.instance.addPostFrameCallback(
+        (_) => widget.controller.animateTo(
+          widget.controller.position.maxScrollExtent,
+          duration: Durations.medium3,
+          curve: Easing.standard,
+        ),
+      );
+
   Future<void> _sendMessage(String text) async {
     setState(() {
       _messages.add(ChatMessage(text: text, isUser: true));
@@ -143,18 +155,16 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
       isLoading = true;
     });
 
-    widget.controller.animateTo(
-      widget.controller.position.maxScrollExtent,
-      duration: Durations.medium3,
-      curve: Easing.standard,
-    );
+    _scrollToEnd();
 
     String accumulatedText = "";
     try {
       final responseStream = _chat.sendMessageStream(Content.text(text));
       await for (final response in responseStream) {
-        final chunk = response.text;
+        final chunk =
+            response.text?.replaceAll("```html", "").replaceAll("```", "");
         if (chunk != null) {
+          _scrollToEnd();
           setState(() {
             accumulatedText += chunk;
             if (_messages.isNotEmpty && !_messages.last.isUser) {
@@ -162,6 +172,7 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
                   ChatMessage(text: accumulatedText, isUser: false);
             } else {
               _messages.add(ChatMessage(text: chunk, isUser: false));
+              HapticFeedback.lightImpact();
             }
           });
         }
@@ -172,11 +183,8 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
             .add(ChatMessage(text: "Error: ${e.toString()}", isUser: false));
       });
     } finally {
-      widget.controller.animateTo(
-        widget.controller.position.maxScrollExtent,
-        duration: Durations.medium3,
-        curve: Easing.standard,
-      );
+      HapticFeedback.heavyImpact();
+      _scrollToEnd();
       setState(() {
         isLoading = false;
       });
@@ -187,22 +195,20 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
     if (fromUser) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            CustomCard(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  content,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: CustomCard(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                content,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               ),
             ),
-          ],
+          ),
         ),
       );
     } else {
@@ -237,16 +243,33 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 24 + 4, vertical: 8),
-              child: FutureBuilder(
-                future: Future(() async {
-                  summary = await summarizeText(widget.text);
-                  widget.onSummary?.call(summary!);
-                  setState(() {});
-                }),
-                builder: (context, snapshot) {
-                  return const Text("Bezig met samenvatten...");
-                },
-              ),
+              child: widget.instantSummery
+                  ? FutureBuilder(
+                      future: Future(() async {
+                        summary = await summarizeText(widget.text);
+                        HapticFeedback.heavyImpact();
+                        widget.onSummary?.call(summary!);
+                        setState(() {});
+                      }),
+                      builder: (context, snapshot) {
+                        return const Text("Bezig met samenvatten...");
+                      },
+                    )
+                  : Align(
+                      alignment: Alignment.centerLeft,
+                      child: LoadingButton(
+                        future: () async {
+                          summary = await summarizeText(widget.text);
+                          HapticFeedback.heavyImpact();
+                          widget.onSummary?.call(summary!);
+                          setState(() {});
+                        },
+                        child: (isLoading, onTap) => FilledButton(
+                          onPressed: isLoading ? null : onTap,
+                          child: const Text("Maak samenvatting"),
+                        ),
+                      ),
+                    ),
             ),
           if (summary != null) ...[
             Padding(
@@ -254,41 +277,65 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
               child: HTMLDisplay(html: summary!),
             ),
-            ListTile(
-              title: const Text("AI Samenvattig"),
-              subtitle: const Text(
-                  "Samenvattigen kunnen fouten bevatten. Controleer altijd de inhoud."),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
                 children: [
-                  LoadingButton(
-                    future: () async {
-                      // Summarize with attachments
-                      summary = await summarizeText(
-                        widget.text,
-                        bronnen: widget.bronnen,
-                      );
-                      widget.onSummary?.call(summary!);
-                      setState(() {});
-                    },
-                    child: (isLoading, onTap) => IconButton(
-                      onPressed: isLoading ? null : onTap,
-                      icon: const Icon(Icons.upload_file),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                   ),
-                  IconButton(
-                    onPressed: () async {
-                      // Copy the summery
-                      await Clipboard.setData(
-                        ClipboardData(text: summary!.withoutHTML!),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Gekopieerd"),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                      ),
+                      child: Text(
+                        "Samenvattigen kunnen fouten bevatten. Controleer altijd de inhoud.",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.outline,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.copy),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.bronnen.isNotEmpty)
+                        LoadingButton(
+                          future: () async {
+                            // Summarize with attachments
+                            summary = await summarizeText(
+                              widget.text,
+                              bronnen: widget.bronnen,
+                            );
+                            widget.onSummary?.call(summary!);
+                            setState(() {});
+                          },
+                          child: (isLoading, onTap) => IconButton(
+                            onPressed: isLoading ? null : onTap,
+                            icon: const Icon(Icons.upload_file),
+                          ),
+                        ),
+                      IconButton(
+                        onPressed: () async {
+                          // Copy the summery
+                          await Clipboard.setData(
+                            ClipboardData(text: summary!.withoutHTML!),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Gekopieerd"),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.copy),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -297,9 +344,9 @@ class _SummarizePromptBodyState extends State<_SummarizePromptBody> {
               indent: 16,
               endIndent: 16,
             ),
-            for (var message in _messages)
-              _buildMessage(message.text, fromUser: message.isUser)
           ],
+          for (var message in _messages)
+            _buildMessage(message.text, fromUser: message.isUser),
           const BottomSheetBottomContentPadding()
         ],
       ),

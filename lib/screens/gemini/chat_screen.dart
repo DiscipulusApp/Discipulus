@@ -247,6 +247,7 @@ class ChatInputField extends StatelessWidget {
                   Expanded(
                     child: Expanded(
                       child: TextField(
+                        textCapitalization: TextCapitalization.sentences,
                         controller: textController,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(

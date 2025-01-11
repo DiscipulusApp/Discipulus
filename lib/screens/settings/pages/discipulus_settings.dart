@@ -8,6 +8,7 @@ import 'package:discipulus/models/account_extension.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -163,7 +164,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
               hintText: appSettings.geminiAPIKey,
             ),
             onChanged: (value) => appSettings
-              ..geminiAPIKey = value
+              ..geminiAPIKey = value.nullOnEmpty
               ..save(),
           ),
         ),

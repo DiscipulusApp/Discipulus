@@ -568,6 +568,7 @@ class MessagesFolder {
     Iterable<Bericht> newMessages = berichten.map((e) {
       Bericht? currentMessage = isar.berichts.getSync(e.uuid);
       return e
+        ..aiSummary = currentMessage?.aiSummary ?? e.aiSummary
         ..inhoud =
             e.id.isNegative ? e.inhoud : currentMessage?.inhoud ?? e.inhoud
         ..ontvangers = currentMessage?.ontvangers ?? e.ontvangers
