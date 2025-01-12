@@ -304,7 +304,7 @@ class _VerticalIntroductionScreenState
                         ),
                         buildSlideAnimation(
                           Text(
-                            "Gemaakt door rebelse vrijwilligers 💪",
+                            "Gelukkig geen onderdeel van Magister 🙌",
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ),
