@@ -1,7 +1,7 @@
 name: discipulus
 description: "Gelukkig geen onderdeel van Magister 🙌"
 publish_to: 'none'
-version: 0.1.4+15
+version: 0.1.4+16
 
 environment:
   sdk: '>=3.1.0 <4.0.0'
