@@ -1,0 +1,213 @@
+name: Flutter Multi-Platform Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (leave empty for auto-increment)'
+        required: false
+      build_number:
+        description: 'Build number (leave empty for auto-increment)'
+        required: false
+
+env:
+  APP_NAME: discipulus
+  APP_ID: dev.harrydekat.discipulus
+
+jobs:
+  version:
+    name: Create version number
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+      build_number: ${{ steps.set_version.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set version and build number
+        id: set_version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            version=${latest_tag#v}
+            IFS='.' read -ra VERSION_PARTS <<< "$version"
+            VERSION_PARTS[2]=$((VERSION_PARTS[2] + 1))
+            new_version="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}"
+            echo "version=$new_version" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -n "${{ github.event.inputs.build_number }}" ]; then
+            echo "build_number=${{ github.event.inputs.build_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "build_number=${{ github.run_number }}" >> $GITHUB_OUTPUT
+          fi
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    needs: version
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+      - run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+      - name: Create Windows ZIP
+        run: |
+          Compress-Archive -Path build\windows\runner\Release\* -DestinationPath ${{ env.APP_NAME }}_windows.zip
+      - name: Generate MSIX
+        run: |
+          flutter pub add --dev msix
+          dart run msix:create --build-windows false
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows-artifacts
+          path: |
+            ${{ env.APP_NAME }}_windows.zip
+            build\windows\runner\Release\*.msix
+
+  build-macos-ios:
+    name: Build macOS and iOS
+    runs-on: macos-latest
+    needs: version
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - run: flutter config --enable-macos-desktop
+      - run: flutter pub get
+      - name: Build macOS
+        run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+      - name: Import Apple Certificate
+        uses: apple-actions/import-codesign-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      - name: Import Provisioning Profile
+        run: |
+          echo -n "${{ secrets.APPLE_PROVISIONING_PROFILE }}" | base64 --decode > profile.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles
+      - name: Build iOS
+        run: |
+          flutter build ios --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          cd build/ios/iphoneos
+          mkdir Payload
+          cd Payload
+          ln -s ../Runner.app
+          cd ..
+          zip -r ${{ env.APP_NAME }}_ios.ipa Payload
+      - uses: actions/upload-artifact@v3
+        with:
+          name: macos-ios-artifacts
+          path: |
+            build/macos/Build/Products/Release/*.app
+            build/ios/iphoneos/${{ env.APP_NAME }}_ios.ipa
+
+  build-linux-android:
+    name: Build Linux and Android
+    runs-on: ubuntu-latest
+    needs: version
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: flutter config --enable-linux-desktop
+      - run: flutter pub get
+      - name: Build Linux
+        run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+      - name: Create Flatpak
+        run: |
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08
+          echo '{
+            "app-id": "${{ env.APP_ID }}",
+            "runtime": "org.freedesktop.Platform",
+            "runtime-version": "22.08",
+            "sdk": "org.freedesktop.Sdk",
+            "command": "${{ env.APP_NAME }}",
+            "modules": [
+              {
+                "name": "${{ env.APP_NAME }}",
+                "buildsystem": "simple",
+                "build-commands": [
+                  "cp -r . /app/${{ env.APP_NAME }}",
+                  "chmod +x /app/${{ env.APP_NAME }}/${{ env.APP_NAME }}"
+                ],
+                "sources": [
+                  {
+                    "type": "dir",
+                    "path": "build/linux/x64/release/bundle"
+                  }
+                ]
+              }
+            ]
+          }' > ${{ env.APP_ID }}.json
+          flatpak-builder --repo=repo --force-clean build-dir ${{ env.APP_ID }}.json
+          flatpak build-bundle repo ${{ env.APP_NAME }}_linux.flatpak ${{ env.APP_ID }}
+      - name: Decode Android keystore
+        run: |
+          echo ${{ secrets.ANDROID_KEYSTORE }} | base64 -d > android/app/keystore.jks
+      - name: Build Android
+        run: |
+          flutter build appbundle --release \
+            --build-name=${{ needs.version.outputs.version }} \
+            --build-number=${{ needs.version.outputs.build_number }} \
+            --keystore=android/app/keystore.jks \
+            --keystore-password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            --key-alias=${{ secrets.ANDROID_KEY_ALIAS }} \
+            --key-password=${{ secrets.ANDROID_KEY_PASSWORD }}
+          flutter build apk --release --split-per-abi \
+            --build-name=${{ needs.version.outputs.version }} \
+            --build-number=${{ needs.version.outputs.build_number }} \
+            --keystore=android/app/keystore.jks \
+            --keystore-password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            --key-alias=${{ secrets.ANDROID_KEY_ALIAS }} \
+            --key-password=${{ secrets.ANDROID_KEY_PASSWORD }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: linux-android-artifacts
+          path: |
+            build/linux/x64/release/bundle
+            ${{ env.APP_NAME }}_linux.flatpak
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/apk/release/*.apk
+
+  create-release:
+    name: Create Release
+    needs: [version, build-windows, build-macos-ios, build-linux-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          release_name: Release ${{ needs.version.outputs.version }} (Build ${{ needs.version.outputs.build_number }})
+          draft: false
+          prerelease: false
+      - name: Upload Release Assets
+        run: |
+          for file in $(find . -type f); do
+            asset_name=$(basename "$file")
+            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 -H "Content-Type: $(file -b --mime-type "$file")" \
+                 --data-binary @"$file" \
+                 "https://uploads.github.com/repos/${{ github.repository }}/releases/${{ steps.create_release.outputs.id }}/assets?name=$asset_name"
+          done
