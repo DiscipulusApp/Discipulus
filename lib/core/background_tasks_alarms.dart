@@ -239,6 +239,23 @@ extension on DNDAlarm {
 
     if (turnOnDND) {
       final int lastId = events.last.einde.millisecondsSinceEpoch;
+
+      // We need to schedule the turning off alarm. We will then also keep in
+      // mind that there might be an alarm at the same time that will turn it
+      // back on. We will therefor only add this turning off alarm when there
+      // is no alarm at the same time that will turn it back on.
+
+      bool hasAlarmAtSameTime = appSettings.alarms.any((e) {
+        final timeDiff =
+            e.time?.difference(events.last.einde).inSeconds.abs() ?? 60;
+        return timeDiff <= 30;
+      });
+
+      if (hasAlarmAtSameTime) {
+        print("AutoDND: There is already an alarm at the same time");
+        return true;
+      }
+
       await AndroidAlarm(
         time: events.last.einde,
         id: lastId,

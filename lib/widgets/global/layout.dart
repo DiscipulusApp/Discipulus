@@ -345,7 +345,7 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
   }
 
   //
-  // Diffrent types of sidebars
+  // Different types of sidebars
   //
 
   Widget smallSideBar() {
@@ -360,7 +360,7 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
         animationCurve: Easing.linear,
-        animationDuration: Durations.short2,
+        animationDuration: const Duration(milliseconds: 125),
         childDecoration: BoxDecoration(borderRadius: borderRadius),
         drawer: Padding(
           padding: padding.copyWith(left: 0, right: 0),

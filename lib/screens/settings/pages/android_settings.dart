@@ -1,7 +1,9 @@
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -121,12 +123,35 @@ class _DNDToggleCardState extends State<DNDToggleCard> {
                   child: ListTile(
                     dense: true,
                     leading: const Icon(Icons.alarm),
+                    onTap: () => const AlarmListScreen().push(context),
                     title: Text("${appSettings.alarms.length}x DND ingesteld."),
                   ),
                 )
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class AlarmListScreen extends StatelessWidget {
+  const AlarmListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaffoldSkeleton(
+      appBar: (isRefreshing, trailingRefreshButton, leading) =>
+          const SliverAppBar.large(
+        title: Text("Ingestelde alarmen"),
+      ),
+      children: [
+        for (var alarm in appSettings.alarms)
+          ListTile(
+            title: Text(alarm.time?.formattedDateAndTime ?? ""),
+            subtitle: Text(alarm.params.values.join("\n")),
+            leading: const Icon(Icons.alarm),
+          )
       ],
     );
   }
