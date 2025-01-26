@@ -4,6 +4,7 @@ import 'package:discipulus/api/models/account.dart';
 import 'package:discipulus/api/routes/messages.dart';
 import 'package:discipulus/api/routes/persons.dart';
 import 'package:discipulus/core/routes.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/utils/account_manager.dart';
@@ -112,6 +113,12 @@ class Magister {
                     onError: (e) => handler.reject(e),
                   );
             }
+
+            errors.add(FlutterErrorDetails(
+              exception: error,
+              stack: error.stackTrace,
+              library: "Dio",
+            ));
 
             // Show a snackbar with the error when the error is relevant
             if (navKey.currentContext?.mounted ?? false) {

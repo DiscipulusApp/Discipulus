@@ -42,7 +42,7 @@ class _BarChartRoundedGradesState extends State<BarChartRoundedGrades> {
           name: "#$grade",
           id: grade,
           valueString: (value) => "${value.toInt()}x",
-          value: (await widget.grades
+          baseValue: (await widget.grades
                   .applyGradeFilter(filters: [
                     ...Settings.activeGradeFilters
                         .where((e) => e.runtimeType != RoundedGradeRangeFilter)

@@ -118,7 +118,9 @@ class Grade {
 class GradeChange {
   double averageBefore;
   double avarageAfter;
-  double get change => avarageAfter - averageBefore;
+  double get change => (!avarageAfter.isNaN && !averageBefore.isNaN)
+      ? avarageAfter - averageBefore
+      : 0;
 
   GradeChange({required this.avarageAfter, required this.averageBefore});
 }

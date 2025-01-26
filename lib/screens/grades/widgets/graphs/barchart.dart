@@ -23,7 +23,9 @@ class BarChartEntry {
   int id;
 
   /// The value that the bar should have
-  double value;
+  double get value => extraValue != null && !extraValue!.isNegative
+      ? baseValue + extraValue!
+      : baseValue;
 
   /// The name that will be displayed on the side of the bar
   String name;
@@ -41,14 +43,26 @@ class BarChartEntry {
   /// value will be displayed as as string.
   String Function(double value)? valueString;
 
+  /// This will be added or removed from the current value if not null. This
+  /// value will be in a different color if set
+  double? extraValue;
+
+  /// The color of the entry. When null the primary color will be used.
+  Color Function(double value)? extraValueColor;
+
+  /// The value that the bar should have
+  double baseValue;
+
   BarChartEntry({
     required this.name,
     this.indicator,
     this.onTap,
     required this.id,
-    required this.value,
+    required this.baseValue,
     this.color,
     this.valueString,
+    this.extraValue,
+    this.extraValueColor,
   });
 }
 
@@ -214,7 +228,10 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
               ),
               maxY: widget.maxValuePadding != null || widget.maxValue == null
                   ? (entries
-                              .map((e) => e.value)
+                              .map((e) => e.extraValue != null &&
+                                      e.extraValue!.abs() > 0.05
+                                  ? e.value + 1
+                                  : e.value)
                               .reduce((value, element) => max(value, element))
                               .toDouble() +
                           (widget.maxValuePadding ?? 0))
@@ -236,7 +253,7 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                   }
                 },
                 touchTooltipData: BarTouchTooltipData(
-                  fitInsideHorizontally: true,
+                  fitInsideHorizontally: false,
                   fitInsideVertically: true,
                   tooltipMargin: 10,
                   tooltipHorizontalAlignment: FLHorizontalAlignment.center,
@@ -245,9 +262,18 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                   getTooltipColor: (line) => Colors.transparent,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     BarChartEntry entry = indexToEntry(group.x);
+
                     return BarTooltipItem(
-                      entry.valueString?.call(entry.value) ??
-                          (rod.toY).displayNumber(),
+                      [
+                        entry.valueString?.call(entry.baseValue) ??
+                            (entry.baseValue).displayNumber(),
+
+                        // If there is a change that is bigger than 0.1 rounded
+                        // add it to the tooltip.
+                        if (entry.extraValue != null &&
+                            entry.extraValue!.abs() > 0.05)
+                          " (${entry.extraValue!.isNegative ? "+" : ""}${(entry.extraValue! * -1).displayNumber(decimalDigits: 1)})"
+                      ].join(""),
                       TextStyle(
                         color: rod.color,
                         fontWeight: FontWeight.bold,
@@ -270,6 +296,20 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                         ),
                         color: entry.color?.call(entry.value).barColor ??
                             Theme.of(context).colorScheme.primary,
+                        rodStackItems: [
+                          if (entry.extraValue != null)
+                            BarChartRodStackItem(
+                              entry.extraValue!.isNegative
+                                  ? entry.baseValue + entry.extraValue!
+                                  : entry.baseValue,
+                              entry.extraValue!.isNegative
+                                  ? entry.baseValue
+                                  : entry.baseValue + entry.extraValue!,
+                              entry.extraValueColor?.call(entry.extraValue!) ??
+                                  entry.color?.call(entry.value).barColor ??
+                                  Theme.of(context).colorScheme.primary,
+                            )
+                        ],
                       )
                     ],
                   )

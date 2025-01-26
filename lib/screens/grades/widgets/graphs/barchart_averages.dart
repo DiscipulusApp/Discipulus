@@ -1,3 +1,4 @@
+import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/subjects.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
@@ -14,21 +15,25 @@ class BarChartAverages extends StatefulWidget {
     super.key,
     required this.subjects,
     this.rounded = false,
+    this.showTrend = false,
   });
 
   final IsarLinks<Subject> subjects;
   final bool rounded;
+  final bool showTrend;
 
   @override
   State<BarChartAverages> createState() => _BarChartAveragesState();
 }
 
 class _BarChartAveragesState extends State<BarChartAverages> {
-  BarChartEntry _buildEntry(
-      {Subject? subject,
-      double? average,
-      int? index,
-      bool amountChart = false}) {
+  BarChartEntry _buildEntry({
+    Subject? subject,
+    double? average,
+    int? index,
+    bool amountChart = false,
+    double? change,
+  }) {
     return BarChartEntry(
       name: subject != null ? subject.afkorting.capitalized : "###",
       id: subject?.id ?? index!,
@@ -42,7 +47,11 @@ class _BarChartAveragesState extends State<BarChartAverages> {
           : BarChartColor(
               barColor: Theme.of(context).colorScheme.primary,
               textColor: Theme.of(context).colorScheme.onPrimary),
-      value: average ?? appSettings.sufficientFrom,
+      extraValueColor: (value) => value.isNegative
+          ? Theme.of(context).colorScheme.inversePrimary
+          : Theme.of(context).colorScheme.error,
+      baseValue: average ?? appSettings.sufficientFrom,
+      extraValue: change != null ? change * -1 : null,
     );
   }
 
@@ -59,12 +68,21 @@ class _BarChartAveragesState extends State<BarChartAverages> {
                 .toDouble())
             : subject.grades.filter().useable().applyGradeFilter().average
     ]);
+    List<GradeChange>? changes;
+    if (widget.showTrend) {
+      changes = await Future.wait([
+        for (Subject subject in subjects)
+          subject.grades.filter().applyGradeFilter().changeInAverageLastMonth()
+      ]);
+    }
+
     return [
       for (MapEntry<int, Subject> subject in subjects.asMap().entries)
         _buildEntry(
             amountChart:
                 appSettings.subjectSortType == SubjectSortType.amountOfGrades,
             subject: subject.value,
+            change: changes?[subject.key].change,
             average: (() {
               double average = averages[subject.key];
               if (widget.rounded) {
