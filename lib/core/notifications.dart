@@ -352,7 +352,7 @@ class Intents {
       });
 
       // Initial app start
-      if (!navKey.currentContext!.mounted) return;
+      if (!(navKey.currentContext?.mounted ?? false)) return;
 
       await media.launchMessageSheet();
     }

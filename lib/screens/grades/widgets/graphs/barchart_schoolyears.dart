@@ -31,7 +31,7 @@ class _BarChartSchoolyearsState extends State<BarChartSchoolyears> {
         BarChartEntry(
           name: subject.schoolyear.value!.groep.code,
           id: subject.schoolyear.value!.einde.millisecondsSinceEpoch,
-          value: await subject.grades
+          baseValue: await subject.grades
               .filter()
               .useable()
               .applyGradeFilter()

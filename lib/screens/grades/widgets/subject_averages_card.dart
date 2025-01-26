@@ -59,61 +59,65 @@ class _AveragesTileState extends State<AveragesTile> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8.0).copyWith(bottom: 4),
           child: BarChartAverages(
             subjects: widget.subjects,
             rounded: rounded,
+            showTrend: showTrend,
           ),
         ),
 
         // Average Settings
-        FilterChipList(
-          chips: [
-            _sortingChip(),
-            ToggleChip(
-              label: const Text("Afgerond"),
-              onChanged: (value) => setState(() => rounded = value),
-              initalValue: rounded,
-            ),
-            ToggleChip(
-              label: const Text("Maandelijkse trend"),
-              icon: const Icon(Icons.trending_up),
-              onChanged: (value) => setState(() => showTrend = value),
-              initalValue: showTrend,
-            )
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0).copyWith(top: 0),
+          child: FilterChipList(
+            chips: [
+              _sortingChip(),
+              ToggleChip(
+                label: const Text("Afgerond"),
+                onChanged: (value) => setState(() => rounded = value),
+                initalValue: rounded,
+              ),
+              ToggleChip(
+                label: const Text("Maandelijkse trend"),
+                icon: const Icon(Icons.trending_up),
+                onChanged: (value) => setState(() => showTrend = value),
+                initalValue: showTrend,
+              )
+            ],
+          ),
         ),
 
         // Averages
-        ValueListenableBuilder(
-            valueListenable: subjects,
-            builder: (context, value, child) {
-              return LayoutBuilder(builder: (context, constraints) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: value.isNotEmpty
-                      ? Wrap(
-                          children: value
-                              .map<Widget>((e) => CustomCard(
-                                    child: SubjectAverageTile(
-                                      subject: e,
-                                      big: true,
-                                      rounded: rounded,
-                                      showTrend: showTrend,
-                                    ),
-                                  ))
-                              .wrapOn(constraints,
-                                  insertOnOdd: const SizedBox()),
-                        )
-                      : const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(
-                            child: Text("Geen gemiddeldes gevonden 🤷"),
-                          ),
-                        ),
-                );
-              });
-            })
+        // ValueListenableBuilder(
+        //     valueListenable: subjects,
+        //     builder: (context, value, child) {
+        //       return LayoutBuilder(builder: (context, constraints) {
+        //         return Padding(
+        //           padding: const EdgeInsets.all(8.0),
+        //           child: value.isNotEmpty
+        //               ? Wrap(
+        //                   children: value
+        //                       .map<Widget>((e) => CustomCard(
+        //                             child: SubjectAverageTile(
+        //                               subject: e,
+        //                               big: true,
+        //                               rounded: rounded,
+        //                               showTrend: showTrend,
+        //                             ),
+        //                           ))
+        //                       .wrapOn(constraints,
+        //                           insertOnOdd: const SizedBox()),
+        //                 )
+        //               : const Padding(
+        //                   padding: EdgeInsets.all(16.0),
+        //                   child: Center(
+        //                     child: Text("Geen gemiddeldes gevonden 🤷"),
+        //                   ),
+        //                 ),
+        //         );
+        //       });
+        //     })
       ],
     );
   }

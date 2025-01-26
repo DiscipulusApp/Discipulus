@@ -486,10 +486,10 @@ extension GradeQueryEntension
         .findAll();
 
     return GradeChange(
-        avarageAfter:
-            (await cijferKolom((q) => q.kolomSoortEqualTo(1)).findAll())
-                .average,
-        averageBefore: grades.average);
+      avarageAfter:
+          (await cijferKolom((q) => q.kolomSoortEqualTo(1)).findAll()).average,
+      averageBefore: grades.average,
+    );
   }
 
   /// Gets the change in average from the last month
