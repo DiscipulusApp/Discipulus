@@ -17,6 +17,7 @@ class RichTextInput extends StatefulWidget {
     this.extraLeadingButton = const [],
     this.topWidget,
     this.onEmpty = const [],
+    this.placeholderText,
   });
 
   final FleatherController controller;
@@ -24,6 +25,7 @@ class RichTextInput extends StatefulWidget {
   final double? minHeight;
   final Widget? topWidget;
   final List<Widget> onEmpty;
+  final String? placeholderText;
 
   @override
   State<RichTextInput> createState() => _RichTextInputState();
@@ -70,26 +72,26 @@ class _RichTextInputState extends State<RichTextInput> {
                 controller: widget.controller,
                 leading: [
                   ...widget.extraLeadingButton,
-                  if (appSettings.geminiAPIKey != null)
-                    IconButton(
-                      onPressed: () async {
-                        String? email = await showGenerationDialog(context, "");
-                        if (email?.nullOnEmpty != null) {
-                          widget.controller.document.insert(
-                              0,
-                              parchmentHtml
-                                  .decode(
-                                    email!
-                                        .replaceAll("```hmtl\n", "")
-                                        .replaceAll("\n```", ""),
-                                  )
-                                  .toPlainText());
-                          checkIfEmpty();
-                          setState(() {});
-                        }
-                      },
-                      icon: const Icon(Icons.auto_awesome),
-                    )
+                  // if (appSettings.geminiAPIKey != null)
+                  //   IconButton(
+                  //     onPressed: () async {
+                  //       String? email = await showGenerationDialog(context, "");
+                  //       if (email?.nullOnEmpty != null) {
+                  //         widget.controller.document.insert(
+                  //             0,
+                  //             parchmentHtml
+                  //                 .decode(
+                  //                   email!
+                  //                       .replaceAll("```hmtl\n", "")
+                  //                       .replaceAll("\n```", ""),
+                  //                 )
+                  //                 .toPlainText());
+                  //         checkIfEmpty();
+                  //         setState(() {});
+                  //       }
+                  //     },
+                  //     icon: const Icon(Icons.auto_awesome),
+                  //   )
                 ],
               ),
             ],
@@ -99,7 +101,19 @@ class _RichTextInputState extends State<RichTextInput> {
           constraints: BoxConstraints(minHeight: widget.minHeight ?? 0),
           child: Stack(
             children: [
+              if (isEmpty && widget.placeholderText != null)
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      widget.placeholderText!,
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.outline),
+                    ),
+                  ),
+                ),
               FleatherTheme(
+                key: ValueKey("writerBlock"),
                 data: customFleatherTheme(context),
                 child: FleatherEditor(
                   spellCheckConfiguration: SpellCheckConfiguration(

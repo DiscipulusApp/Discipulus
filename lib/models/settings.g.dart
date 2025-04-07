@@ -146,10 +146,11 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
-    r'sufficientFrom': PropertySchema(
+    r'themeVariant': PropertySchema(
       id: 25,
-      name: r'sufficientFrom',
-      type: IsarType.double,
+      name: r'themeVariant',
+      type: IsarType.byte,
+      enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'useHandoff': PropertySchema(
       id: 26,
@@ -247,7 +248,7 @@ void _settingsSerialize(
   writer.writeBool(offsets[22], object.showCalcCardsInGlobalAverageList);
   writer.writeBool(offsets[23], object.showEmptySpaceBetweenLessons);
   writer.writeByte(offsets[24], object.subjectSortType.index);
-  writer.writeDouble(offsets[25], object.sufficientFrom);
+  writer.writeByte(offsets[25], object.themeVariant.index);
   writer.writeBool(offsets[26], object.useHandoff);
   writer.writeBool(offsets[27], object.useMaterialYou);
   writer.writeBool(offsets[28], object.workWeek);
@@ -303,7 +304,9 @@ Settings _settingsDeserialize(
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
           reader.readByteOrNull(offsets[24])] ??
       SubjectSortType.alphabetical;
-  object.sufficientFrom = reader.readDouble(offsets[25]);
+  object.themeVariant =
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[25])] ??
+          ThemeVariant.system;
   object.useHandoff = reader.readBool(offsets[26]);
   object.useMaterialYou = reader.readBoolOrNull(offsets[27]);
   object.workWeek = reader.readBool(offsets[28]);
@@ -384,7 +387,9 @@ P _settingsDeserializeProp<P>(
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
     case 25:
-      return (reader.readDouble(offset)) as P;
+      return (_SettingsthemeVariantValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          ThemeVariant.system) as P;
     case 26:
       return (reader.readBool(offset)) as P;
     case 27:
@@ -437,6 +442,30 @@ const _SettingssubjectSortTypeValueEnumMap = {
   3: SubjectSortType.amountOfGrades,
   4: SubjectSortType.magister,
   5: SubjectSortType.none,
+};
+const _SettingsthemeVariantEnumValueMap = {
+  'system': 0,
+  'tonalSpot': 1,
+  'fidelity': 2,
+  'monochrome': 3,
+  'neutral': 4,
+  'vibrant': 5,
+  'expressive': 6,
+  'content': 7,
+  'rainbow': 8,
+  'fruitSalad': 9,
+};
+const _SettingsthemeVariantValueEnumMap = {
+  0: ThemeVariant.system,
+  1: ThemeVariant.tonalSpot,
+  2: ThemeVariant.fidelity,
+  3: ThemeVariant.monochrome,
+  4: ThemeVariant.neutral,
+  5: ThemeVariant.vibrant,
+  6: ThemeVariant.expressive,
+  7: ThemeVariant.content,
+  8: ThemeVariant.rainbow,
+  9: ThemeVariant.fruitSalad,
 };
 
 Id _settingsGetId(Settings object) {
@@ -1553,66 +1582,56 @@ extension SettingsQueryFilter
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> sufficientFromEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> themeVariantEqualTo(
+      ThemeVariant value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sufficientFrom',
+        property: r'themeVariant',
         value: value,
-        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      sufficientFromGreaterThan(
-    double value, {
+      themeVariantGreaterThan(
+    ThemeVariant value, {
     bool include = false,
-    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'sufficientFrom',
+        property: r'themeVariant',
         value: value,
-        epsilon: epsilon,
       ));
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      sufficientFromLessThan(
-    double value, {
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> themeVariantLessThan(
+    ThemeVariant value, {
     bool include = false,
-    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'sufficientFrom',
+        property: r'themeVariant',
         value: value,
-        epsilon: epsilon,
       ));
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> sufficientFromBetween(
-    double lower,
-    double upper, {
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> themeVariantBetween(
+    ThemeVariant lower,
+    ThemeVariant upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'sufficientFrom',
+        property: r'themeVariant',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        epsilon: epsilon,
       ));
     });
   }
@@ -1982,15 +2001,15 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> sortBySufficientFrom() {
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByThemeVariant() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sufficientFrom', Sort.asc);
+      return query.addSortBy(r'themeVariant', Sort.asc);
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> sortBySufficientFromDesc() {
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByThemeVariantDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sufficientFrom', Sort.desc);
+      return query.addSortBy(r'themeVariant', Sort.desc);
     });
   }
 
@@ -2349,15 +2368,15 @@ extension SettingsQuerySortThenBy
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> thenBySufficientFrom() {
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByThemeVariant() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sufficientFrom', Sort.asc);
+      return query.addSortBy(r'themeVariant', Sort.asc);
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> thenBySufficientFromDesc() {
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByThemeVariantDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sufficientFrom', Sort.desc);
+      return query.addSortBy(r'themeVariant', Sort.desc);
     });
   }
 
@@ -2565,9 +2584,9 @@ extension SettingsQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Settings, Settings, QDistinct> distinctBySufficientFrom() {
+  QueryBuilder<Settings, Settings, QDistinct> distinctByThemeVariant() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sufficientFrom');
+      return query.addDistinctBy(r'themeVariant');
     });
   }
 
@@ -2768,9 +2787,10 @@ extension SettingsQueryProperty
     });
   }
 
-  QueryBuilder<Settings, double, QQueryOperations> sufficientFromProperty() {
+  QueryBuilder<Settings, ThemeVariant, QQueryOperations>
+      themeVariantProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sufficientFrom');
+      return query.addPropertyName(r'themeVariant');
     });
   }
 
@@ -2861,28 +2881,38 @@ const ProfileSettingsSchema = Schema(
       name: r'remindNotifications',
       type: IsarType.bool,
     ),
-    r'spotlightIndexAssignments': PropertySchema(
+    r'spoilerGradeNotfications': PropertySchema(
       id: 10,
+      name: r'spoilerGradeNotfications',
+      type: IsarType.bool,
+    ),
+    r'spotlightIndexAssignments': PropertySchema(
+      id: 11,
       name: r'spotlightIndexAssignments',
       type: IsarType.bool,
     ),
     r'spotlightIndexMessages': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'spotlightIndexMessages',
       type: IsarType.bool,
     ),
     r'spotlightIndexStudiewijzers': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'spotlightIndexStudiewijzers',
       type: IsarType.bool,
     ),
     r'startingPageIndex': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'startingPageIndex',
       type: IsarType.long,
     ),
+    r'sufficientFrom': PropertySchema(
+      id: 15,
+      name: r'sufficientFrom',
+      type: IsarType.double,
+    ),
     r'useAutoDND': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'useAutoDND',
       type: IsarType.bool,
     )
@@ -2944,11 +2974,13 @@ void _profileSettingsSerialize(
   writer.writeString(offsets[7], object.mailHeader);
   writer.writeBool(offsets[8], object.messagesNotifications);
   writer.writeBool(offsets[9], object.remindNotifications);
-  writer.writeBool(offsets[10], object.spotlightIndexAssignments);
-  writer.writeBool(offsets[11], object.spotlightIndexMessages);
-  writer.writeBool(offsets[12], object.spotlightIndexStudiewijzers);
-  writer.writeLong(offsets[13], object.startingPageIndex);
-  writer.writeBool(offsets[14], object.useAutoDND);
+  writer.writeBool(offsets[10], object.spoilerGradeNotfications);
+  writer.writeBool(offsets[11], object.spotlightIndexAssignments);
+  writer.writeBool(offsets[12], object.spotlightIndexMessages);
+  writer.writeBool(offsets[13], object.spotlightIndexStudiewijzers);
+  writer.writeLong(offsets[14], object.startingPageIndex);
+  writer.writeDouble(offsets[15], object.sufficientFrom);
+  writer.writeBool(offsets[16], object.useAutoDND);
 }
 
 ProfileSettings _profileSettingsDeserialize(
@@ -2976,11 +3008,13 @@ ProfileSettings _profileSettingsDeserialize(
   object.mailHeader = reader.readStringOrNull(offsets[7]);
   object.messagesNotifications = reader.readBool(offsets[8]);
   object.remindNotifications = reader.readBool(offsets[9]);
-  object.spotlightIndexAssignments = reader.readBool(offsets[10]);
-  object.spotlightIndexMessages = reader.readBool(offsets[11]);
-  object.spotlightIndexStudiewijzers = reader.readBool(offsets[12]);
-  object.startingPageIndex = reader.readLong(offsets[13]);
-  object.useAutoDND = reader.readBool(offsets[14]);
+  object.spoilerGradeNotfications = reader.readBool(offsets[10]);
+  object.spotlightIndexAssignments = reader.readBool(offsets[11]);
+  object.spotlightIndexMessages = reader.readBool(offsets[12]);
+  object.spotlightIndexStudiewijzers = reader.readBool(offsets[13]);
+  object.startingPageIndex = reader.readLong(offsets[14]);
+  object.sufficientFrom = reader.readDouble(offsets[15]);
+  object.useAutoDND = reader.readBool(offsets[16]);
   return object;
 }
 
@@ -3024,8 +3058,12 @@ P _profileSettingsDeserializeProp<P>(
     case 12:
       return (reader.readBool(offset)) as P;
     case 13:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 14:
+      return (reader.readLong(offset)) as P;
+    case 15:
+      return (reader.readDouble(offset)) as P;
+    case 16:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3701,6 +3739,16 @@ extension ProfileSettingsQueryFilter
   }
 
   QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      spoilerGradeNotficationsEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'spoilerGradeNotfications',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
       spotlightIndexAssignmentsEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -3782,6 +3830,72 @@ extension ProfileSettingsQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sufficientFromEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sufficientFrom',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sufficientFromGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sufficientFrom',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sufficientFromLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sufficientFrom',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sufficientFromBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sufficientFrom',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }

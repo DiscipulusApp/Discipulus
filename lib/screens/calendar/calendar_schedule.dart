@@ -203,27 +203,20 @@ class _CalendarScheduleScreenState extends State<_CalendarScheduleScreen> {
                             color: Theme.of(context).colorScheme.error),
                       ),
                     ),
-                  const Divider(),
-                  const ListTile(
-                    leading: Icon(Icons.replay),
-                    title: Text("Does not repeat"),
-                  ),
                 ],
               ),
             ),
-
             CustomCard(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               elevation: 0,
               child: ListTile(
                 leading: const Icon(Icons.location_on),
-                title: const Text("Add location"),
+                title: const Text("Voeg locatie toe"),
                 onTap: () => _setLocation(context),
                 subtitle:
                     _eventLocation.isNotEmpty ? Text(_eventLocation) : null,
               ),
             ),
-
             CustomCard(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               elevation: 0,
@@ -232,18 +225,6 @@ class _CalendarScheduleScreenState extends State<_CalendarScheduleScreen> {
                 minHeight: 200,
               ),
             ),
-            // ListTile(
-            //   title: const Text("Personal"),
-            //   trailing: Switch(
-            //     value: _isPersonalPlanning,
-            //     onChanged: (value) {
-            //       setState(() {
-            //         _calendarType =
-            //             value ? CalendarType.personal : CalendarType.schedule;
-            //       });
-            //     },
-            //   ),
-            // ),
             const SizedBox(height: 10),
           ],
         ),

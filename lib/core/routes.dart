@@ -6,9 +6,10 @@ import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/bronnen/external_source_list.dart';
+import 'package:discipulus/screens/calendar/calendar_week/calendar_week.dart';
 import 'package:discipulus/screens/calendar/experimental/calendar_stats.dart';
-import 'package:discipulus/screens/gemini/chat_screen.dart';
 import 'package:discipulus/screens/grades/grades_subject.dart';
+import 'package:discipulus/screens/introduction/post_login.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/screens/messages/message_details.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
@@ -22,7 +23,6 @@ import 'package:flutter/material.dart';
 import 'package:discipulus/screens/activities/activities.dart';
 import 'package:discipulus/screens/assignments/assignments.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
-import 'package:discipulus/screens/calendar/experimental/calendar_scroll/calendar_scroll.dart';
 import 'package:discipulus/screens/grades/grades.dart';
 import 'package:discipulus/screens/leermiddelen.dart';
 import 'package:discipulus/screens/messages/messages.dart';
@@ -174,10 +174,16 @@ List<DestinationSegement> destinations(List<Permission> permissions,
       if (kDebugMode || forceDebug)
         DestinationSegement(name: "Debug", destinations: [
           const Destination(
-            icon: Icon(Icons.abc_outlined),
-            filledIcon: Icon(Icons.abc),
-            label: "Calendar Scroll",
-            view: CalendarScrollView(),
+            icon: Icon(Icons.interests),
+            filledIcon: Icon(Icons.interests_outlined),
+            label: "Post Login",
+            view: PostLoginScreen(),
+          ),
+          const Destination(
+            icon: Icon(Icons.calendar_view_week_outlined),
+            filledIcon: Icon(Icons.calendar_view_week),
+            label: "Calendar Week",
+            view: CalendarWeekScreen(),
           ),
           const Destination(
             icon: Icon(Icons.screen_lock_landscape_outlined),
@@ -193,12 +199,6 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             label: "Calendar Statictics",
             view: CalendarStatistics(),
           ),
-          const Destination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            filledIcon: Icon(Icons.auto_awesome),
-            label: "Gemini",
-            view: GeminiChatScreen(),
-          )
         ])
     ].where((s) => s.destinations.isNotEmpty).toList();
 

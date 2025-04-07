@@ -7,8 +7,10 @@ import 'package:discipulus/api/magister_api_dart.dart';
 import 'package:discipulus/api/models/account.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/screens/introduction/loader_screen.dart';
+import 'package:discipulus/screens/introduction/post_login.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -238,6 +240,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         Layout.of(context)?.update();
         Layout.of(context)?.goToPageFromIndex(0);
         Layout.of(context)?.setState(() {});
+        PostLoginScreen().push(context);
       });
     } catch (e) {
       textState.value = "ERROR: $e";

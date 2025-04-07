@@ -8,6 +8,7 @@ import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/screens/gemini/email_generation.dart';
+import 'package:discipulus/screens/gemini/gemini.dart';
 import 'package:discipulus/screens/grades/widgets/text_input.dart';
 import 'package:discipulus/screens/messages/message_extensions.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
@@ -21,6 +22,7 @@ import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/chips/chips.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
+import 'package:discipulus/widgets/global/tiles/loading_button.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
@@ -114,15 +116,11 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
   MessagesFolder? concepts;
 
-  /// Gets triggered after the content of a field changes
-  void onChange() {
-    // Update handoff
-    if (Platform.isMacOS || Platform.isIOS) updateActivity();
-    setState(() {});
-  }
+  Timer? _debounceTimer; // Timer for debouncing FleatherController changes
 
   @override
   void initState() {
+    super.initState();
     // Set profile to the active one
     profile = activeProfile;
 
@@ -141,7 +139,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
                       : widget.message!.inhoud!
                   : widget.sharedMedia!.content!)
               : null,
-    )..addListener(onChange);
+    )..addListener(_onFleatherChange); // Use debounced listener
 
     // Set subject if needed
     subjectController = TextEditingController(
@@ -152,7 +150,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               : concept != null
                   ? widget.message?.onderwerp
                   : null,
-    )..addListener(onChange);
+    )..addListener(onChange); // Subject changes need immediate update
 
     // Set reciepients if needed
     ccReciepients = ValueNotifier([]);
@@ -174,7 +172,6 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               id: e.id, naam: e.naam, type: "bijlage", bron: e))
           .toList();
     }
-    super.initState();
 
     // Check if there were shared attachments
     if (widget.sharedMedia != null) {
@@ -187,10 +184,12 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           .then((value) => setState(() {}));
     }
 
+    // Listeners for immediate UI updates (e.g., send button state)
     reciepients.addListener(onChange);
     ccReciepients.addListener(onChange);
     bccReciepients.addListener(onChange);
 
+    // Initial state update
     onChange();
 
     Future(() async => concepts =
@@ -200,8 +199,10 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel(); // Cancel timer on dispose
+
     controller
-      ..removeListener(onChange)
+      ..removeListener(_onFleatherChange) // Remove the specific listener
       ..dispose();
     subjectController
       ..removeListener(onChange)
@@ -217,8 +218,30 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
     super.dispose();
   }
 
+  /// Debounced listener specifically for FleatherController changes
+  void _onFleatherChange() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      // Only call onChange (which calls setState) after a delay
+      if (mounted) {
+        onChange();
+      }
+    });
+  }
+
+  /// Gets triggered after the content of a field changes (or debounced Fleather change)
+  void onChange() {
+    // Update handoff (can still happen frequently, but setState is the main cost)
+    if (Platform.isMacOS || Platform.isIOS) updateActivity();
+    // This setState rebuilds the widget, ensure widget is still mounted
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   /// Updates the activity
   Future<void> updateActivity() async {
+    // No changes needed here, just ensure it's called reasonably
     await FlutterAppleHandoff.updateActivity(
       HandoffActivity.construct(
           profileUUID: profile.uuid,
@@ -250,7 +273,10 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
       attachmentsProgress
           .addAll(files.map((e) => UploadedAttachmentProgress(path: e.path)));
     }
-    setState(() {});
+    // Ensure UI updates happen within the mounted state
+    if (mounted) {
+      setState(() {});
+    }
 
     // Upload all the files
     await Future.wait(files.map((e) =>
@@ -265,14 +291,21 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           // and add it to the list of attachments
           attachmentsProgress.removeWhere((a) => a.path == e.path);
           uploadedAttachments = [...uploadedAttachments, value];
-          setState(() {});
+          // Ensure UI updates happen within the mounted state
+          if (mounted) {
+            setState(() {});
+          }
         }))).onError((error, stackTrace) {
       // When the upload fails, the files should be removed from the files-that-are-in-progress list
       attachmentsProgress
           .where((a) => files.map((e) => e.path).contains(a.path))
           .firstOrNull
           ?.failed = true;
-      return [];
+      // Ensure UI updates happen within the mounted state
+      if (mounted) {
+        setState(() {}); // Update UI to show failed state
+      }
+      return []; // Return empty list on error
     });
   }
 
@@ -296,7 +329,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
         for (var c in bccReciepients.value) c.toOntvanger
       ];
 
-      // concept!.bronnen.addAll(uploadedAttachments);
+      // concept!.bronnen.addAll(uploadedAttachments); // Handled by syncConcept
       concept!.inhoud = parchmentHtml.encode(controller.document);
       concept!.save();
       await concept!.syncConcept(
@@ -335,8 +368,10 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
       }
     }
 
-    // Close the sheet
-    Navigator.pop(context);
+    // Close the sheet if still mounted
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> applyConcept(Bericht appliedConcept) async {
@@ -344,16 +379,35 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
     // Applying concept
     concept = appliedConcept;
-    // Replace content
+    // Replace content - Create new controller to ensure update
+    // Dispose old one first
+    controller.removeListener(_onFleatherChange);
+    controller.dispose();
     controller = FleatherController(
-        document: parchmentHtml.decode(appliedConcept.inhoud ?? ""));
+        document: parchmentHtml.decode(appliedConcept.inhoud ?? ""))
+      ..addListener(_onFleatherChange); // Add listener to new controller
 
     // Replace subject
     subjectController.text = appliedConcept.onderwerp ?? "";
 
-    // Replace recievers
+    // Replace recievers - Use .value setter to notify listeners
     reciepients.value = [
       ...appliedConcept.ontvangers?.map((e) => Contact(
+              id: e.id,
+              achternaam: e.weergavenaam,
+              voorletters: e.weergavenaam.characters.first)) ??
+          []
+    ];
+    // Clear CC/BCC when applying concept unless they were part of it (add if needed)
+    ccReciepients.value = [
+      ...appliedConcept.kopieOntvangers?.map((e) => Contact(
+              id: e.id,
+              achternaam: e.weergavenaam,
+              voorletters: e.weergavenaam.characters.first)) ??
+          []
+    ];
+    bccReciepients.value = [
+      ...appliedConcept.blindeKopieOntvangers?.map((e) => Contact(
               id: e.id,
               achternaam: e.weergavenaam,
               voorletters: e.weergavenaam.characters.first)) ??
@@ -363,14 +417,16 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
     // Add attachments if needed
     uploadedAttachments = [
       ...uploadedAttachments.where((e) =>
-          e.path !=
-          null), // Attachments that have just been uploaded have a non-null path
+          e.path != null), // Keep attachments that were just uploaded by user
       ...appliedConcept.bronnen.map((e) =>
           UploadedAttachment(id: e.id, naam: e.naam, type: "bijlage", bron: e))
     ];
 
     // Is important
     hasPriority = appliedConcept.heeftPrioriteit;
+
+    // Trigger UI update
+    onChange();
   }
 
   Widget _buildHeader() {
@@ -384,21 +440,20 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ValueListenableBuilder<List<Contact>>(
-              valueListenable: reciepients,
-              builder: (context, value, widget) => FilledButton.icon(
-                onPressed: saveAsConcept ||
-                        (reciepients.value.isNotEmpty &&
-                            subjectController.text != "")
-                    ? () => sendMessage()
-                    : null,
-                icon: saveAsConcept
-                    ? const Icon(Icons.save)
-                    : const Icon(Icons.send),
-                label: saveAsConcept
-                    ? const Text("Opslaan")
-                    : const Text("Versturen"),
-              ),
+            // REMOVED ValueListenableBuilder
+            FilledButton.icon(
+              // Condition is evaluated on each build triggered by setState
+              onPressed: saveAsConcept ||
+                      (reciepients.value.isNotEmpty &&
+                          subjectController.text.isNotEmpty) // Use isNotEmpty
+                  ? () => sendMessage()
+                  : null,
+              icon: saveAsConcept
+                  ? const Icon(Icons.save)
+                  : const Icon(Icons.send),
+              label: saveAsConcept
+                  ? const Text("Opslaan")
+                  : const Text("Versturen"),
             ),
           ],
         )
@@ -420,17 +475,19 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
       return CustomCard(
         elevation: 0,
         child: SearchContactsButton(
-          callback: setState,
+          callback: setState, // Pass setState directly
           selectedContacts: contacts,
           builder: (p0, controller) => ValueListenableBuilder<List<Contact>>(
               valueListenable: contacts,
-              builder: (context, value, widget) {
+              builder: (context, value, childWidget) {
+                // Renamed 'widget'
                 return ListTile(
                   leading: leading ?? const Icon(Icons.mail_outline_rounded),
                   trailing: const Icon(Icons.person_add),
                   subtitle: value.isNotEmpty
                       ? Wrap(
                           spacing: 4,
+                          runSpacing: 4, // Added runSpacing for better wrap
                           children: [
                             for (var e in value) ContactBadge.fromContact(e)
                           ],
@@ -447,14 +504,17 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
     return CustomAnimatedSize(
       child: Table(
-        columnWidths: [
-          const FlexColumnWidth(),
-          const FixedColumnWidth(72),
-        ].asMap(),
+        columnWidths: const {
+          // Made const
+          0: FlexColumnWidth(),
+          1: FixedColumnWidth(72),
+        },
+        // Removed .asMap() as it's redundant with explicit keys
         children: [
           TableRow(
             children: [
               Column(
+                mainAxisSize: MainAxisSize.min, // Added for tighter layout
                 children: [
                   buildContactTile(reciepients),
                   if (showExtraReciepientsField)
@@ -474,8 +534,12 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               TableCell(
                 verticalAlignment: TableCellVerticalAlignment.fill,
                 child: Card(
+                  margin: const EdgeInsets.only(
+                      left: 8), // Added margin for spacing
                   color: Theme.of(context).colorScheme.primaryContainer,
                   child: InkWell(
+                    borderRadius:
+                        BorderRadius.circular(12), // Match card radius
                     onTap: () => setState(() {
                       showExtraReciepientsField = !showExtraReciepientsField;
                     }),
@@ -495,15 +559,16 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
   }
 
   Widget _buildTextArea() {
+    // No changes needed here, RichTextInput handles its own state.
     return RichTextInput(
       minHeight: 200,
       extraLeadingButton: [
-        _selectConcepts(
-          builder: (_, controller) => IconButton(
-            onPressed: () => controller.openView(),
-            icon: const Icon(Icons.edit_document),
-          ),
-        )
+        // _selectConcepts(
+        //   builder: (_, controller) => IconButton(
+        //     onPressed: () => controller.openView(),
+        //     icon: const Icon(Icons.edit_document),
+        //   ),
+        // )
       ],
       controller: controller,
       topWidget: CustomCard(
@@ -513,6 +578,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           child: _buildAttachmentTiles(),
         ),
       ),
+      placeholderText: "Of begin hier met schrijven...",
       onEmpty: [
         FilledButton.icon(
           onPressed: (!profile.settings.autoInsertHeaderAndFooter ||
@@ -535,11 +601,18 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
                     content = "$content\n${profile.settings.mailFooter}";
 
-                    controller.document.insert(0, content);
-                    setState(() {});
+                    // Use replace to avoid issues if text already exists
+                    final currentLength = controller.document.length;
+                    controller.replaceText(0, currentLength, content,
+                        selection:
+                            TextSelection.collapsed(offset: content.length));
+
+                    // No need for setState here, controller listener will handle it (debounced)
                   } else {
                     // Redirect to settings page
-                    const MailSettingsPage().push(context);
+                    if (mounted) {
+                      const MailSettingsPage().push(context);
+                    }
                   }
                 }
               : null,
@@ -547,31 +620,36 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           icon: const Icon(Icons.short_text),
         ),
         _selectConcepts(
-          builder: (_, controller) => FilledButton.tonalIcon(
-            onPressed: () => controller.openView(),
+          builder: (_, conceptController) => FilledButton.tonalIcon(
+            // Renamed controller
+            onPressed: () => conceptController.openView(),
             label: const Text("Gebruik concept"),
             icon: const Icon(Icons.edit_document),
           ),
         ),
-        FilledButton.tonalIcon(
-          onPressed: () async {
-            String? email = await showGenerationDialog(context, "");
-            if (email?.nullOnEmpty != null) {
-              controller.document.insert(
-                  0,
-                  parchmentHtml
-                      .decode(
-                        email!
-                            .replaceAll("```hmtl\n", "")
-                            .replaceAll("\n```", ""),
-                      )
-                      .toPlainText());
-              setState(() {});
-            }
-          },
-          label: const Text("Genereer email"),
-          icon: const Icon(Icons.auto_awesome),
-        ),
+        if (GeminiSettings.apiKey != null) // Check added for Gemini button
+          FilledButton.tonalIcon(
+            onPressed: () async {
+              String? email = await showGenerationDialog(context, "");
+              if (email?.nullOnEmpty != null) {
+                final decoded = parchmentHtml.decode(
+                  email!
+                      .replaceAll(
+                          "```hmtl\n", "") // Consider more robust HTML cleaning
+                      .replaceAll("\n```", ""),
+                );
+                // Insert at current cursor position or beginning
+                final index = controller.selection.baseOffset;
+                final length = controller.selection.extentOffset - index;
+                controller.replaceText(index, length, decoded.toPlainText(),
+                    selection: TextSelection.collapsed(
+                        offset: index + decoded.toPlainText().length));
+                // No need for setState here, controller listener will handle it (debounced)
+              }
+            },
+            label: const Text("Genereer email"),
+            icon: const Icon(Icons.auto_awesome),
+          ),
       ],
     );
   }
@@ -585,10 +663,11 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           hintText: "Voeg titel toe",
           border: InputBorder.none,
           hintStyle: TextStyle(
-            fontSize: 24.0,
+            fontSize: 24.0, // Consider using Theme.of(context).textTheme
           ),
         ),
         style: const TextStyle(
+          // Consider using Theme.of(context).textTheme
           fontSize: 24.0,
         ),
         controller: subjectController,
@@ -598,12 +677,14 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
   }
 
   Widget _buildSelectionChips() {
-    return Padding(
+    // Wrap with SingleChildScrollView for horizontal overflow
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
           .copyWith(left: 20, bottom: 0),
       child: Row(
-        spacing: 8,
-        mainAxisAlignment: MainAxisAlignment.start,
+        // No 'spacing' property on Row, use Padding or SizedBox between chips
+        // mainAxisAlignment: MainAxisAlignment.start, // Default for Row
         children: [
           DropDownChip<Profile>(
             defaultTitle: "Profiel",
@@ -621,14 +702,17 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               ];
             },
             onSelected: (item) {
-              if (widget.verzendoptie == VerzendOptie.standaard) {
+              if (widget.verzendoptie == VerzendOptie.standaard &&
+                  item != null) {
                 setState(() {
-                  profile = item!.item;
+                  profile = item.item;
+                  // Clear attachments specific to the previous profile if necessary
+                  // uploadedAttachments.clear(); // Decide if this is desired behavior
                 });
-                uploadedAttachments.clear();
               }
             },
           ),
+          const SizedBox(width: 8), // Spacing
           ToggleChip(
             initalValue: hasPriority,
             icon: const Icon(Icons.label_important),
@@ -639,6 +723,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               });
             },
           ),
+          const SizedBox(width: 8), // Spacing
           ToggleChip(
             initalValue: saveAsConcept,
             icon: const Icon(Icons.edit_document),
@@ -649,20 +734,76 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               });
             },
           ),
+          if (GeminiSettings.apiKey != null) ...[
+            const SizedBox(width: 8), // Spacing
+            _buildSubjectGenerationButton()
+          ]
         ],
       ),
     );
   }
 
+  Widget _buildSubjectGenerationButton() {
+    return LoadingButton(
+      future: () async {
+        final subject = await generateEmailSubject(
+          parchmentHtml.encode(controller.document),
+        );
+        if (mounted) {
+          subjectController.text = subject;
+          // No need for setState, controller listener handles it
+        }
+      },
+      child: (isLoading, onTap) {
+        // Check plain text for emptiness
+        bool isEmpty = controller.document.toPlainText().trim().isEmpty;
+        return ActionChip(
+          side: isLoading || isEmpty
+              ? BorderSide.none // Use none instead of null
+              : BorderSide(
+                  color: Theme.of(context).colorScheme.tertiaryContainer),
+          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+          avatar: isLoading
+              ? SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2, // Thinner indicator
+                    color: Theme.of(context).colorScheme.onTertiaryContainer,
+                  ),
+                )
+              : Icon(
+                  Icons.auto_awesome,
+                  size: 18, // Smaller icon
+                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                ),
+          label: Text(
+            "Genereer titel",
+            style: TextStyle(
+              // Ensure text color matches icon
+              color: Theme.of(context).colorScheme.onTertiaryContainer,
+            ),
+          ),
+          onPressed: isLoading || isEmpty ? null : onTap,
+        );
+      },
+    );
+  }
+
   Widget _buildAttachmentTiles() {
+    // No changes needed here, AttachmentTileList handles its own state updates via ValueNotifiers.
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: AttachmentTileList(
         attachmentsProgress: attachmentsProgress,
         uploadedAttachments: uploadedAttachments,
         onAttachmentUploaded: (attachment) {
+          // This callback might trigger a setState in the parent if needed,
+          // but currently it seems handled internally or by other triggers.
           uploadedAttachments = [...uploadedAttachments, attachment];
-          setState(() {});
+          if (mounted)
+            setState(
+                () {}); // Explicitly update if list change needs UI rebuild
         },
         onAttachmentRemoved: (attachment) {
           if (attachment.path == null) {
@@ -675,11 +816,13 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
         },
         onRetry: (attachment) {
           attachment.failed = false;
+          // Ensure UI updates to remove failed state immediately
+          if (mounted) setState(() {});
           uploadAttachment([File(attachment.path)], setState,
               retryFailed: true);
         },
         uploadAttachment: (files) {
-          uploadAttachment(files, setState).then((value) => setState(() {}));
+          uploadAttachment(files, setState); // No .then needed here
         },
       ),
     );
@@ -687,45 +830,54 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      return DropRegion(
-        formats: Formats.standardFormats,
-        onPerformDrop: (PerformDropEvent event) async {
-          for (var e in event.session.items) {
-            e.dataReader?.getValue(
-              Formats.fileUri,
-              (value) {
-                uploadAttachment([File(value?.toFilePath() ?? "")], setState)
-                    .then((value) {
-                  if (mounted) setState(() {});
-                });
-              },
-            );
-          }
-        },
-        onDropOver: (DropOverEvent event) => DropOperation.copy,
-        child: ListView(
-          controller: widget.controller,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: _buildHeader(),
-            ),
-            _buildSubjectEditor(),
-            _buildSelectionChips(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildReceipientsTile(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CustomCard(elevation: 0, child: _buildTextArea()),
-            ),
-            const BottomSheetBottomContentPadding()
-          ],
-        ),
-      );
-    });
+    // Using ListView directly is fine here
+    return DropRegion(
+      formats: Formats.standardFormats,
+      onPerformDrop: (PerformDropEvent event) async {
+        for (var e in event.session.items) {
+          e.dataReader?.getValue(
+            Formats.fileUri,
+            (value) {
+              uploadAttachment([File(value?.toFilePath() ?? "")], setState)
+                  .then((value) {
+                if (mounted) setState(() {});
+              });
+            },
+          );
+        }
+      },
+      onDropOver: (DropOverEvent event) {
+        // Check if any item contains a file URI
+        final hasFile =
+            event.session.items.any((item) => item.canProvide(Formats.fileUri));
+        return hasFile ? DropOperation.copy : DropOperation.none;
+      },
+      child: ListView(
+        controller: widget.controller,
+        padding: EdgeInsets.zero, // Remove default padding if not needed
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: _buildHeader(),
+          ),
+          _buildSubjectEditor(),
+          _buildSelectionChips(), // Already wrapped in SingleChildScrollView
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildReceipientsTile(),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            // Wrap RichTextInput in a Card for consistent styling
+            child: CustomCard(
+                elevation: 0,
+                margin: EdgeInsets.zero, // Remove margin if padding handles it
+                child: _buildTextArea()),
+          ),
+          const BottomSheetBottomContentPadding() // Ensure consistent bottom padding
+        ],
+      ),
+    );
   }
 
   Widget _selectConcepts(
@@ -733,47 +885,39 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
     return SearchAnchor(
       builder: builder,
       suggestionsBuilder: (context, anchorController) async {
-        return ((await concepts?.berichten
-                        .filter()
-                        .group(
-                          (q) => q
-                              .inhoudContains(anchorController.text,
-                                  caseSensitive: false)
-                              .or()
-                              .onderwerpContains(anchorController.text,
-                                  caseSensitive: false),
-                        )
-                        .sortByVerzondenOpDesc()
-                        .findAll())
-                    ?.map<Widget>(
-                  (e) => GestureDetector(
-                    onTap: () async {
-                      await applyConcept(e);
+        final query = anchorController.text;
+        if (concepts == null || query.isEmpty)
+          return []; // Handle null concepts or empty query
 
-                      // Update
-                      setState(() {});
+        final results = await concepts!.berichten
+            .filter()
+            .group(
+              (q) => q
+                  .inhoudContains(query, caseSensitive: false)
+                  .or()
+                  .onderwerpContains(query, caseSensitive: false),
+            )
+            .sortByVerzondenOpDesc()
+            .findAll();
 
-                      // Close view
-                      anchorController.closeView("");
-                    },
-                    child: AbsorbPointer(
-                      child: MessageTile(bericht: e),
-                    ),
-                  ),
-                ) ??
-                [])
-            .toList()
-          ..insertAll(0, [
-            ListTile(
-              title: const Text("Opslaan"),
-              subtitle: const Text("Sla huidig bericht op als concept"),
-              trailing: const Icon(Icons.navigate_next),
-              leading: const Icon(Icons.save),
-              onTap: () => sendMessage(asConcept: true)
-                  .then((value) => anchorController.closeView("saved")),
-            ),
-            const Divider()
-          ]);
+        return results
+            .map<Widget>(
+              (e) => GestureDetector(
+                onTap: () async {
+                  // Close view immediately for better UX
+                  anchorController
+                      .closeView(e.onderwerp); // Pass something back?
+                  // Apply concept after closing
+                  await applyConcept(e);
+                  // State update is handled within applyConcept or its listeners
+                },
+                // Use AbsorbPointer to prevent inner tile taps
+                child: AbsorbPointer(
+                  child: MessageTile(bericht: e),
+                ),
+              ),
+            )
+            .toList(); // Removed unnecessary intermediate list/[]
       },
     );
   }

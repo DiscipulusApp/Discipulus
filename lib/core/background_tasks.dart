@@ -13,9 +13,7 @@ class BackgroundRefresh {
         constraints: Constraints(networkType: NetworkType.connected),
         frequency: const Duration(minutes: 30),
       );
-    } else if (Platform.isIOS &&
-        (await Workmanager().checkBackgroundRefreshPermission()) ==
-            BackgroundRefreshPermissionState.available) {
+    } else if (Platform.isIOS) {
       Workmanager().registerProcessingTask(
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
@@ -226,7 +224,9 @@ Future<void> _quickRefreshGrades(
           if (await isar.profiles.count() >= 2) 'voor ${profile.name}'
         ].join(" "),
         body: gradesAfter.length == 1
-            ? "Er is een nieuw cijfer van ${subjectNames.first} beschikbaar"
+            ? profile.settings.spoilerGradeNotfications
+                ? "Je hebt een ${(await schoolyear?.grades.filter().sortByDatumIngevoerdDesc().findFirst())!.grade.displayNumber()} voor ${subjectNames.first} gehaald"
+                : "Er is een nieuw cijfer van ${subjectNames.first} beschikbaar"
             : "Er zijn ${gradesAfter.length} nieuwe cijfers beschikbaar van ${subjectNames.toList().formattedJoin}",
         payload: NotificationPayload(
           profile: profile,

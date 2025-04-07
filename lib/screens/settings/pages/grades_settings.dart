@@ -2,6 +2,7 @@ import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
+import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -80,8 +81,8 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
           subtitle: const Text("Stel in welk cijfer nog net voldoende is"),
           hintText: appSettings.sufficientFrom.displayNumber(),
           onFocusChange: (value) {
-            setState(() => appSettings
-              ..sufficientFrom =
+            setState(() => activeProfile
+              ..settings.sufficientFrom =
                   double.tryParse(value) ?? appSettings.sufficientFrom
               ..save());
           },

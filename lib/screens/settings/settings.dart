@@ -151,9 +151,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class ProfileChangeWidget extends StatelessWidget {
-  const ProfileChangeWidget({super.key, required this.updateState});
+  const ProfileChangeWidget(
+      {super.key, required this.updateState, this.showAddProfileButton = true});
 
   final void Function(VoidCallback fn) updateState;
+  final bool showAddProfileButton;
 
   @override
   Widget build(BuildContext context) {
@@ -221,10 +223,12 @@ class ProfileChangeWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                  IconButton.filledTonal(
-                    onPressed: () => const CreateAccountScreen().push(context),
-                    icon: const Icon(Icons.person_add),
-                  )
+                  if (showAddProfileButton)
+                    IconButton.filledTonal(
+                      onPressed: () =>
+                          const CreateAccountScreen().push(context),
+                      icon: const Icon(Icons.person_add),
+                    )
                 ],
               ),
             ),

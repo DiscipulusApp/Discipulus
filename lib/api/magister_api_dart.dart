@@ -172,7 +172,7 @@ class Magister {
                   uuid: uuid,
                   SnackBar(
                     content: Text(
-                      error.response?.data["omschrijving"] ??
+                      error.response?.data?["omschrijving"] ??
                           error.message ??
                           "Whoops, er ging wat fout",
                       maxLines: 2,

@@ -1,11 +1,8 @@
 import 'package:discipulus/api/models/subjects.dart';
 import 'package:discipulus/main.dart';
-import 'package:discipulus/screens/gemini/chat_screen.dart';
-import 'package:discipulus/screens/gemini/instructions.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
-import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/chips/chip_filter.dart';
@@ -294,21 +291,6 @@ class _GradeInformationState extends State<GradeInformation> {
                             isar.writeTxnSync(() => isar.grades
                                 .putSync(widget.grade..isEnabled = value));
                           })),
-                if (appSettings.geminiAPIKey != null)
-                  ListTile(
-                    leading: const Icon(Icons.chat_bubble),
-                    title: const Text("AI therapeut"),
-                    subtitle: const Text(
-                        "Zo geschrokken van je resultaat? Praat me een ai therapeut!"),
-                    trailing: IconButton.filledTonal(
-                      onPressed: () async => GeminiChatScreen(
-                        systemInstruction:
-                            await GeminiInstructions.therapistFromGrade(
-                                widget.grade),
-                      ).push(context),
-                      icon: const Icon(Icons.start),
-                    ),
-                  )
               ],
             )),
       ].map((e) => Padding(
@@ -408,7 +390,7 @@ class _GradeInformationState extends State<GradeInformation> {
               ListTile(
                 leading: const Icon(Icons.arrow_downward),
                 title: Text(
-                    "Dit is het laagste cijfer in ${widget.grade.datumIngevoerd!.difference(gradeStatistics!.lowestSinceGlobal!).inDays} dagen"),
+                    "Dit is het laagste cijfer in ${widget.grade.datumIngevoerd!.difference(gradeStatistics!.lowestSinceGlobal!).toName}"),
               ),
             if (gradeStatistics?.lowestSinceSubjectGlobal != null &&
                 gradeStatistics?.lowestSinceSubjectGlobal !=
@@ -418,7 +400,7 @@ class _GradeInformationState extends State<GradeInformation> {
               ListTile(
                 leading: const Icon(Icons.arrow_downward),
                 title: Text(
-                    "Dit is het laagste cijfer voor ${widget.grade.subject.value!.naam} in ${widget.grade.datumIngevoerd!.difference(gradeStatistics!.lowestSinceSubjectGlobal!).toName} dagen"),
+                    "Dit is het laagste cijfer voor ${widget.grade.subject.value!.naam} in ${widget.grade.datumIngevoerd!.difference(gradeStatistics!.lowestSinceSubjectGlobal!).toName}"),
               ),
           ]
             .map(

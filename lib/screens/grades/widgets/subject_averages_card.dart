@@ -63,13 +63,14 @@ class _AveragesTileState extends State<AveragesTile> {
           child: BarChartAverages(
             subjects: widget.subjects,
             rounded: rounded,
-            showTrend: showTrend,
+            showTrend: showTrend &&
+                appSettings.subjectSortType != SubjectSortType.amountOfGrades,
           ),
         ),
 
         // Average Settings
         Padding(
-          padding: const EdgeInsets.all(8.0).copyWith(top: 0),
+          padding: const EdgeInsets.all(8.0).copyWith(top: 0, bottom: 0),
           child: FilterChipList(
             chips: [
               _sortingChip(),
@@ -81,10 +82,27 @@ class _AveragesTileState extends State<AveragesTile> {
               ToggleChip(
                 label: const Text("Maandelijkse trend"),
                 icon: const Icon(Icons.trending_up),
-                onChanged: (value) => setState(() => showTrend = value),
-                initalValue: showTrend,
+                onChanged: appSettings.subjectSortType !=
+                        SubjectSortType.amountOfGrades
+                    ? (value) => setState(() => showTrend = value)
+                    : null,
+                initalValue: showTrend &&
+                    appSettings.subjectSortType !=
+                        SubjectSortType.amountOfGrades,
               )
             ],
+          ),
+        ),
+
+        // Information badge
+        Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 8).copyWith(bottom: 8),
+          child: ListTile(
+            dense: true,
+            leading: Icon(Icons.info_outline),
+            title: Text(
+                "Klik op een vak om cijfers te berekenen of meer informatie te zien."),
           ),
         ),
 

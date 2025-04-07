@@ -19,7 +19,7 @@ import 'package:discipulus/api/models/subjects.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 
-// Cpre
+// Core
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
@@ -179,9 +179,17 @@ class MainAppState extends State<MainApp> {
 
         (ColorScheme light, ColorScheme dark) generateDynamicColourSchemes(
             ColorScheme lightDynamic, ColorScheme darkDynamic) {
-          var lightBase = ColorScheme.fromSeed(seedColor: lightDynamic.primary);
+          var lightBase = ColorScheme.fromSeed(
+            seedColor: lightDynamic.primary,
+            dynamicSchemeVariant: appSettings.themeVariant.variant ??
+                DynamicSchemeVariant.tonalSpot,
+          );
           var darkBase = ColorScheme.fromSeed(
-              seedColor: darkDynamic.primary, brightness: Brightness.dark);
+            seedColor: darkDynamic.primary,
+            brightness: Brightness.dark,
+            dynamicSchemeVariant: appSettings.themeVariant.variant ??
+                DynamicSchemeVariant.tonalSpot,
+          );
 
           var lightAdditionalColours = extractAdditionalColours(lightBase);
           var darkAdditionalColours = extractAdditionalColours(darkBase);
@@ -199,12 +207,13 @@ class MainAppState extends State<MainApp> {
         if (lightDynamic != null &&
             darkDynamic != null &&
             (appSettings.useMaterialYou ?? true)) {
-          //Using Material You colors set by Android S+ devices
+          // Using Material You colors set by Android S+ devices
           appSettings
             ..useMaterialYou = true
             ..save();
-          (lightColorScheme, darkColorScheme) =
-              generateDynamicColourSchemes(lightDynamic, darkDynamic);
+          (lightColorScheme, darkColorScheme) = Platform.isAndroid
+              ? generateDynamicColourSchemes(lightDynamic, darkDynamic)
+              : (lightDynamic, darkDynamic);
         } else {
           Color seedColor =
               (appSettings.useMaterialYou ?? true) && accentColor != null
@@ -214,10 +223,14 @@ class MainAppState extends State<MainApp> {
           // Not using Material You colors set by Android S+ devices
           lightColorScheme = ColorScheme.fromSeed(
             seedColor: seedColor,
+            dynamicSchemeVariant: appSettings.themeVariant.variant ??
+                DynamicSchemeVariant.tonalSpot,
           ).harmonized();
           darkColorScheme = ColorScheme.fromSeed(
             seedColor: seedColor,
             brightness: Brightness.dark,
+            dynamicSchemeVariant: appSettings.themeVariant.variant ??
+                DynamicSchemeVariant.tonalSpot,
           ).harmonized();
         }
 
@@ -240,11 +253,11 @@ class MainAppState extends State<MainApp> {
             colorScheme: colorScheme,
             useMaterial3: true,
             splashFactory: InkSparkle.splashFactory,
-            pageTransitionsTheme: const PageTransitionsTheme(
+            pageTransitionsTheme: PageTransitionsTheme(
               builders: {
                 TargetPlatform.android: SharedAxisPageTransitionsBuilder(
                   transitionType: SharedAxisTransitionType.scaled,
-                )
+                ),
               },
             ),
             snackBarTheme:

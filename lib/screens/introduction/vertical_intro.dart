@@ -31,7 +31,7 @@ class IntroBulletPoint {
   });
 }
 
-extension on List<IntroBulletPoint> {
+extension IntroBulletPointExt on List<IntroBulletPoint> {
   List<Widget> get dislayCards {
     return [
       for (var point in indexed)

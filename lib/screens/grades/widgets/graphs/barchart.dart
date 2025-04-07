@@ -294,7 +294,7 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(8),
                         ),
-                        color: entry.color?.call(entry.value).barColor ??
+                        color: entry.color?.call(entry.baseValue).barColor ??
                             Theme.of(context).colorScheme.primary,
                         rodStackItems: [
                           if (entry.extraValue != null)
@@ -306,7 +306,7 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                                   ? entry.baseValue
                                   : entry.baseValue + entry.extraValue!,
                               entry.extraValueColor?.call(entry.extraValue!) ??
-                                  entry.color?.call(entry.value).barColor ??
+                                  entry.color?.call(entry.baseValue).barColor ??
                                   Theme.of(context).colorScheme.primary,
                             )
                         ],
@@ -332,42 +332,50 @@ class CustomSideTile extends StatelessWidget {
     return GestureDetector(
       onTap: entry.onTap,
       child: SideTitleWidget(
-        axisSide: AxisSide.bottom,
+        meta: TitleMeta(
+          min: 5,
+          max: 50,
+          parentAxisSize: 10,
+          axisPosition: 0,
+          appliedInterval: 0,
+          sideTitles: SideTitles(),
+          formattedValue: "",
+          axisSide: AxisSide.bottom,
+          rotationQuarterTurns: 1,
+        ),
+        // axisSide: AxisSide.bottom,
         space: 0,
         fitInside: SideTitleFitInsideData.disable(),
-        child: RotatedBox(
-          quarterTurns: -1,
-          child: AnimatedContainer(
-            curve: CustomAnimatedSize.style().curve!,
-            duration: Durations.short3,
-            height: 24,
-            alignment: Alignment.centerLeft,
-            color: entry.color?.call(entry.value).barColor ??
-                Theme.of(context).colorScheme.primary,
-            child: Padding(
-              padding: EdgeInsets.only(left: entry.indicator != null ? 4 : 8),
-              child: CustomAnimatedSize(
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  if (entry.indicator != null)
-                    Icon(
-                      entry.indicator,
-                      color: entry.color?.call(entry.value).textColor ??
+        child: AnimatedContainer(
+          curve: CustomAnimatedSize.style().curve!,
+          duration: Durations.short3,
+          height: 24,
+          alignment: Alignment.centerLeft,
+          color: entry.color?.call(entry.baseValue).barColor ??
+              Theme.of(context).colorScheme.primary,
+          child: Padding(
+            padding: EdgeInsets.only(left: entry.indicator != null ? 4 : 8),
+            child: CustomAnimatedSize(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (entry.indicator != null)
+                  Icon(
+                    entry.indicator,
+                    color: entry.color?.call(entry.baseValue).textColor ??
+                        Theme.of(context).colorScheme.onPrimary,
+                    size: 18,
+                  ),
+                ElasticAnimation(
+                  child: Text(
+                    key: ValueKey(entry.name),
+                    entry.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: entry.color?.call(entry.baseValue).textColor ??
                           Theme.of(context).colorScheme.onPrimary,
-                      size: 18,
-                    ),
-                  ElasticAnimation(
-                    child: Text(
-                      key: ValueKey(entry.name),
-                      entry.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: entry.color?.call(entry.value).textColor ??
-                            Theme.of(context).colorScheme.onPrimary,
-                      ),
                     ),
                   ),
-                ]),
-              ),
+                ),
+              ]),
             ),
           ),
         ),

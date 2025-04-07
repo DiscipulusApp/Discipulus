@@ -92,6 +92,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
     }
     setState(() {});
     await event.sync();
+    await refresh();
+    await widget.callback?.call();
   }
 
   void Function()? showLocationChanger() {
@@ -199,6 +201,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
                           event
                             ..infoType = item?.item
                             ..save();
+                          setState(() {});
+
                           await event.sync();
                           await refresh();
 

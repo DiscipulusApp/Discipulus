@@ -55,11 +55,13 @@ Future<T?> showScrollableModalBottomSheet<T>(
       shape: Theme.of(context).bottomSheetTheme.shape,
       builder: (context) => ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
+          physics: const ClampingScrollPhysics(),
           dragDevices: {
             PointerDeviceKind.touch,
             PointerDeviceKind.mouse,
             PointerDeviceKind.trackpad,
-            PointerDeviceKind.unknown
+            PointerDeviceKind.unknown,
+            PointerDeviceKind.stylus
           },
         ),
         child: child,
@@ -81,11 +83,13 @@ Future<T?> showScrollableModalBottomSheet<T>(
       shape: Theme.of(context).bottomSheetTheme.shape,
       (context) => ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
+          physics: const ClampingScrollPhysics(),
           dragDevices: {
             PointerDeviceKind.touch,
             PointerDeviceKind.mouse,
             PointerDeviceKind.trackpad,
-            PointerDeviceKind.unknown
+            PointerDeviceKind.unknown,
+            PointerDeviceKind.stylus
           },
         ),
         child: SafeArea(
