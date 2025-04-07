@@ -6,7 +6,7 @@ import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/bronnen/external_source_list.dart';
-import 'package:discipulus/screens/calendar/calendar_week/calendar_week.dart';
+// import 'package:discipulus/screens/calendar/calendar_week/calendar_week.dart';
 import 'package:discipulus/screens/calendar/experimental/calendar_stats.dart';
 import 'package:discipulus/screens/grades/grades_subject.dart';
 import 'package:discipulus/screens/introduction/post_login.dart';
@@ -179,12 +179,12 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             label: "Post Login",
             view: PostLoginScreen(),
           ),
-          const Destination(
-            icon: Icon(Icons.calendar_view_week_outlined),
-            filledIcon: Icon(Icons.calendar_view_week),
-            label: "Calendar Week",
-            view: CalendarWeekScreen(),
-          ),
+          // const Destination(
+          //   icon: Icon(Icons.calendar_view_week_outlined),
+          //   filledIcon: Icon(Icons.calendar_view_week),
+          //   label: "Calendar Week",
+          //   view: CalendarWeekScreen(),
+          // ),
           const Destination(
             icon: Icon(Icons.screen_lock_landscape_outlined),
             filledIcon: Icon(Icons.screen_lock_landscape),

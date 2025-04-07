@@ -431,7 +431,7 @@ Future<void> scheduleReminders(Profile profile) async {
               ? "Je hebt volgende week één toets"
               : "Je hebt volgende week ${events.length} toets(en)",
           body: events.length == 1
-              ? "Je hebt een toets op ${events.first.start.dayName} van ${events.first.subject.value!.naam.capitalized}"
+              ? "Je hebt een toets op ${events.first.start.dayName} van ${events.first.subject.value?.naam.capitalized ?? events.first.title}"
               : "Je hebt toetsen van ${events.map((e) => e.subject.value?.naam).nonNulls.toSet().formattedJoin} op ${events.map((e) => e.start.dayName).nonNulls.toSet().formattedJoin}",
         ),
       ),
@@ -449,7 +449,7 @@ Future<void> scheduleReminders(Profile profile) async {
           channel: NotificationChannel.reminders,
           title: "Vergeet je toets morgen niet!",
           body:
-              "Morgen heb je een toets ${event.subject.value!.naam.capitalized} ${event.lesuurVan != null ? "het ${event.lesuurVan}e uur" : "om ${event.start.formattedTime}"}.",
+              "Morgen heb je een toets ${event.subject.value?.naam.capitalized ?? event.title} ${event.lesuurVan != null ? "het ${event.lesuurVan}e uur" : "om ${event.start.formattedTime}"}.",
         ),
       )
   ]);
