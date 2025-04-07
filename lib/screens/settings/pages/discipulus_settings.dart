@@ -81,6 +81,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             selected: {appSettings.brightness},
           ),
         ),
+        const ThemeVariantWidget(),
 
         //
         //  Vormgeving
@@ -252,6 +253,116 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             ),
           )
       ],
+    );
+  }
+}
+
+class ThemeVariantWidget extends StatefulWidget {
+  const ThemeVariantWidget({super.key});
+
+  @override
+  State<ThemeVariantWidget> createState() => _ThemeVariantWidgetState();
+}
+
+class _ThemeVariantWidgetState extends State<ThemeVariantWidget> {
+  Map<ThemeVariant, ColorScheme?> schemes = {};
+  late Color? accentColor;
+  late Color seedColor =
+      (appSettings.useMaterialYou ?? true) && accentColor != null
+          ? accentColor!
+          : Color(appSettings.activeMaterialYouColorInt);
+
+  Future<void> setSchemes() async {
+    accentColor = await DynamicColorPlugin.getAccentColor();
+
+    schemes = {
+      for (ThemeVariant variant in ThemeVariant.values)
+        variant: variant.variant != null
+            ? ColorScheme.fromSeed(
+                seedColor: seedColor,
+                dynamicSchemeVariant: variant.variant!,
+                brightness: Theme.of(context).brightness,
+              )
+            : accentColor != seedColor && accentColor != null
+                ? ColorScheme.fromSeed(
+                    seedColor: accentColor!,
+                    brightness: Theme.of(context).brightness,
+                  )
+                : null,
+    };
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    setSchemes();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            for (MapEntry<ThemeVariant, ColorScheme?> entry
+                in schemes.entries.nonNulls) ...[
+              Card.outlined(
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      appSettings
+                        ..themeVariant = entry.key
+                        ..save();
+                    });
+                    MainApp.of(context).updateTheme();
+                    setSchemes();
+                  },
+                  child: SizedBox(
+                    height: 150,
+                    width: 50,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (entry.value != null)
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (Color color in [
+                                entry.value!.primary,
+                                entry.value!.primaryContainer,
+                                entry.value!.tertiary,
+                                entry.value!.tertiaryContainer,
+                                entry.value!.secondary
+                              ])
+                                Expanded(
+                                  child: Container(
+                                    color: color,
+                                  ),
+                                )
+                            ],
+                          ),
+                        if (entry.key == appSettings.themeVariant &&
+                            entry.value != null)
+                          Icon(
+                            Icons.check_circle,
+                            color:
+                                (entry.value ?? Theme.of(context).colorScheme)
+                                    .onTertiary,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ]
+          ],
+        ),
+      ),
     );
   }
 }

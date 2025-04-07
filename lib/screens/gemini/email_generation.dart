@@ -1,6 +1,8 @@
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
+import 'package:discipulus/screens/gemini/gemini.dart';
 import 'package:discipulus/screens/gemini/instructions.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -48,7 +50,7 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
     super.initState();
     _model = appSettings.geminiAPIKey != null
         ? GenerativeModel(
-            model: 'gemini-1.5-flash',
+            model: GeminiSettings.model.name,
             apiKey: appSettings.geminiAPIKey!,
             systemInstruction: widget.customSystemInstruction ??
                 GeminiInstructions.emailWriter,
@@ -118,4 +120,26 @@ Future<String?> showGenerationDialog(BuildContext context, String? currentEmail,
     builder: (context) =>
         EmailGenerationScreen(customSystemInstruction: customSystemInstruction),
   );
+}
+
+Future<String> generateEmailSubject(String htmlBody) async {
+  if (appSettings.geminiAPIKey == null) return "Geen API key";
+  if (htmlBody.withoutHTML?.isEmpty ?? true) return "";
+
+  final model = GenerativeModel(
+    model: GeminiSettings.model.name,
+    apiKey: GeminiSettings.apiKey!,
+    systemInstruction: GeminiInstructions.emailSubjectWriter(htmlBody),
+    generationConfig: GenerationConfig(temperature: 0.2, topP: 1, topK: 1),
+    safetySettings: GeminiSettings.safetySettings,
+  );
+
+  try {
+    final content = [Content.text(htmlBody)];
+    final response = await model.generateContent(content);
+
+    return (response.text ?? "Geen titel").trim();
+  } catch (e) {
+    return 'Error: $e';
+  }
 }

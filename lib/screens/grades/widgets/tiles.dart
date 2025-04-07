@@ -31,7 +31,15 @@ class GradeTile extends StatelessWidget {
               .changeInAverage(grade: grade),
           builder: (context, snapshot) {
             return snapshot.hasData
-                ? Badge(label: Text(snapshot.data!.change.displayNumber()))
+                ? Badge(
+                    backgroundColor: snapshot.data!.change.isNegative
+                        ? Theme.of(context).colorScheme.errorContainer
+                        : null,
+                    textColor: snapshot.data!.change.isNegative
+                        ? Theme.of(context).colorScheme.onErrorContainer
+                        : null,
+                    label: Text(snapshot.data!.change.displayNumber()),
+                  )
                 : const SizedBox();
           },
         ),
@@ -44,7 +52,15 @@ class GradeTile extends StatelessWidget {
                 .changeInAverage(grade: grade),
             builder: (context, snapshot) {
               return snapshot.hasData
-                  ? Badge(label: Text(snapshot.data!.change.displayNumber()))
+                  ? Badge(
+                      backgroundColor: snapshot.data!.change.isNegative
+                          ? Theme.of(context).colorScheme.errorContainer
+                          : null,
+                      textColor: snapshot.data!.change.isNegative
+                          ? Theme.of(context).colorScheme.onErrorContainer
+                          : null,
+                      label: Text(snapshot.data!.change.displayNumber()),
+                    )
                   : const SizedBox();
             }),
       // Date

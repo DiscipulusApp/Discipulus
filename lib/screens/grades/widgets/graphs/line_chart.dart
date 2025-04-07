@@ -4,7 +4,6 @@ import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
-import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
@@ -61,6 +60,7 @@ class _GradesLineChartState extends State<GradesLineChart> {
   late final ValueNotifier<Grade?> hoveredGrade;
   DateTime? hoveredGradeSetTime;
   Grade? lastHoveredGrade;
+  late final ValueNotifier<List<TouchLineBarSpot>> _lastLineBarSpot;
 
   /// Keeps track of the current tooltip
   int? currentTooltipId;
@@ -160,12 +160,14 @@ class _GradesLineChartState extends State<GradesLineChart> {
   @override
   void initState() {
     hoveredGrade = ValueNotifier(null);
+    _lastLineBarSpot = ValueNotifier([]);
     super.initState();
   }
 
   @override
   void dispose() {
     hoveredGrade.dispose();
+    _lastLineBarSpot.dispose();
     super.dispose();
   }
 
@@ -219,29 +221,36 @@ class _GradesLineChartState extends State<GradesLineChart> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Popup on grade hover
         CustomAnimatedSize(
           child: ValueListenableBuilder(
             valueListenable: hoveredGrade,
             builder: (context, grade, child) {
-              return ElasticAnimation(
-                child: SizedBox(
-                  key: ValueKey(grade?.id),
-                  height: grade != null ? null : 12,
-                  child: grade != null
-                      ? CustomCard(
-                          margin: const EdgeInsets.all(12).copyWith(bottom: 8),
-                          child: GradeTile(grade: grade),
-                        )
-                      : null,
+              return SizedBox(
+                height: grade != null ? null : 12,
+                child: Column(
+                  children: grade != null
+                      ? [
+                          ElasticAnimation(
+                            child: CustomCard(
+                              key: ValueKey(grade.id),
+                              margin: const EdgeInsets.all(12),
+                              child: GradeTile(grade: grade),
+                            ),
+                          ),
+                        ]
+                      : [],
                 ),
               );
             },
           ),
         ),
+
+        // Graph
         SizedBox(
           height: widget.height,
           child: Padding(
-            padding: const EdgeInsets.all(12.0).copyWith(top: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: FutureBuilder(
               future: getData(),
               builder: (context, snapshot) {
@@ -336,6 +345,8 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                   HapticFeedback.selectionClick();
                                   currentTooltipId =
                                       p1?.lineBarSpots?.first.spotIndex;
+                                  _lastLineBarSpot.value =
+                                      p1?.lineBarSpots ?? [];
                                 }
 
                                 // If the user is no longer hovering over the
@@ -388,6 +399,7 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                                           .inSeconds >=
                                                       2) {
                                                 hoveredGrade.value = null;
+                                                _lastLineBarSpot.value = [];
                                               }
                                             },
                                           );
@@ -399,19 +411,26 @@ class _GradesLineChartState extends State<GradesLineChart> {
                               },
                               touchSpotThreshold: 50,
                               touchTooltipData: LineTouchTooltipData(
-                                getTooltipColor: (line) =>
-                                    elevatedColor(addElevation: 1),
+                                getTooltipColor: (line) => Colors.transparent,
                                 tooltipHorizontalOffset: 16,
-                                maxContentWidth: 200,
+                                maxContentWidth: 0,
                                 tooltipHorizontalAlignment:
                                     FLHorizontalAlignment.right,
                                 tooltipPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8)
-                                    .copyWith(bottom: 0),
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ).copyWith(bottom: 0),
                                 fitInsideHorizontally: true,
                                 fitInsideVertically: true,
-                                getTooltipItems: (touchedSpots) =>
-                                    getToolTips(touchedSpots),
+                                getTooltipItems: (touchedSpots) {
+                                  return [
+                                    for (var spot in touchedSpots)
+                                      const LineTooltipItem(
+                                        "",
+                                        TextStyle(),
+                                      )
+                                  ];
+                                },
                               ),
                             ),
                             lineBarsData: [
@@ -467,74 +486,82 @@ class _GradesLineChartState extends State<GradesLineChart> {
             ),
           ),
         ),
+
+        CustomAnimatedSize(
+          child: ValueListenableBuilder(
+            valueListenable: hoveredGrade,
+            builder: (context, grade, child) {
+              return SizedBox(
+                height: grade != null ? null : 12,
+                child: Column(
+                  children: grade != null
+                      ? [
+                          Row(
+                            spacing: 8,
+                            children: [
+                              Expanded(
+                                child: ElasticAnimation(
+                                  child: CustomCard(
+                                    key: ValueKey(grade
+                                        .datumIngevoerd?.formattedDateAndTime),
+                                    margin: const EdgeInsets.all(12)
+                                        .copyWith(right: 0),
+                                    child: ListTile(
+                                      dense: true,
+                                      leading: const Icon(Icons.date_range),
+                                      title: Text(grade.datumIngevoerd
+                                              ?.formattedDateAndTime ??
+                                          ""),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              CustomAnimatedSize(
+                                child: IntrinsicWidth(
+                                  child: ElasticAnimation(
+                                    child: CustomCard(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiaryContainer,
+                                      key: ValueKey(_lastLineBarSpot
+                                          .value.lastOrNull?.y
+                                          .displayNumber()),
+                                      margin: const EdgeInsets.all(12)
+                                          .copyWith(left: 0),
+                                      child: ListTile(
+                                        dense: true,
+                                        leading: Icon(
+                                          Icons.trending_neutral,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onTertiaryContainer,
+                                        ),
+                                        title: Text(
+                                          _lastLineBarSpot.value.lastOrNull?.y
+                                                  .displayNumber() ??
+                                              "-",
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onTertiaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ]
+                      : [],
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
-  }
-
-  // I am very sad that it has come to this, but fl_charts just does not have good tooltip support.
-  List<LineTooltipItem?> getToolTips(List<LineBarSpot> touchedSpots) {
-    Grade? grade = spotToGrade(touchedSpots.first.spotIndex);
-    if (touchedSpots.length == 1) {
-      return [
-        LineTooltipItem(
-          "${showSubjectNames ? "${grade?.subject.value?.naam.capitalized}\n" : ""}${grade?.datumIngevoerd?.formattedDateAndTime ?? "Berekent cijfer"}",
-          Theme.of(context).textTheme.titleSmall!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-          textAlign: TextAlign.start,
-          children: (touchedSpots
-                ..sort(
-                  (a, b) => b.barIndex.compareTo(a.barIndex),
-                ))
-              .asMap()
-              .map(
-                (index, e) => MapEntry(
-                  index,
-                  TextSpan(
-                    text: "${e.y.displayNumber()}\n",
-                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                        color: e.bar.color, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-              .values
-              .toList(),
-        )
-      ];
-    } else {
-      return [
-        LineTooltipItem(
-          "${showSubjectNames ? "${grade?.subject.value?.naam.capitalized}\n" : ""}${grade?.datumIngevoerd?.formattedDateAndTime ?? "Berekent cijfer"}",
-          Theme.of(context).textTheme.titleSmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface),
-          textAlign: TextAlign.start,
-        ),
-        LineTooltipItem(
-          "",
-          Theme.of(context).textTheme.labelMedium!,
-          textAlign: TextAlign.start,
-          children: (touchedSpots
-                ..sort(
-                  (a, b) => b.barIndex.compareTo(a.barIndex),
-                ))
-              .asMap()
-              .map(
-                (index, e) => MapEntry(
-                  index,
-                  TextSpan(
-                    text: "${e.y.displayNumber()}\n",
-                    style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                        color: e.bar.color, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              )
-              .values
-              .toList(),
-        )
-      ];
-    }
   }
 }
 

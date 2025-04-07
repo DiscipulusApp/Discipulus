@@ -2,6 +2,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
+import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/filter.dart';
 import 'package:discipulus/widgets/global/filters/messages_filter.dart';
 import 'package:flutter/material.dart';
@@ -25,11 +26,16 @@ class Settings {
   int activeMaterialYouColorInt = Colors.blue.value;
   @enumerated
   ThemeBrightness brightness = ThemeBrightness.system;
+  @enumerated
+  ThemeVariant themeVariant = ThemeVariant.system;
   int? activeProfileUuid;
   int? activeProfileUuidWidgets;
   bool drawerOnBack = true;
   bool drawerOpenOnRight = false;
-  double sufficientFrom = 5.5;
+  @ignore
+  double get sufficientFrom => activeProfile.settings.sufficientFrom.isNaN
+      ? 5.5
+      : activeProfile.settings.sufficientFrom;
 
   bool sendCrashInfo = true;
   bool useHandoff = true;
@@ -71,7 +77,7 @@ class Settings {
   bool showCalcCardsInGlobalAverageList = false;
   bool zoomLineGraph = true;
   @enumerated
-  SubjectSortType subjectSortType = SubjectSortType.alphabetical;
+  SubjectSortType subjectSortType = SubjectSortType.highestAverage;
   @ignore
 
   /// This contains the active grade filters, this value won't be saved.
@@ -94,13 +100,51 @@ class Settings {
 
 enum ThemeBrightness { system, dark, light }
 
+enum ThemeVariant {
+  system,
+  tonalSpot,
+  fidelity,
+  monochrome,
+  neutral,
+  vibrant,
+  expressive,
+  content,
+  rainbow,
+  fruitSalad;
+
+  DynamicSchemeVariant? get variant {
+    switch (this) {
+      case ThemeVariant.system:
+        return null;
+      case ThemeVariant.tonalSpot:
+        return DynamicSchemeVariant.tonalSpot;
+      case ThemeVariant.fidelity:
+        return DynamicSchemeVariant.fidelity;
+      case ThemeVariant.monochrome:
+        return DynamicSchemeVariant.monochrome;
+      case ThemeVariant.neutral:
+        return DynamicSchemeVariant.neutral;
+      case ThemeVariant.vibrant:
+        return DynamicSchemeVariant.vibrant;
+      case ThemeVariant.expressive:
+        return DynamicSchemeVariant.expressive;
+      case ThemeVariant.content:
+        return DynamicSchemeVariant.content;
+      case ThemeVariant.rainbow:
+        return DynamicSchemeVariant.rainbow;
+      case ThemeVariant.fruitSalad:
+        return DynamicSchemeVariant.fruitSalad;
+    }
+  }
+}
+
 extension ThemeBrightnessExtension on ThemeBrightness {
   String get name {
     switch (index) {
       case 1:
         return "Donker";
       case 2:
-        return "licht";
+        return "Licht";
       default:
         return "Systeem";
     }
@@ -125,6 +169,7 @@ class ProfileSettings {
   DateTime? lastRefresh = DateTime.now();
   bool messagesNotifications = false;
   bool gradesNotfications = false;
+  bool spoilerGradeNotfications = false; // Shows the grade in the notification
   bool eventsNotifications = false;
   bool remindNotifications = true;
 
@@ -157,6 +202,9 @@ class ProfileSettings {
 
   /// If this profile should schedule auto Do Not Disturb events. (Android Only)
   bool useAutoDND = false;
+
+  /// When a grade will be counted as sufficient
+  double sufficientFrom = 5.5;
 
   ProfileSettings({
     this.lastRefresh,

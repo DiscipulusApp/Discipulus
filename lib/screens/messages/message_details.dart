@@ -6,8 +6,8 @@ import 'package:discipulus/screens/gemini/summarizer.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
-import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/filters/messages_filter.dart';
 import 'package:discipulus/widgets/global/html.dart';
@@ -214,7 +214,14 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
           label: const Text("Samenvatting"),
           onPressed: () => showSummarizeSheet(
             context,
-            text: widget.message.inhoud!,
+            text: """
+            Afzender: ${widget.message.afzender?.naam ?? ""}
+            Datum: ${widget.message.verzondenOp}
+            Bijlagen: ${widget.message.bronnen.length}
+            Onderwerp: ${widget.message.onderwerp ?? ""}
+           
+            ${widget.message.inhoud!}
+            """,
             initialSummary: widget.message.aiSummary,
             onSummary: (summary) {
               widget.message.aiSummary = summary;
@@ -342,7 +349,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
           );
         },
         suggestionsBuilder: (_, controller) async {
-          List ontvangers = [
+          List<Ontvanger> ontvangers = [
             ...widget.message.ontvangers ?? [],
             ...widget.message.kopieOntvangers ?? []
           ];
@@ -354,7 +361,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
                       .contains(controller.text.toLowerCase()))
                   .toList());
           return [
-            for (var e in filteredOntvangers)
+            for (Ontvanger e in filteredOntvangers)
               ListTile(
                 leading: ContactAvatar(
                     heroId: e.id,

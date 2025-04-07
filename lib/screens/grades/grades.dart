@@ -1,6 +1,7 @@
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/grades_magister.dart';
+import 'package:discipulus/screens/grades/widgets/sufficient_grades_card.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -208,6 +209,16 @@ class _GradesListScreenState extends State<GradesListScreen> {
                   : const SizedBox(),
             ),
           ),
+          ValueListenableBuilder(
+              key: const ValueKey("NO_PADDING"),
+              valueListenable: showStatistics,
+              builder: (context, value, child) => value
+                  ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SufficientGradesCard(
+                          grades: grades.applyGradeFilter()),
+                    )
+                  : const SizedBox()),
           ValueListenableBuilder(
             key: const ValueKey("NO_PADDING"),
             valueListenable: showStatistics,

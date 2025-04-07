@@ -8,9 +8,14 @@ import 'package:discipulus/core/spotlight_search.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/gemini/chat_screen.dart';
+import 'package:discipulus/screens/gemini/summarizer.dart';
+import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
+import 'package:discipulus/widgets/global/avatars.dart';
+import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +52,8 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
 
   // Global drawer
   late final ValueNotifier<int> selectedIndex;
+  Timer? hoverTimer;
+  bool _hoveredChild = false;
   bool _showDrawer = true;
 
   // unilink subscription
@@ -89,11 +96,12 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
   Future<void> goToPage(
     Widget screen, {
     bool showDrawer = true,
+    bool skipDrawer = false,
     bool makeFirst = true,
     String? routeName,
   }) async {
     // If the drawer is present, it should be closed
-    if (mounted) drawerController.hideDrawer();
+    if (mounted && !skipDrawer) drawerController.hideDrawer();
 
     if (showDrawer != _showDrawer) {
       setState(() {
@@ -186,6 +194,19 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
         }),
       );
 
+  void updateShownPage() {
+    Widget currentView = _desinations.value
+        .expand((e) => e.destinations)
+        .toList()[selectedIndex.value]
+        .view;
+
+    // Update
+    update();
+
+    // Set current view
+    goToPage(currentView, skipDrawer: true, makeFirst: true);
+  }
+
   //
   //  Core
   //
@@ -225,6 +246,7 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     _desinations.dispose();
     selectedIndex.dispose();
     _linkSub.cancel();
+    hoverTimer?.cancel();
     super.dispose();
   }
 
@@ -261,6 +283,38 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     );
   }
 
+  // This function takes two widgets. Normally it displays only one, but when on
+  // a desktop the mouse cursor stays hovered on it for more than a second it
+  // switches to the second widget. This is reversed the moment the mouse is no
+  // longer hovering over either widget.
+  Widget _buildHoverAnimation(Widget child, Widget hoverChild) {
+    const Duration hoverDuration = Duration(milliseconds: 300);
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return MouseRegion(
+          onEnter: (_) {
+            hoverTimer = Timer(hoverDuration, () {
+              setState(() {
+                _hoveredChild = true;
+              });
+            });
+          },
+          onExit: (_) {
+            hoverTimer?.cancel();
+            if (_hoveredChild) {
+              setState(() {
+                _hoveredChild = false;
+              });
+            }
+          },
+          child: CustomAnimatedSize(
+            child: _hoveredChild ? hoverChild : child,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // We do not always want to show the sidebar, so we will check if the current
@@ -289,7 +343,8 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
                 key: const Key('primaryNavigation'),
                 inAnimation: _slotLayoutAnimation,
                 outAnimation: _slotLayoutAnimation,
-                duration: Durations.short3,
+                inDuration: Durations.short3,
+                outDuration: Durations.short3,
                 builder: (_) {
                   return largeSideBar();
                 },
@@ -298,9 +353,10 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
                 key: const Key('primaryNavigation'),
                 inAnimation: _slotLayoutAnimation,
                 outAnimation: _slotLayoutAnimation,
-                duration: Durations.short3,
+                inDuration: Durations.short3,
+                outDuration: Durations.short3,
                 builder: (_) {
-                  return mediumSideBar();
+                  return _buildHoverAnimation(mediumSideBar(), largeSideBar());
                 },
               ),
             },
@@ -315,7 +371,8 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
                 },
               ),
               Breakpoints.mediumAndUp: SlotLayout.from(
-                duration: Durations.short3,
+                inDuration: Durations.short3,
+                outDuration: Durations.short3,
                 key: const Key('body'),
                 builder: (_) {
                   persistantDrawer = true;
@@ -356,11 +413,8 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
             ? appSettings.drawerOnBack
             : false, //TODO: Disable when route is not first
         controller: drawerController,
-        animationController: animationController,
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
-        animationCurve: Easing.linear,
-        animationDuration: const Duration(milliseconds: 125),
         childDecoration: BoxDecoration(borderRadius: borderRadius),
         drawer: Padding(
           padding: padding.copyWith(left: 0, right: 0),
@@ -397,9 +451,13 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
                     onDestinationSelected: (int index) => goToPageFromIndex(
                       _getIndex(index, toIntersperse: false),
                     ),
-                    leading: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Icon(Icons.query_stats_rounded),
+                    leading: InkWell(
+                      onTap: () =>
+                          showGeminiChatSheet(navKey.currentState!.context),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Icon(Icons.query_stats_rounded),
+                      ),
                     ),
                     destinations: <NavigationRailDestination>[
                       ...<List<NavigationRailDestination>>[
@@ -458,6 +516,33 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
 class BigDrawerBase extends StatelessWidget {
   const BigDrawerBase({super.key});
 
+  Widget _buildFakeDest(context,
+      {required Widget title,
+      required Widget icon,
+      EdgeInsets iconPadding = const EdgeInsets.all(12)}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InkWell(
+        onTap: () {
+          if (Layout.of(context)!.drawerController.value.visible) {
+            Layout.of(context)!.drawerController.hideDrawer();
+          }
+
+          showGeminiChatSheet(navKey.currentState!.context);
+        },
+        child: Row(
+          children: [
+            Padding(
+              padding: iconPadding,
+              child: icon,
+            ),
+            title
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScrollConfiguration(
@@ -489,6 +574,14 @@ class BigDrawerBase extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
+                  if (appSettings.geminiAPIKey != null) ...[
+                    _buildFakeDest(
+                      context,
+                      title: Text("Gemini"),
+                      icon: Icon(Icons.auto_awesome),
+                    ),
+                    const Divider(indent: 28, endIndent: 28),
+                  ],
                   ...[
                     for (DestinationSegement segment in desinations)
                       [
@@ -509,7 +602,17 @@ class BigDrawerBase extends StatelessWidget {
                       ]
                   ].intersperse([
                     const Divider(indent: 28, endIndent: 28),
-                  ]).expand((element) => element)
+                  ]).expand((element) => element),
+                  if (isar.profiles.countSync() > 1)
+                    CustomCard(
+                      margin: const EdgeInsets.symmetric(horizontal: 0),
+                      child: ProfileChangeWidget(
+                        showAddProfileButton: false,
+                        updateState: (fn) => navKey.currentContext!
+                            .findAncestorStateOfType<LayoutState>()!
+                            .updateShownPage(),
+                      ),
+                    ),
                 ],
               );
             },

@@ -10,6 +10,7 @@ import 'package:html/dom.dart' hide Text;
 import 'package:html/parser.dart' as htmlparser;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:markdown/markdown.dart' show markdownToHtml;
 
 class HTMLDisplay extends StatelessWidget {
   const HTMLDisplay({
@@ -18,17 +19,22 @@ class HTMLDisplay extends StatelessWidget {
     this.margin = 0,
     this.marginOnParagraphTag = false,
     this.align = TextAlign.start,
+    this.convertMarkdown = false,
   });
 
   final String html;
   final double margin;
   final bool marginOnParagraphTag;
   final TextAlign align;
+  final bool convertMarkdown;
 
   @override
   Widget build(BuildContext context) {
+    String content = convertMarkdown ? markdownToHtml(html) : html;
     Document doc = htmlparser.parse(
-      (marginOnParagraphTag ? html.replaceAll("<p></p>", "<br/><br/>") : html)
+      (marginOnParagraphTag
+              ? content.replaceAll("<p></p>", "<br/><br/>")
+              : content)
           .replaceAll(RegExp(r'\s*style=([\"])(.*?)\1'), "")
           .replaceAll(
               RegExp(
@@ -48,8 +54,11 @@ class HTMLDisplay extends StatelessWidget {
           if (appSettings.geminiAPIKey != null)
             ContextMenuButtonItem(
               label: "Samenvatten",
-              onPressed: () => showSummarizeSheet(context,
-                  text: html, instantSummery: false),
+              onPressed: () => showSummarizeSheet(
+                context,
+                text: html,
+                instantSummery: false,
+              ),
             ),
         ];
 

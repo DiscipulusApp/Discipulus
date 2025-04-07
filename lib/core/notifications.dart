@@ -221,8 +221,6 @@ class NotificationController {
           time.toUtc().millisecondsSinceEpoch,
         ),
         details,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload?.toJson(),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );

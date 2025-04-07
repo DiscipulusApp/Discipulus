@@ -77,7 +77,7 @@ class _MessagesListScreenState extends State<MessagesListScreen>
       _messages = [];
       endWasReached = false;
     });
-    await refresh();
+    await refresh(false);
   }
 
   void _insertOrReplaceMessages(List<Bericht> newMessages) {
