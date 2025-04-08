@@ -490,7 +490,7 @@ class _VerticalIntroductionScreenState
             leading: const Icon(Icons.open_in_browser),
             title: const Text("Lees de voorwaarden"),
             onTap: () => launchUrl(
-                Uri.parse("https://harrydekat.dev/disciuplus/voorwaarden")),
+                Uri.parse("https://harrydekat.dev/Discipulus/voorwaarden")),
           )
         ],
       ),
