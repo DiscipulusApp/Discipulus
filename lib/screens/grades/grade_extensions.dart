@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
@@ -628,4 +630,72 @@ extension SubjectListExtension on List<Subject> {
         return this;
     }
   }
+}
+
+// Define the type for the returned function
+typedef GaussianFunction = double Function(double x);
+
+extension GaussianCurveExtension on Iterable<Grade> {
+  /// Generates a function representing the Gaussian (normal distribution) curve
+  /// based on the numerical grades in this iterable.
+  ///
+  /// The returned function takes a grade value `x` and returns the
+  /// probability density at that point on the curve.
+  ///
+  /// Returns a function that always returns 0.0 if there are fewer than 2
+  /// numerical grades (as standard deviation is undefined).
+  GaussianFunction generateGaussianCurve() {
+    // 1. Filter for numerical and usable grades and get their double values
+    final numericalGradeValues = numericalGrades // Use existing extension
+        .map((grade) => grade.grade)
+        .where((gradeValue) =>
+            gradeValue >= 0 && gradeValue <= 10) // Ensure valid grade range
+        .toList();
+
+    // 2. Handle edge case: Not enough data points for standard deviation
+    if (numericalGradeValues.length < 2) {
+      // Standard deviation is undefined or zero. Return a function that gives no curve.
+      return (double x) => 0.0;
+    }
+
+    // 3. Calculate the Mean (μ)
+    // We can reuse the existing average calculation, but ensure it's done on the filtered list
+    final double mean = numericalGradeValues
+        .average; // Assuming average works on List<double> or adapt
+
+    // 4. Calculate the Standard Deviation (σ)
+    final double variance = numericalGradeValues
+            .map((gradeValue) => pow(gradeValue - mean, 2))
+            .sum /
+        numericalGradeValues.length; // Use population variance N
+
+    final double standardDeviation = sqrt(variance);
+
+    // Handle edge case: Standard deviation is zero (all grades are the same)
+    // Use a small epsilon to account for potential floating-point inaccuracies
+    const double epsilon = 1e-9;
+    if (standardDeviation < epsilon) {
+      return (double x) {
+        // If std dev is effectively zero, the "curve" is a spike at the mean.
+        // Return 1.0 (or a large value) if x is very close to the mean, 0 otherwise.
+        return (x - mean).abs() < epsilon ? 1.0 : 0.0;
+      };
+    }
+
+    // 5. Define and return the Gaussian function using the calculated mean and std dev
+    final double coefficient = 1.0 / (standardDeviation * sqrt(2 * pi));
+
+    gaussianFunction(double x) {
+      final double exponent =
+          -pow(x - mean, 2) / (2 * pow(standardDeviation, 2));
+      return coefficient * exp(exponent);
+    }
+
+    return gaussianFunction;
+  }
+}
+
+// Helper extension if your existing GradeListExtension doesn't have average on List<double>
+extension _DoubleListAverage on Iterable<double> {
+  double get average => isEmpty ? double.nan : sum / length;
 }
