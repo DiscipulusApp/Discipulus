@@ -319,8 +319,9 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                   (value - appSettings.sufficientFrom) > 1 ||
                                   (value - appSettings.sufficientFrom) < -1,
                               getDrawingHorizontalLine: (value) => FlLine(
-                                  color: elevatedColor(addElevation: 1),
-                                  strokeWidth: 4),
+                                color: elevatedColor(addElevation: 1),
+                                strokeWidth: 4,
+                              ),
                             ),
                             borderData: FlBorderData(show: false),
                             titlesData: FlTitlesData(

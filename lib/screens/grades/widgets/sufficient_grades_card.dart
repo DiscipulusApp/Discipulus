@@ -40,9 +40,16 @@ class _SufficientGradesCardState extends State<SufficientGradesCard> {
   final int _absoluteMinFlex = 1;
   // --- End Configuration ---
 
+  _FutureResult _cachedResult = _FutureResult(
+    sufficient: 0,
+    insufficient: 0,
+    total: 0,
+  );
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<_FutureResult>(
+      initialData: _cachedResult,
       future: Future(() async {
         final allGrades = await widget.grades.count();
         final sufficientGrades =
@@ -52,21 +59,14 @@ class _SufficientGradesCardState extends State<SufficientGradesCard> {
         int sufficient = sufficientGrades;
         int insufficient = total - sufficient;
 
-        return _FutureResult(
+        _cachedResult = _FutureResult(
           sufficient: sufficient,
           insufficient: insufficient,
           total: total,
         );
+        return _cachedResult;
       }),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return SizedBox(
-            height: _cardHeight,
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ), // Or just SizedBox()
-          );
-        }
         if (snapshot.hasError) {
           return SizedBox(
             height: _cardHeight,

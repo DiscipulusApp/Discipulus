@@ -1,6 +1,7 @@
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/grades_magister.dart';
+import 'package:discipulus/screens/grades/widgets/graphs/gaussian_chart.dart';
 import 'package:discipulus/screens/grades/widgets/sufficient_grades_card.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
@@ -52,6 +53,10 @@ class _GradesListScreenState extends State<GradesListScreen> {
   /// This value contains the available filters. Since the getting all the possible filters can be quite an intensive task, it's also asynchronously constructed
   List filterChips = [];
 
+  /// The schoolyear that will be compared to the current schoolyear.
+  /// This value defaults to the previous schoolyear.
+  late Schoolyear comparisonSchoolyear;
+
   @override
   void initState() {
     highlightGrade = ValueNotifier(null);
@@ -59,6 +64,13 @@ class _GradesListScreenState extends State<GradesListScreen> {
     showStatistics = ValueNotifier<bool>(false);
 
     schoolyear = activeProfile.activeSchoolyear;
+    comparisonSchoolyear = activeProfile.schoolyears
+            .filter()
+            .not()
+            .uuidEqualTo(schoolyear.uuid)
+            .sortByEindeDesc()
+            .findFirstSync() ??
+        schoolyear;
 
     grades = schoolyear.grades.filter();
     super.initState();
@@ -156,6 +168,7 @@ class _GradesListScreenState extends State<GradesListScreen> {
             ),
           ),
         ),
+
         Padding(
           key: const HeaderKey(),
           padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -210,13 +223,55 @@ class _GradesListScreenState extends State<GradesListScreen> {
             ),
           ),
           ValueListenableBuilder(
+            key: const ValueKey("NO_PADDING"),
+            valueListenable: showStatistics,
+            builder: (context, value, child) => value
+                ? Column(
+                    children: [
+                      CustomCard(
+                        margin: EdgeInsets.all(12).copyWith(bottom: 8),
+                        child: GaussianCurveChart(
+                          primaryGradesQuery: grades.applyGradeFilter(),
+                          backgroundGradesQueries: [
+                            comparisonSchoolyear.grades
+                                .filter()
+                                .useable()
+                                .applyGradeFilter()
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8)
+                            .copyWith(bottom: 8),
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.info_outline),
+                          trailing: SchoolyearSelector(
+                            initValue: SchoolyearObject(
+                              schoolyear.uuid,
+                              group: comparisonSchoolyear.groep,
+                            ),
+                            onSelected: (schoolyear) => setState(() {
+                              comparisonSchoolyear = schoolyear!;
+                            }),
+                          ),
+                          title: Text(
+                              "Deze curve laat de normaalverdeling zien van hoe vaak je bepaalde cijfers haalt."),
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox(),
+          ),
+          ValueListenableBuilder(
               key: const ValueKey("NO_PADDING"),
               valueListenable: showStatistics,
               builder: (context, value, child) => value
                   ? Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SufficientGradesCard(
-                          grades: grades.applyGradeFilter()),
+                        grades: grades.applyGradeFilter(),
+                      ),
                     )
                   : const SizedBox()),
           ValueListenableBuilder(
