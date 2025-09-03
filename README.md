@@ -119,4 +119,4 @@ Discipulus is geïnspireerd door en met dank aan de geweldige projecten [Gemairo
 
 Heb je vragen of suggesties? Je kunt me altijd bereiken via Discord (HarryDeKat#4914) of per e-mail: [discipulus@harrydekat.dev](mailto:discipulus@harrydekat.dev). 
 
-En vergeet niet om het project te checken op GitHub: [Discipulus op GitHub](https://github.com/HarryDeKat/Discipulus).
+En vergeet niet om het project te checken op GitHub: [Discipulus op GitHub](https://github.com/DiscipulusApp/Discipulus).
