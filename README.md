@@ -93,7 +93,7 @@ Discipulus is beschikbaar voor **Windows**, **macOS**, **Linux**, **Android**, e
 
 ```bash
 git clone https://github.com/DiscipulusApp/Discipulus.git
-cd discipulus
+cd Discipulus
 flutter build <platform>
 ```
 
