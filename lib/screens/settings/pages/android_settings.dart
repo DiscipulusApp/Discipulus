@@ -31,7 +31,8 @@ class _AndroidSettingsPageState extends State<AndroidSettingsPage> {
         ProfileChangeWidget(
           updateState: (p0) => setState(() {}),
         ),
-        const DNDToggleCard()
+        const DNDToggleCard(),
+        // const SmartAlarmCard(),
       ],
     );
   }
@@ -153,6 +154,119 @@ class AlarmListScreen extends StatelessWidget {
             leading: const Icon(Icons.alarm),
           )
       ],
+    );
+  }
+}
+
+class SmartAlarmCard extends StatefulWidget {
+  const SmartAlarmCard({super.key});
+
+  @override
+  State<SmartAlarmCard> createState() => _SmartAlarmCardState();
+}
+
+class _SmartAlarmCardState extends State<SmartAlarmCard> {
+  @override
+  Widget build(BuildContext context) {
+    return CustomCard(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        children: [
+          SwitchListTile(
+            value: activeProfile.settings.smartAlarmEnabled,
+            secondary: const Icon(Icons.alarm_add),
+            title: const Text("Slimme wekker"),
+            subtitle: const Text(
+                "Zet automatisch een wekker op basis van je eerste les\n(Zeer ongetest en op eigen risico!)"),
+            onChanged: (value) async {
+              if (value && !await Permission.scheduleExactAlarm.isGranted) {
+                await Permission.scheduleExactAlarm.request();
+              }
+              setState(() {
+                activeProfile
+                  ..settings.smartAlarmEnabled = value
+                  ..save();
+              });
+              // Trigger background scheduler to update alarms
+              await BackgroundScheduler.scheduler();
+            },
+          ),
+          if (activeProfile.settings.smartAlarmEnabled) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.timer),
+              title: const Text("Tijd voor eerste les"),
+              subtitle:
+                  Text("${activeProfile.settings.smartAlarmOffset} minuten"),
+              trailing: SizedBox(
+                width: 150,
+                child: Slider(
+                  value: activeProfile.settings.smartAlarmOffset.toDouble(),
+                  min: 0,
+                  max: 120,
+                  divisions: 24,
+                  label: "${activeProfile.settings.smartAlarmOffset} min",
+                  onChanged: (value) {
+                    setState(() {
+                      activeProfile
+                        ..settings.smartAlarmOffset = value.toInt()
+                        ..save();
+                    });
+                  },
+                  onChangeEnd: (_) => BackgroundScheduler.scheduler(),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.access_time),
+              title: const Text("Uiterste wektijd"),
+              subtitle: Text(
+                  activeProfile.settings.smartAlarmLatestTime?.formattedTime ??
+                      "Geen"),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () async {
+                  TimeOfDay? time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(
+                        activeProfile.settings.smartAlarmLatestTime ??
+                            DateTime(2000, 1, 1, 8, 0)),
+                  );
+                  if (time != null) {
+                    final now = DateTime.now();
+                    setState(() {
+                      activeProfile
+                        ..settings.smartAlarmLatestTime = DateTime(now.year,
+                            now.month, now.day, time.hour, time.minute)
+                        ..save();
+                    });
+                    await BackgroundScheduler.scheduler();
+                  }
+                },
+              ),
+              onTap: () async {
+                // Clear setting on long press or add a clear button?
+                // For now, just let them edit it.
+                // Maybe add a clear button if it's set.
+              },
+            ),
+            if (activeProfile.settings.smartAlarmLatestTime != null)
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.clear),
+                title: const Text("Verwijder uiterste wektijd"),
+                onTap: () {
+                  setState(() {
+                    activeProfile
+                      ..settings.smartAlarmLatestTime = null
+                      ..save();
+                  });
+                  BackgroundScheduler.scheduler();
+                },
+              )
+          ],
+        ],
+      ),
     );
   }
 }

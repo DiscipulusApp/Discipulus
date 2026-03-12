@@ -1,16 +1,16 @@
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/gemini/ai_service.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
-import 'package:discipulus/screens/gemini/gemini.dart';
+import 'package:discipulus/screens/gemini/functions/ai_models.dart';
 import 'package:discipulus/screens/gemini/instructions.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
 class EmailGenerationScreen extends StatefulWidget {
   const EmailGenerationScreen({super.key, this.customSystemInstruction});
 
-  final Content? customSystemInstruction;
+  final AIContent? customSystemInstruction;
 
   @override
   State<EmailGenerationScreen> createState() => _EmailGenerationScreenState();
@@ -18,7 +18,6 @@ class EmailGenerationScreen extends StatefulWidget {
 
 class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
   final TextEditingController _inputController = TextEditingController();
-  late GenerativeModel? _model;
   String _generatedEmail = '';
   bool _isLoading = false;
 
@@ -29,10 +28,12 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
 
     try {
       final prompt = _inputController.text;
-      final content = [Content.text(prompt)];
-      final response = await _model!.generateContent(content);
+      final response = await AIService.sendMessage(
+        history: [AIContent.user(prompt)],
+        systemInstruction: widget.customSystemInstruction ?? GeminiInstructions.emailWriter,
+      );
       setState(() {
-        _generatedEmail = response.text ?? 'Failed to generate email.';
+        _generatedEmail = response;
       });
     } catch (e) {
       setState(() {
@@ -43,27 +44,6 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
         _isLoading = false;
       });
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _model = appSettings.geminiAPIKey != null
-        ? GenerativeModel(
-            model: GeminiSettings.model.name,
-            apiKey: appSettings.geminiAPIKey!,
-            systemInstruction: widget.customSystemInstruction ??
-                GeminiInstructions.emailWriter,
-            safetySettings: [
-              SafetySetting(
-                  HarmCategory.dangerousContent, HarmBlockThreshold.high),
-              SafetySetting(HarmCategory.harassment, HarmBlockThreshold.high),
-              SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.high),
-              SafetySetting(
-                  HarmCategory.sexuallyExplicit, HarmBlockThreshold.high),
-            ],
-          )
-        : null;
   }
 
   @override
@@ -113,7 +93,7 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
 }
 
 Future<String?> showGenerationDialog(BuildContext context, String? currentEmail,
-    {Content? customSystemInstruction}) {
+    {AIContent? customSystemInstruction}) {
   return showDialog<String>(
     useSafeArea: false,
     context: context,
@@ -123,22 +103,13 @@ Future<String?> showGenerationDialog(BuildContext context, String? currentEmail,
 }
 
 Future<String> generateEmailSubject(String htmlBody) async {
-  if (appSettings.geminiAPIKey == null) return "Geen API key";
   if (htmlBody.withoutHTML?.isEmpty ?? true) return "";
 
-  final model = GenerativeModel(
-    model: GeminiSettings.model.name,
-    apiKey: GeminiSettings.apiKey!,
-    systemInstruction: GeminiInstructions.emailSubjectWriter(htmlBody),
-    generationConfig: GenerationConfig(temperature: 0.2, topP: 1, topK: 1),
-    safetySettings: GeminiSettings.safetySettings,
-  );
-
   try {
-    final content = [Content.text(htmlBody)];
-    final response = await model.generateContent(content);
-
-    return (response.text ?? "Geen titel").trim();
+    return await AIService.sendMessage(
+      history: [AIContent.user(htmlBody)],
+      systemInstruction: GeminiInstructions.emailSubjectWriter(htmlBody),
+    );
   } catch (e) {
     return 'Error: $e';
   }

@@ -32,7 +32,7 @@ class GradesTableCell {
 }
 
 class _GradesTableViewState extends State<GradesTableView> {
-  /// Map<Subject, Map<PeriodName, List<GradesTableCell>>>
+  /// `Map<Subject, Map<PeriodName, List<GradesTableCell>>>`
   Map<String, Map<String, List<GradesTableCell>>> data = {};
 
   List<GradesTableCell> get sortedTableCells {

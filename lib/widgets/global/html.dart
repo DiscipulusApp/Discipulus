@@ -51,7 +51,7 @@ class HTMLDisplay extends StatelessWidget {
         final anchors = editableTextState.contextMenuAnchors;
         final buttonItems = [
           ...editableTextState.contextMenuButtonItems,
-          if (appSettings.geminiAPIKey != null)
+          if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null)
             ContextMenuButtonItem(
               label: "Samenvatten",
               onPressed: () => showSummarizeSheet(

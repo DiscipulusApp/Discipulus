@@ -235,6 +235,7 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
 
   @override
   selectionSheetContentBuilder(BuildContext context) {
+    var selectedItems = SelectableList.maybyOf(context)?.selectedItems ?? [];
     return [
       const ListTitle(child: Text("Geselecteerde bronnen")),
       FutureBuilder(
@@ -242,7 +243,7 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
           () => isar.brons
               .filter()
               .anyOf(
-                SelectableList.maybyOf(context)?.selectedItems ?? [],
+                selectedItems,
                 (q, uuid) => q.uuidEqualTo(uuid),
               )
               .findAll(),
@@ -270,13 +271,14 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
 
   @override
   headerOptionsBuilder(BuildContext context) {
+    var selectedItems = SelectableList.maybyOf(context)?.selectedItems ?? [];
     return [
       FutureBuilder(
           future: Future(
             () => isar.brons
                 .filter()
                 .anyOf(
-                  SelectableList.maybyOf(context)?.selectedItems ?? [],
+                  selectedItems,
                   (q, uuid) => q.uuidEqualTo(uuid),
                 )
                 .findAll(),
@@ -298,7 +300,7 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
 
                       setState(() {});
                       // widget.selectedCallback?.call();
-                      if (mounted) {
+                      if (context.mounted) {
                         SelectableList.maybyOf(context)
                             ?.sheetKey
                             .currentState

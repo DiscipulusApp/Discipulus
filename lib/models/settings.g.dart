@@ -90,29 +90,29 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.byteList,
       enumMap: _SettingsenabledGradeBadgeTypesEnumValueMap,
     ),
-    r'geminiAPIKey': PropertySchema(
-      id: 14,
-      name: r'geminiAPIKey',
-      type: IsarType.string,
-    ),
     r'openAfterDownload': PropertySchema(
-      id: 15,
+      id: 14,
       name: r'openAfterDownload',
       type: IsarType.bool,
     ),
-    r'saveVirtualFiles': PropertySchema(
+    r'openRouterAPIKey': PropertySchema(
+      id: 15,
+      name: r'openRouterAPIKey',
+      type: IsarType.string,
+    ),
+    r'openRouterModel': PropertySchema(
       id: 16,
+      name: r'openRouterModel',
+      type: IsarType.string,
+    ),
+    r'saveVirtualFiles': PropertySchema(
+      id: 17,
       name: r'saveVirtualFiles',
       type: IsarType.bool,
     ),
     r'sendCrashInfo': PropertySchema(
-      id: 17,
-      name: r'sendCrashInfo',
-      type: IsarType.bool,
-    ),
-    r'sharePersonalInformationWithGemini': PropertySchema(
       id: 18,
-      name: r'sharePersonalInformationWithGemini',
+      name: r'sendCrashInfo',
       type: IsarType.bool,
     ),
     r'shortBronTitle': PropertySchema(
@@ -157,18 +157,23 @@ const SettingsSchema = CollectionSchema(
       name: r'useHandoff',
       type: IsarType.bool,
     ),
-    r'useMaterialYou': PropertySchema(
+    r'useLocalAI': PropertySchema(
       id: 27,
+      name: r'useLocalAI',
+      type: IsarType.bool,
+    ),
+    r'useMaterialYou': PropertySchema(
+      id: 28,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -203,11 +208,12 @@ int _settingsEstimateSize(
   }
   bytesCount += 3 + object.enabledGradeBadgeTypes.length;
   {
-    final value = object.geminiAPIKey;
+    final value = object.openRouterAPIKey;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.openRouterModel.length * 3;
   return bytesCount;
 }
 
@@ -237,11 +243,11 @@ void _settingsSerialize(
   writer.writeBool(offsets[12], object.drawerOpenOnRight);
   writer.writeByteList(
       offsets[13], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
-  writer.writeString(offsets[14], object.geminiAPIKey);
-  writer.writeBool(offsets[15], object.openAfterDownload);
-  writer.writeBool(offsets[16], object.saveVirtualFiles);
-  writer.writeBool(offsets[17], object.sendCrashInfo);
-  writer.writeBool(offsets[18], object.sharePersonalInformationWithGemini);
+  writer.writeBool(offsets[14], object.openAfterDownload);
+  writer.writeString(offsets[15], object.openRouterAPIKey);
+  writer.writeString(offsets[16], object.openRouterModel);
+  writer.writeBool(offsets[17], object.saveVirtualFiles);
+  writer.writeBool(offsets[18], object.sendCrashInfo);
   writer.writeBool(offsets[19], object.shortBronTitle);
   writer.writeBool(offsets[20], object.showAutoCancelledEvents);
   writer.writeBool(offsets[21], object.showBronExtension);
@@ -250,9 +256,10 @@ void _settingsSerialize(
   writer.writeByte(offsets[24], object.subjectSortType.index);
   writer.writeByte(offsets[25], object.themeVariant.index);
   writer.writeBool(offsets[26], object.useHandoff);
-  writer.writeBool(offsets[27], object.useMaterialYou);
-  writer.writeBool(offsets[28], object.workWeek);
-  writer.writeBool(offsets[29], object.zoomLineGraph);
+  writer.writeBool(offsets[27], object.useLocalAI);
+  writer.writeBool(offsets[28], object.useMaterialYou);
+  writer.writeBool(offsets[29], object.workWeek);
+  writer.writeBool(offsets[30], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -290,12 +297,12 @@ Settings _settingsDeserialize(
               GradeBadgeTypes.weight)
           .toList() ??
       [];
-  object.geminiAPIKey = reader.readStringOrNull(offsets[14]);
   object.id = id;
-  object.openAfterDownload = reader.readBool(offsets[15]);
-  object.saveVirtualFiles = reader.readBool(offsets[16]);
-  object.sendCrashInfo = reader.readBool(offsets[17]);
-  object.sharePersonalInformationWithGemini = reader.readBool(offsets[18]);
+  object.openAfterDownload = reader.readBool(offsets[14]);
+  object.openRouterAPIKey = reader.readStringOrNull(offsets[15]);
+  object.openRouterModel = reader.readString(offsets[16]);
+  object.saveVirtualFiles = reader.readBool(offsets[17]);
+  object.sendCrashInfo = reader.readBool(offsets[18]);
   object.shortBronTitle = reader.readBool(offsets[19]);
   object.showAutoCancelledEvents = reader.readBool(offsets[20]);
   object.showBronExtension = reader.readBool(offsets[21]);
@@ -308,9 +315,10 @@ Settings _settingsDeserialize(
       _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[25])] ??
           ThemeVariant.system;
   object.useHandoff = reader.readBool(offsets[26]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[27]);
-  object.workWeek = reader.readBool(offsets[28]);
-  object.zoomLineGraph = reader.readBool(offsets[29]);
+  object.useLocalAI = reader.readBool(offsets[27]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[28]);
+  object.workWeek = reader.readBool(offsets[29]);
+  object.zoomLineGraph = reader.readBool(offsets[30]);
   return object;
 }
 
@@ -363,11 +371,11 @@ P _settingsDeserializeProp<P>(
               .toList() ??
           []) as P;
     case 14:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 15:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 16:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 17:
       return (reader.readBool(offset)) as P;
     case 18:
@@ -393,10 +401,12 @@ P _settingsDeserializeProp<P>(
     case 26:
       return (reader.readBool(offset)) as P;
     case 27:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 28:
       return (reader.readBool(offset)) as P;
+    case 28:
+      return (reader.readBoolOrNull(offset)) as P;
     case 29:
+      return (reader.readBool(offset)) as P;
+    case 30:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1233,157 +1243,6 @@ extension SettingsQueryFilter
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'geminiAPIKey',
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      geminiAPIKeyIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'geminiAPIKey',
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      geminiAPIKeyGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'geminiAPIKey',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      geminiAPIKeyStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'geminiAPIKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition> geminiAPIKeyMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'geminiAPIKey',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      geminiAPIKeyIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geminiAPIKey',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      geminiAPIKeyIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'geminiAPIKey',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<Settings, Settings, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1447,6 +1306,296 @@ extension SettingsQueryFilter
   }
 
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'openRouterAPIKey',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'openRouterAPIKey',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'openRouterAPIKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'openRouterAPIKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'openRouterAPIKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'openRouterAPIKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterAPIKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'openRouterAPIKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'openRouterModel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'openRouterModel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'openRouterModel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'openRouterModel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      openRouterModelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'openRouterModel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
       saveVirtualFilesEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1461,16 +1610,6 @@ extension SettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'sendCrashInfo',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterFilterCondition>
-      sharePersonalInformationWithGeminiEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sharePersonalInformationWithGemini',
         value: value,
       ));
     });
@@ -1641,6 +1780,16 @@ extension SettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'useHandoff',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> useLocalAIEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'useLocalAI',
         value: value,
       ));
     });
@@ -1861,18 +2010,6 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> sortByGeminiAPIKey() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'geminiAPIKey', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy> sortByGeminiAPIKeyDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'geminiAPIKey', Sort.desc);
-    });
-  }
-
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenAfterDownload() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'openAfterDownload', Sort.asc);
@@ -1882,6 +2019,30 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenAfterDownloadDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'openAfterDownload', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenRouterAPIKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterAPIKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenRouterAPIKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterAPIKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenRouterModel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterModel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenRouterModelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterModel', Sort.desc);
     });
   }
 
@@ -1906,20 +2067,6 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortBySendCrashInfoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sendCrashInfo', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy>
-      sortBySharePersonalInformationWithGemini() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sharePersonalInformationWithGemini', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy>
-      sortBySharePersonalInformationWithGeminiDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sharePersonalInformationWithGemini', Sort.desc);
     });
   }
 
@@ -2022,6 +2169,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseHandoffDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseLocalAI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLocalAI', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseLocalAIDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLocalAI', Sort.desc);
     });
   }
 
@@ -2216,18 +2375,6 @@ extension SettingsQuerySortThenBy
     });
   }
 
-  QueryBuilder<Settings, Settings, QAfterSortBy> thenByGeminiAPIKey() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'geminiAPIKey', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy> thenByGeminiAPIKeyDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'geminiAPIKey', Sort.desc);
-    });
-  }
-
   QueryBuilder<Settings, Settings, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2252,6 +2399,30 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByOpenRouterAPIKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterAPIKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByOpenRouterAPIKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterAPIKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByOpenRouterModel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterModel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByOpenRouterModelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'openRouterModel', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenBySaveVirtualFiles() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saveVirtualFiles', Sort.asc);
@@ -2273,20 +2444,6 @@ extension SettingsQuerySortThenBy
   QueryBuilder<Settings, Settings, QAfterSortBy> thenBySendCrashInfoDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sendCrashInfo', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy>
-      thenBySharePersonalInformationWithGemini() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sharePersonalInformationWithGemini', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QAfterSortBy>
-      thenBySharePersonalInformationWithGeminiDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sharePersonalInformationWithGemini', Sort.desc);
     });
   }
 
@@ -2389,6 +2546,18 @@ extension SettingsQuerySortThenBy
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseHandoffDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseLocalAI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLocalAI', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseLocalAIDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLocalAI', Sort.desc);
     });
   }
 
@@ -2513,16 +2682,25 @@ extension SettingsQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Settings, Settings, QDistinct> distinctByGeminiAPIKey(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'geminiAPIKey', caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<Settings, Settings, QDistinct> distinctByOpenAfterDownload() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'openAfterDownload');
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QDistinct> distinctByOpenRouterAPIKey(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'openRouterAPIKey',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QDistinct> distinctByOpenRouterModel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'openRouterModel',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -2535,13 +2713,6 @@ extension SettingsQueryWhereDistinct
   QueryBuilder<Settings, Settings, QDistinct> distinctBySendCrashInfo() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'sendCrashInfo');
-    });
-  }
-
-  QueryBuilder<Settings, Settings, QDistinct>
-      distinctBySharePersonalInformationWithGemini() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sharePersonalInformationWithGemini');
     });
   }
 
@@ -2593,6 +2764,12 @@ extension SettingsQueryWhereDistinct
   QueryBuilder<Settings, Settings, QDistinct> distinctByUseHandoff() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'useHandoff');
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QDistinct> distinctByUseLocalAI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'useLocalAI');
     });
   }
 
@@ -2716,15 +2893,21 @@ extension SettingsQueryProperty
     });
   }
 
-  QueryBuilder<Settings, String?, QQueryOperations> geminiAPIKeyProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'geminiAPIKey');
-    });
-  }
-
   QueryBuilder<Settings, bool, QQueryOperations> openAfterDownloadProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'openAfterDownload');
+    });
+  }
+
+  QueryBuilder<Settings, String?, QQueryOperations> openRouterAPIKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'openRouterAPIKey');
+    });
+  }
+
+  QueryBuilder<Settings, String, QQueryOperations> openRouterModelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'openRouterModel');
     });
   }
 
@@ -2737,13 +2920,6 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool, QQueryOperations> sendCrashInfoProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'sendCrashInfo');
-    });
-  }
-
-  QueryBuilder<Settings, bool, QQueryOperations>
-      sharePersonalInformationWithGeminiProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sharePersonalInformationWithGemini');
     });
   }
 
@@ -2797,6 +2973,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool, QQueryOperations> useHandoffProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'useHandoff');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations> useLocalAIProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'useLocalAI');
     });
   }
 
@@ -2881,38 +3063,53 @@ const ProfileSettingsSchema = Schema(
       name: r'remindNotifications',
       type: IsarType.bool,
     ),
-    r'spoilerGradeNotfications': PropertySchema(
+    r'smartAlarmEnabled': PropertySchema(
       id: 10,
+      name: r'smartAlarmEnabled',
+      type: IsarType.bool,
+    ),
+    r'smartAlarmLatestTime': PropertySchema(
+      id: 11,
+      name: r'smartAlarmLatestTime',
+      type: IsarType.dateTime,
+    ),
+    r'smartAlarmOffset': PropertySchema(
+      id: 12,
+      name: r'smartAlarmOffset',
+      type: IsarType.long,
+    ),
+    r'spoilerGradeNotfications': PropertySchema(
+      id: 13,
       name: r'spoilerGradeNotfications',
       type: IsarType.bool,
     ),
     r'spotlightIndexAssignments': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'spotlightIndexAssignments',
       type: IsarType.bool,
     ),
     r'spotlightIndexMessages': PropertySchema(
-      id: 12,
+      id: 15,
       name: r'spotlightIndexMessages',
       type: IsarType.bool,
     ),
     r'spotlightIndexStudiewijzers': PropertySchema(
-      id: 13,
+      id: 16,
       name: r'spotlightIndexStudiewijzers',
       type: IsarType.bool,
     ),
     r'startingPageIndex': PropertySchema(
-      id: 14,
+      id: 17,
       name: r'startingPageIndex',
       type: IsarType.long,
     ),
     r'sufficientFrom': PropertySchema(
-      id: 15,
+      id: 18,
       name: r'sufficientFrom',
       type: IsarType.double,
     ),
     r'useAutoDND': PropertySchema(
-      id: 16,
+      id: 19,
       name: r'useAutoDND',
       type: IsarType.bool,
     )
@@ -2974,13 +3171,16 @@ void _profileSettingsSerialize(
   writer.writeString(offsets[7], object.mailHeader);
   writer.writeBool(offsets[8], object.messagesNotifications);
   writer.writeBool(offsets[9], object.remindNotifications);
-  writer.writeBool(offsets[10], object.spoilerGradeNotfications);
-  writer.writeBool(offsets[11], object.spotlightIndexAssignments);
-  writer.writeBool(offsets[12], object.spotlightIndexMessages);
-  writer.writeBool(offsets[13], object.spotlightIndexStudiewijzers);
-  writer.writeLong(offsets[14], object.startingPageIndex);
-  writer.writeDouble(offsets[15], object.sufficientFrom);
-  writer.writeBool(offsets[16], object.useAutoDND);
+  writer.writeBool(offsets[10], object.smartAlarmEnabled);
+  writer.writeDateTime(offsets[11], object.smartAlarmLatestTime);
+  writer.writeLong(offsets[12], object.smartAlarmOffset);
+  writer.writeBool(offsets[13], object.spoilerGradeNotfications);
+  writer.writeBool(offsets[14], object.spotlightIndexAssignments);
+  writer.writeBool(offsets[15], object.spotlightIndexMessages);
+  writer.writeBool(offsets[16], object.spotlightIndexStudiewijzers);
+  writer.writeLong(offsets[17], object.startingPageIndex);
+  writer.writeDouble(offsets[18], object.sufficientFrom);
+  writer.writeBool(offsets[19], object.useAutoDND);
 }
 
 ProfileSettings _profileSettingsDeserialize(
@@ -3008,13 +3208,16 @@ ProfileSettings _profileSettingsDeserialize(
   object.mailHeader = reader.readStringOrNull(offsets[7]);
   object.messagesNotifications = reader.readBool(offsets[8]);
   object.remindNotifications = reader.readBool(offsets[9]);
-  object.spoilerGradeNotfications = reader.readBool(offsets[10]);
-  object.spotlightIndexAssignments = reader.readBool(offsets[11]);
-  object.spotlightIndexMessages = reader.readBool(offsets[12]);
-  object.spotlightIndexStudiewijzers = reader.readBool(offsets[13]);
-  object.startingPageIndex = reader.readLong(offsets[14]);
-  object.sufficientFrom = reader.readDouble(offsets[15]);
-  object.useAutoDND = reader.readBool(offsets[16]);
+  object.smartAlarmEnabled = reader.readBool(offsets[10]);
+  object.smartAlarmLatestTime = reader.readDateTimeOrNull(offsets[11]);
+  object.smartAlarmOffset = reader.readLong(offsets[12]);
+  object.spoilerGradeNotfications = reader.readBool(offsets[13]);
+  object.spotlightIndexAssignments = reader.readBool(offsets[14]);
+  object.spotlightIndexMessages = reader.readBool(offsets[15]);
+  object.spotlightIndexStudiewijzers = reader.readBool(offsets[16]);
+  object.startingPageIndex = reader.readLong(offsets[17]);
+  object.sufficientFrom = reader.readDouble(offsets[18]);
+  object.useAutoDND = reader.readBool(offsets[19]);
   return object;
 }
 
@@ -3054,16 +3257,22 @@ P _profileSettingsDeserializeProp<P>(
     case 10:
       return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 13:
       return (reader.readBool(offset)) as P;
     case 14:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 15:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readLong(offset)) as P;
+    case 18:
+      return (reader.readDouble(offset)) as P;
+    case 19:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3734,6 +3943,146 @@ extension ProfileSettingsQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'remindNotifications',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'smartAlarmEnabled',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'smartAlarmLatestTime',
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'smartAlarmLatestTime',
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'smartAlarmLatestTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'smartAlarmLatestTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'smartAlarmLatestTime',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmLatestTimeBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'smartAlarmLatestTime',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmOffsetEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'smartAlarmOffset',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmOffsetGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'smartAlarmOffset',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmOffsetLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'smartAlarmOffset',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      smartAlarmOffsetBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'smartAlarmOffset',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }

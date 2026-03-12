@@ -20,6 +20,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_local_ai/flutter_local_ai.dart';
 
 class DiscipulusSettingsPage extends StatefulWidget {
   const DiscipulusSettingsPage({super.key});
@@ -29,6 +30,8 @@ class DiscipulusSettingsPage extends StatefulWidget {
 }
 
 class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
+  bool _obscureAPIKey = true;
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldSkeleton(
@@ -155,40 +158,129 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
         //  AI
         //
         const ListTitle(child: Text("Kunstmatige intelligentie")),
-        ListTile(
-          leading: const Icon(Icons.auto_awesome),
-          title: const Text("Gemini API key"),
-          subtitle: TextField(
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              filled: true,
-              hintText: appSettings.geminiAPIKey,
+        Column(
+          children: [
+            const ListTile(
+              leading: Icon(Icons.info_outline),
+              title: Text("Over AI in Discipulus"),
+              subtitle: Text(
+                  "Discipulus kan gebruik maken van AI om teksten samen te vatten of je te helpen als een persoonlijke assistent. Hiervoor kun je OpenRouter gebruiken (Cloud) of een lokaal model (Privacy)."),
             ),
-            onChanged: (value) => appSettings
-              ..geminiAPIKey = value.nullOnEmpty
-              ..save(),
-          ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: const Text("OpenRouter API key"),
+              subtitle: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      obscureText: _obscureAPIKey,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        filled: true,
+                        hintText: appSettings.openRouterAPIKey ??
+                            "Voer je API key in",
+                      ),
+                      onChanged: (value) => setState(() {
+                        appSettings
+                          ..openRouterAPIKey = value.nullOnEmpty
+                          ..save();
+                      }),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(_obscureAPIKey
+                        ? Icons.visibility_off
+                        : Icons.visibility),
+                    onPressed: () =>
+                        setState(() => _obscureAPIKey = !_obscureAPIKey),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.open_in_browser),
+              title: const Text("Krijg een API-key op openrouter.ai"),
+              onTap: () => launchUrl(Uri.parse("https://openrouter.ai/keys")),
+            ),
+            ListTile(
+              leading: const Icon(Icons.model_training),
+              title: const Text("OpenRouter Model"),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      filled: true,
+                      hintText: appSettings.openRouterModel,
+                    ),
+                      onChanged: (value) => appSettings
+                        ..openRouterModel = value.nullOnEmpty ??
+                            "google/gemma-3-27b-it:free"
+                        ..save(),
+                  ),
+                  const Text(
+                    "Aanbevolen modellen:",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        "google/gemma-3-27b-it:free",
+                        "meta-llama/llama-3.3-70b-instruct:free",
+                        "mistralai/mistral-small-3.1-24b-instruct:free",
+                        "qwen/qwen3-coder:free",
+                      ]
+                          .map((model) => Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: ActionChip(
+                                  label: Text(model.split('/').last),
+                                  onPressed: () {
+                                    setState(() {
+                                      appSettings
+                                        ..openRouterModel = model
+                                        ..save();
+                                    });
+                                  },
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        ListTile(
-          dense: true,
-          leading: const Icon(Icons.open_in_browser),
-          title: const Text("Krijg een API-key"),
-          onTap: () =>
-              launchUrl(Uri.parse("https://aistudio.google.com/apikey")),
+        FutureBuilder<bool>(
+          future: FlutterLocalAi().isAvailable(),
+          builder: (context, snapshot) {
+            final isAvailable = snapshot.data ?? false;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CustomCard(
+                child: SwitchListTile(
+                  value: appSettings.useLocalAI,
+                  onChanged: isAvailable
+                      ? (value) => setState(() {
+                            appSettings
+                              ..useLocalAI = value
+                              ..save();
+                          })
+                      : null,
+                  secondary: const Icon(Icons.memory),
+                  title: const Text("Gebruik Lokale AI (Offline)"),
+                  subtitle: Text(isAvailable
+                      ? "Genereer tekst lokaal op je apparaat zonder API key."
+                      : "Lokale AI wordt niet ondersteund op dit apparaat."),
+                ),
+              ),
+            );
+          },
         ),
-        SwitchListTile(
-            value: appSettings.sharePersonalInformationWithGemini,
-            onChanged: appSettings.geminiAPIKey != null
-                ? (value) => setState(() {
-                      appSettings
-                        ..sharePersonalInformationWithGemini = value
-                        ..save();
-                    })
-                : null,
-            secondary: const Icon(Icons.lock),
-            title: const Text("Deel persoonlijke informatie"),
-            subtitle: const Text(
-                "Wanneer dit aan staat zullen dingen zoals je naam en klas worden gebruikt bij het gebruik van AI")),
         //
         //  Profiles
         //
@@ -226,13 +318,14 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
                       await account.logoutAndRemoveAllData();
                       if (await isar.profiles.where().count() == 0) {
                         // No account left, returning to main menu
+                        if (!context.mounted) return;
                         Navigator.popUntil(context, (route) => route.isFirst);
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
                           builder: (context) =>
                               const VerticalIntroductionScreen(),
                         ));
                       }
-                      if (mounted) setState(() {});
+                      if (context.mounted) setState(() {});
                     },
                     child: (isLoading, onTap) => IconButton(
                       key: ValueKey(isLoading),
@@ -274,6 +367,7 @@ class _ThemeVariantWidgetState extends State<ThemeVariantWidget> {
 
   Future<void> setSchemes() async {
     accentColor = await DynamicColorPlugin.getAccentColor();
+    if (!mounted) return;
 
     schemes = {
       for (ThemeVariant variant in ThemeVariant.values)
@@ -411,13 +505,14 @@ class _PersonalColorSettingState extends State<PersonalColorSetting> {
           (value) => IconButton(
             icon: const Icon(Icons.radio_button_unchecked),
             color: value,
-            isSelected: appSettings.activeMaterialYouColorInt == value.value &&
-                !(appSettings.useMaterialYou ?? false),
+            isSelected:
+                appSettings.activeMaterialYouColorInt == value.toARGB32() &&
+                    !(appSettings.useMaterialYou ?? false),
             selectedIcon: const Icon(Icons.circle),
             onPressed: () async {
               setState(() => appSettings
                 ..useMaterialYou = false
-                ..activeMaterialYouColorInt = value.value
+                ..activeMaterialYouColorInt = value.toARGB32()
                 ..save());
               await MainApp.of(context).updateTheme();
             },
@@ -432,6 +527,7 @@ class _PersonalColorSettingState extends State<PersonalColorSetting> {
             ),
             IconButton(
               isSelected: !material3Colors.values
+                      .map((c) => c.toARGB32())
                       .contains(appSettings.activeMaterialYouColorInt) &&
                   !(appSettings.useMaterialYou ?? false),
               selectedIcon: const Icon(Icons.image),
@@ -441,15 +537,21 @@ class _PersonalColorSettingState extends State<PersonalColorSetting> {
                   allowMultiple: false,
                   type: FileType.image,
                 );
+                if (!context.mounted ||
+                    result == null ||
+                    result.paths.isEmpty ||
+                    result.paths.first == null) return;
+
                 ColorScheme colorScheme = await ColorScheme.fromImageProvider(
                   dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
-                  provider: ResizeImage(FileImage(File(result!.paths.first!)),
+                  provider: ResizeImage(FileImage(File(result.paths.first!)),
                       height: 10, width: 10),
                   brightness: Theme.of(context).brightness,
                 );
+                if (!context.mounted) return;
                 setState(() => appSettings
                   ..useMaterialYou = false
-                  ..activeMaterialYouColorInt = colorScheme.primary.value
+                  ..activeMaterialYouColorInt = colorScheme.primary.toARGB32()
                   ..save());
                 await MainApp.of(context).updateTheme();
               },

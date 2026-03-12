@@ -24,8 +24,8 @@ subprojects {
         if (project.plugins.hasPlugin("com.android.application")) {
             val androidExtension = project.extensions.getByName("android") as AppExtension
             androidExtension.apply {
-                compileSdkVersion(34)
-                buildToolsVersion("34.0.0")
+                compileSdkVersion(36)
+                buildToolsVersion("36.0.0")
                 if (namespace == null) {
                     namespace = project.group.toString()
                 }
@@ -33,8 +33,8 @@ subprojects {
         } else if (project.plugins.hasPlugin("com.android.library")) {
             val androidExtension = project.extensions.getByName("android") as LibraryExtension
             androidExtension.apply {
-                compileSdkVersion(34)
-                buildToolsVersion("34.0.0")
+                compileSdkVersion(36)
+                buildToolsVersion("36.0.0")
                 if (namespace == null) {
                     namespace = project.group.toString()
                 }

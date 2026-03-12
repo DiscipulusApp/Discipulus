@@ -12,6 +12,7 @@ import 'package:discipulus/screens/settings/pages/debug_settings.dart';
 import 'package:discipulus/screens/settings/pages/discipulus_info.dart';
 import 'package:discipulus/screens/settings/pages/discipulus_settings.dart';
 import 'package:discipulus/screens/settings/pages/grades_settings.dart';
+import 'package:discipulus/screens/settings/pages/login_with_discipulus.dart';
 import 'package:discipulus/screens/settings/pages/magister_settings.dart';
 import 'package:discipulus/screens/settings/pages/mail_settings.dart';
 import 'package:discipulus/screens/settings/pages/notification_settings.dart';
@@ -105,6 +106,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: const Icon(Icons.file_copy_outlined),
       page: const BronnenSettingsPage(),
     ),
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+      SettingsPage(
+        name: "Login met Discipulus",
+        desc: "Log in op alternatieve applicaties",
+        icon: const Icon(Icons.login_rounded),
+        page: const LoginWithDiscipulusPage(),
+      ),
     SettingsPage(
       name: "Over Discipulus",
       desc: "Informatie & Licenties",

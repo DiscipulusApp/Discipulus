@@ -414,7 +414,7 @@ extension GradeQueryEntension
   }
 
   /// Calculates a new average when a certain grade is added to the average
-  /// Map<double, double> == {weight: grade}
+  /// `Map<double, double>` == {weight: grade}
   Future<double> newAverageFromGrade(
     List<DummyGrade> grades, {
     int? ignoredGradeUUID,

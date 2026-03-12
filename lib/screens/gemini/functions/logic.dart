@@ -10,11 +10,11 @@ import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/layout.dart';
 import 'package:flutter/material.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:discipulus/screens/gemini/functions/ai_models.dart';
 import 'package:isar/isar.dart';
 
 Future<Map<String, dynamic>> getScheduleForDateRange(
-    FunctionCall functionCall) async {
+    AIFunctionCall functionCall) async {
   final rawDate = functionCall.args['date'];
   final int? rawDays = int.tryParse(functionCall.args['dayAmount'].toString());
 
@@ -57,7 +57,7 @@ Future<Map<String, dynamic>> getScheduleForDateRange(
   };
 }
 
-Future<Map<String, dynamic>> getMessages(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> getMessages(AIFunctionCall functionCall) async {
   final folder =
       await activeProfile.berichtMappen.filter().idEqualTo(1).findFirst();
   if (folder == null) {
@@ -82,7 +82,7 @@ Future<Map<String, dynamic>> getMessages(FunctionCall functionCall) async {
   };
 }
 
-Future<Map<String, dynamic>> searchMessages(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> searchMessages(AIFunctionCall functionCall) async {
   final searchTerm = functionCall.args['searchTerm'].toString();
   final folder =
       await activeProfile.berichtMappen.filter().idEqualTo(1).findFirst();
@@ -119,7 +119,7 @@ Future<Map<String, dynamic>> searchMessages(FunctionCall functionCall) async {
   };
 }
 
-Future<Map<String, dynamic>> getMessageDetail(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> getMessageDetail(AIFunctionCall functionCall) async {
   final messageId = int.tryParse(functionCall.args['id'].toString());
   if (messageId == null) {
     return {'error': true, 'message': 'Invalid message ID'};
@@ -163,7 +163,7 @@ Future<Map<String, dynamic>> getSchoolYears() async {
 }
 
 Future<Map<String, dynamic>> getSubjectsForSchoolYear(
-    FunctionCall functionCall) async {
+    AIFunctionCall functionCall) async {
   final schoolYearId =
       int.tryParse(functionCall.args['schoolYearId'].toString());
   if (schoolYearId == null) {
@@ -190,7 +190,7 @@ Future<Map<String, dynamic>> getSubjectsForSchoolYear(
 }
 
 Future<Map<String, dynamic>> getGradesForSubjects(
-    FunctionCall functionCall) async {
+    AIFunctionCall functionCall) async {
   final List<String> subjectNames =
       List<String>.from(functionCall.args['subjects'] as List);
 
@@ -202,7 +202,7 @@ Future<Map<String, dynamic>> getGradesForSubjects(
   return {for (var subject in subjects) subject.naam: subject.grades.average};
 }
 
-Future<Map<String, dynamic>> navigateToScreen(FunctionCall functionCall) {
+Future<Map<String, dynamic>> navigateToScreen(AIFunctionCall functionCall) {
   final screenName = functionCall.args['screen'];
   final destination = destinations(activeProfile.account.value!.permissions)
       .expand((e) => e.destinations)
@@ -214,7 +214,7 @@ Future<Map<String, dynamic>> navigateToScreen(FunctionCall functionCall) {
       {'success': true, 'message': 'Navigating to $screenName'});
 }
 
-Future<Map<String, dynamic>> writeEmail(FunctionCall functionCall) {
+Future<Map<String, dynamic>> writeEmail(AIFunctionCall functionCall) {
   final recipient = functionCall.args['recipient'].toString();
   final subject = functionCall.args['subject'].toString();
   final body = functionCall.args['body'].toString();
@@ -240,7 +240,7 @@ Future<Map<String, dynamic>> writeEmail(FunctionCall functionCall) {
   });
 }
 
-Future<Map<String, dynamic>> changeEvent(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> changeEvent(AIFunctionCall functionCall) async {
   final eventId = int.parse(functionCall.args['eventId'].toString());
   final done = functionCall.args['done'] as bool?;
   final location = functionCall.args['location']?.toString();
@@ -310,7 +310,7 @@ Future<Map<String, dynamic>> getStudiewijzers() async {
   };
 }
 
-Future<Map<String, dynamic>> editStudiewijzer(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> editStudiewijzer(AIFunctionCall functionCall) async {
   final studiewijzerId = int.parse(functionCall.args['id'].toString());
   final name = functionCall.args['name']?.toString();
   final emoji = functionCall.args['emoji']?.toString();
@@ -349,7 +349,7 @@ Future<Map<String, dynamic>> editStudiewijzer(FunctionCall functionCall) async {
   };
 }
 
-Future<Map<String, dynamic>> searchPeople(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> searchPeople(AIFunctionCall functionCall) async {
   final searchTerm = functionCall.args['searchTerm'].toString();
   final people = await activeProfile.account.value!.api.messages
       .searchContacts(searchTerm);

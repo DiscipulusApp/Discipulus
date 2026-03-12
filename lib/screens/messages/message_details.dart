@@ -202,7 +202,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
 
   List<Widget> _messageChips() {
     return [
-      if (appSettings.geminiAPIKey != null && widget.message.inhoud != null)
+      if ((appSettings.useLocalAI || appSettings.openRouterAPIKey != null) && widget.message.inhoud != null)
         ActionChip(
           side: BorderSide(
               color: Theme.of(context).colorScheme.tertiaryContainer),
@@ -219,7 +219,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
             Datum: ${widget.message.verzondenOp}
             Bijlagen: ${widget.message.bronnen.length}
             Onderwerp: ${widget.message.onderwerp ?? ""}
-           
+
             ${widget.message.inhoud!}
             """,
             initialSummary: widget.message.aiSummary,
@@ -276,12 +276,14 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
         avatar: const Icon(Icons.move_to_inbox),
         label: const Text("Verplaatsen"),
         onPressed: () async {
+          var inboxes = await widget
+              .message.map.value?.profile.value?.berichtMappen
+              .filter()
+              .findAll();
+          if (!mounted) return;
           MessagesFolder? folder = await showMessageFolderSelector(
             context,
-            inboxes: await widget
-                .message.map.value?.profile.value?.berichtMappen
-                .filter()
-                .findAll(),
+            inboxes: inboxes,
             initialFolder: widget.message.map.value,
           );
           if (folder != null) {
@@ -325,8 +327,9 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
               ],
             ),
           );
-          if (shouldDelete == true && mounted) {
+          if (shouldDelete == true) {
             await widget.message.remove();
+            if (!mounted) return;
             Navigator.of(context).pop();
           }
         },

@@ -3,6 +3,7 @@ import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/csv_export.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -143,8 +144,28 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
             });
           },
         ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.download_rounded),
+          title: const Text("Exporteer naar CSV"),
+          subtitle: const Text("Exporteer al je cijfers naar een CSV bestand"),
+          onTap: () async {
+            try {
+              await exportGradesToCSV();
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Exporteren mislukt"),
+                  ),
+                );
+              }
+            }
+          },
+        ),
       ],
     );
+
   }
 }
 

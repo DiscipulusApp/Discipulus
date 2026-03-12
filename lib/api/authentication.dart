@@ -21,8 +21,7 @@ class Authentication {
         "magister.ecs",
       ]}) {
     assert(
-        tenant == null ||
-            tenant.startsWith(RegExp("[A-Za-z|-]+.magister.net")),
+        tenant == null || tenant.startsWith(RegExp("[A-Za-z|-]+.magister.net")),
         "Tenant needs to follow school.magister.net pattern!");
     assert(username == null || tenant != null,
         "Tenant has to be set, if the username parameter is used!");

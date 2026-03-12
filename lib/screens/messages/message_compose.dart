@@ -7,15 +7,15 @@ import 'package:discipulus/api/routes/messages.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
+import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/email_generation.dart';
-import 'package:discipulus/screens/gemini/gemini.dart';
 import 'package:discipulus/screens/grades/widgets/text_input.dart';
-import 'package:discipulus/screens/messages/message_extensions.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/settings/pages/mail_settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/screens/messages/message_extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
@@ -627,7 +627,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
             icon: const Icon(Icons.edit_document),
           ),
         ),
-        if (GeminiSettings.apiKey != null) // Check added for Gemini button
+        if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null)
           FilledButton.tonalIcon(
             onPressed: () async {
               String? email = await showGenerationDialog(context, "");
@@ -734,7 +734,8 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               });
             },
           ),
-          if (GeminiSettings.apiKey != null) ...[
+          if (appSettings.useLocalAI ||
+              appSettings.openRouterAPIKey != null) ...[
             const SizedBox(width: 8), // Spacing
             _buildSubjectGenerationButton()
           ]
@@ -801,9 +802,9 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           // This callback might trigger a setState in the parent if needed,
           // but currently it seems handled internally or by other triggers.
           uploadedAttachments = [...uploadedAttachments, attachment];
-          if (mounted)
-            setState(
-                () {}); // Explicitly update if list change needs UI rebuild
+          if (mounted) {
+            setState(() {});
+          }
         },
         onAttachmentRemoved: (attachment) {
           if (attachment.path == null) {
@@ -886,8 +887,9 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
       builder: builder,
       suggestionsBuilder: (context, anchorController) async {
         final query = anchorController.text;
-        if (concepts == null || query.isEmpty)
+        if (concepts == null || query.isEmpty) {
           return []; // Handle null concepts or empty query
+        }
 
         final results = await concepts!.berichten
             .filter()
@@ -1067,11 +1069,14 @@ class _AttachmentTileState extends State<AttachmentTile> {
     file = widget.path != null ? File(widget.path!) : null;
     super.initState();
     if (file != null && file!.canPreview) {
+      Brightness currentBrightness = Theme.of(context).brightness;
       Future(() async {
         colorScheme = await ColorScheme.fromImageProvider(
             provider: ResizeImage(FileImage(file!), height: 10, width: 10),
-            brightness: Theme.of(context).brightness);
-      }).then((value) => (mounted) ? setState(() {}) : () {});
+            brightness: currentBrightness);
+      }).then((value) {
+        if (mounted) setState(() {});
+      });
     }
   }
 

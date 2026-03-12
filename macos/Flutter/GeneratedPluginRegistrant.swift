@@ -14,10 +14,12 @@ import file_picker
 import file_selector_macos
 import flutter_apple_handoff
 import flutter_apple_spotlight
+import flutter_local_ai
 import flutter_local_notifications
 import home_widget
 import irondash_engine_context
 import isar_flutter_libs
+import mobile_scanner
 import open_file_mac
 import path_provider_foundation
 import share_plus
@@ -35,10 +37,12 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   SwiftFlutterAppleHandoffPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleHandoffPlugin"))
   SwiftFlutterAppleSpotlightPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleSpotlightPlugin"))
+  FlutterLocalAiPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalAiPlugin"))
   FlutterLocalNotificationsPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalNotificationsPlugin"))
   HomeWidgetPlugin.register(with: registry.registrar(forPlugin: "HomeWidgetPlugin"))
   IrondashEngineContextPlugin.register(with: registry.registrar(forPlugin: "IrondashEngineContextPlugin"))
   IsarFlutterLibsPlugin.register(with: registry.registrar(forPlugin: "IsarFlutterLibsPlugin"))
+  MobileScannerPlugin.register(with: registry.registrar(forPlugin: "MobileScannerPlugin"))
   OpenFilePlugin.register(with: registry.registrar(forPlugin: "OpenFilePlugin"))
   PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))

@@ -9,20 +9,18 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
-import 'package:discipulus/screens/gemini/summarizer.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
-import 'package:discipulus/widgets/global/avatars.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:collection/collection.dart';
+import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
 
 /// Creates the base layout of the app.
 ///
@@ -55,9 +53,6 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
   Timer? hoverTimer;
   bool _hoveredChild = false;
   bool _showDrawer = true;
-
-  // unilink subscription
-  late final StreamSubscription _linkSub;
 
   // The index is not the actual index in some cases, since we use intersperse
   // to create dividers in the medium sidebar.
@@ -128,8 +123,8 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
 
     // Perform a quick refresh if needed
     BackgroundRefresh.quickRefresh(
-      onlyRefreshNeeded: !kDebugMode,
-    ); // TODO: Turn this off (debugging)
+      onlyRefreshNeeded: true,
+    );
 
     Route newPage = PageRouteBuilder(
       settings: RouteSettings(name: routeName),
@@ -235,7 +230,6 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     initSpotlight();
 
     // Deep links
-    _linkSub = appLinks.uriLinkStream.listen(Intents.uniLinkListener);
     Intents.uniLinkListener(Uri());
   }
 
@@ -245,7 +239,6 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     animationController.dispose();
     _desinations.dispose();
     selectedIndex.dispose();
-    _linkSub.cancel();
     hoverTimer?.cancel();
     super.dispose();
   }
@@ -335,67 +328,75 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
       return Scaffold(
         backgroundColor:
             Platform.isMacOS ? Colors.transparent : backgroundColor,
-        body: AdaptiveLayout(
-          transitionDuration: Durations.short3,
-          primaryNavigation: SlotLayout(
-            config: {
-              Breakpoints.mediumAndUp: SlotLayout.from(
-                key: const Key('primaryNavigation'),
-                inAnimation: _slotLayoutAnimation,
-                outAnimation: _slotLayoutAnimation,
-                inDuration: Durations.short3,
-                outDuration: Durations.short3,
-                builder: (_) {
-                  return largeSideBar();
-                },
-              ),
-              Breakpoints.medium: SlotLayout.from(
-                key: const Key('primaryNavigation'),
-                inAnimation: _slotLayoutAnimation,
-                outAnimation: _slotLayoutAnimation,
-                inDuration: Durations.short3,
-                outDuration: Durations.short3,
-                builder: (_) {
-                  return _buildHoverAnimation(mediumSideBar(), largeSideBar());
-                },
-              ),
-            },
-          ),
-          body: SlotLayout(
-            config: <Breakpoint, SlotLayoutConfig?>{
-              Breakpoints.small: SlotLayout.from(
-                key: const Key('body'),
-                builder: (_) {
-                  persistantDrawer = false;
-                  return smallSideBar();
-                },
-              ),
-              Breakpoints.mediumAndUp: SlotLayout.from(
-                inDuration: Durations.short3,
-                outDuration: Durations.short3,
-                key: const Key('body'),
-                builder: (_) {
-                  persistantDrawer = true;
-                  return Padding(
-                    padding: padding,
-                    child: RepaintBoundary(
-                      child: ClipRRect(
-                        borderRadius: borderRadius,
-                        child: MediaQuery(
-                          data: MediaQuery.of(context).copyWith(
-                            padding: EdgeInsets.zero,
-                            viewPadding: EdgeInsets.zero,
-                            viewInsets: EdgeInsets.zero,
-                          ),
-                          child: ScaffoldMessenger(child: widget.child),
-                        ),
-                      ),
+        body: Column(
+          children: [
+            Expanded(
+              child: AdaptiveLayout(
+                transitionDuration: Durations.short3,
+                primaryNavigation: SlotLayout(
+                  config: {
+                    Breakpoints.mediumAndUp: SlotLayout.from(
+                      key: const Key('primaryNavigation'),
+                      inAnimation: _slotLayoutAnimation,
+                      outAnimation: _slotLayoutAnimation,
+                      inDuration: Durations.short3,
+                      outDuration: Durations.short3,
+                      builder: (_) {
+                        return largeSideBar();
+                      },
                     ),
-                  );
-                },
+                    Breakpoints.medium: SlotLayout.from(
+                      key: const Key('primaryNavigation'),
+                      inAnimation: _slotLayoutAnimation,
+                      outAnimation: _slotLayoutAnimation,
+                      inDuration: Durations.short3,
+                      outDuration: Durations.short3,
+                      builder: (_) {
+                        return _buildHoverAnimation(
+                            mediumSideBar(), largeSideBar());
+                      },
+                    ),
+                  },
+                ),
+                body: SlotLayout(
+                  config: <Breakpoint, SlotLayoutConfig?>{
+                    Breakpoints.small: SlotLayout.from(
+                      key: const Key('body'),
+                      builder: (_) {
+                        persistantDrawer = false;
+                        return smallSideBar();
+                      },
+                    ),
+                    Breakpoints.mediumAndUp: SlotLayout.from(
+                      inDuration: Durations.short3,
+                      outDuration: Durations.short3,
+                      key: const Key('body'),
+                      builder: (_) {
+                        persistantDrawer = true;
+                        return Padding(
+                          padding: padding,
+                          child: RepaintBoundary(
+                            child: ClipRRect(
+                              borderRadius: borderRadius,
+                              child: MediaQuery(
+                                data: MediaQuery.of(context).copyWith(
+                                  padding: EdgeInsets.zero,
+                                  viewPadding: EdgeInsets.zero,
+                                  viewInsets: EdgeInsets.zero,
+                                ),
+                                child: ScaffoldMessenger(child: widget.child),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  },
+                ),
               ),
-            },
-          ),
+            ),
+            const BannerAdWidget(),
+          ],
         ),
       );
     }
@@ -409,9 +410,7 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     return RepaintBoundary(
       child: AdvancedDrawer(
         rtlOpening: appSettings.drawerOpenOnRight,
-        disabledGestures: Platform.isAndroid
-            ? appSettings.drawerOnBack
-            : false, //TODO: Disable when route is not first
+        disabledGestures: Platform.isAndroid ? appSettings.drawerOnBack : false,
         controller: drawerController,
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
@@ -574,14 +573,16 @@ class BigDrawerBase extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (appSettings.geminiAPIKey != null) ...[
-                    _buildFakeDest(
-                      context,
-                      title: Text("Gemini"),
-                      icon: Icon(Icons.auto_awesome),
-                    ),
-                    const Divider(indent: 28, endIndent: 28),
-                  ],
+                  // For now this will be left disabled, since I do not think
+                  // that this is not all too useful.
+                  // if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null) ...[
+                  //   _buildFakeDest(
+                  //     context,
+                  //     title: const Text("AI Assistent"),
+                  //     icon: const Icon(Icons.auto_awesome),
+                  //   ),
+                  //   const Divider(indent: 28, endIndent: 28),
+                  // ],
                   ...[
                     for (DestinationSegement segment in desinations)
                       [

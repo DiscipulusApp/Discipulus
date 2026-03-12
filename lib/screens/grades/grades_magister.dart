@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/utils/extensions.dart';
@@ -240,7 +239,7 @@ class _GradesMagisterViewState extends State<GradesMagisterView> {
 
           // Create a robust unique column identifier combining period order and sort key
           // This handles columns with the same number appearing in different periods
-          final columnId = "${periodSortOrder}_${columnSortKey}";
+          final columnId = "${periodSortOrder}_$columnSortKey";
 
           // Add Column Definition
           uniqueColumns.add(ColumnDefinition(

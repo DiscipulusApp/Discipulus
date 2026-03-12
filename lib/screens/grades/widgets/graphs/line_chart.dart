@@ -425,7 +425,7 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                 fitInsideVertically: true,
                                 getTooltipItems: (touchedSpots) {
                                   return [
-                                    for (var spot in touchedSpots)
+                                    for (var _ in touchedSpots)
                                       const LineTooltipItem(
                                         "",
                                         TextStyle(),

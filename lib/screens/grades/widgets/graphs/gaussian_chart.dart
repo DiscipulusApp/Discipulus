@@ -190,7 +190,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
             drawVerticalLine: false,
             horizontalInterval: _overallMaxY / 4,
             getDrawingHorizontalLine: (value) => FlLine(
-              color: surfaceContainerHighest.withOpacity(0.5),
+              color: surfaceContainerHighest.withValues(alpha: 0.5),
               strokeWidth: 4, // Thinner grid lines
             ),
           ),
@@ -230,7 +230,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
               getTooltipColor: (_) => Theme.of(context)
                   .colorScheme
                   .secondaryContainer
-                  .withOpacity(0.9), // Slightly opaque background
+                  .withValues(alpha: 0.9), // Slightly opaque background
               tooltipHorizontalOffset: 10, // Adjust spacing from the spot
               maxContentWidth: 200, // Allow more width if needed
               tooltipPadding: const EdgeInsets.all(8), // Add padding
@@ -281,7 +281,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                   // It's the primary curve, return the indicator data for this spot
                   return TouchedSpotIndicatorData(
                     FlLine(
-                      color: primaryColor.withOpacity(0.5),
+                      color: primaryColor.withValues(alpha: 0.5),
                       strokeWidth: 5, // Make indicator line slightly thicker
                     ),
                     FlDotData(
@@ -316,8 +316,8 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    primaryColor.withOpacity(0.3),
-                    primaryColor.withOpacity(0.0),
+                    primaryColor.withValues(alpha: 0.3),
+                    primaryColor.withValues(alpha: 0.0),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -329,7 +329,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                   (curveData) => LineChartBarData(
                     spots: curveData.spots,
                     isCurved: true,
-                    color: onSurfaceVariant.withOpacity(0.4), // Grayed out
+                    color: onSurfaceVariant.withValues(alpha: 0.4), // Grayed out
                     barWidth: 1.5, // Thinner
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
@@ -344,7 +344,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                   FlSpot(_primaryCurveData!.mean, 0),
                   FlSpot(_primaryCurveData!.mean, _overallMaxY)
                 ],
-                color: tertiaryColor.withOpacity(0.7),
+                color: tertiaryColor.withValues(alpha: 0.7),
                 barWidth: 1,
                 dashArray: [4, 4],
                 dotData: const FlDotData(show: false),
@@ -355,7 +355,7 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                 FlSpot(appSettings.sufficientFrom, 0),
                 FlSpot(appSettings.sufficientFrom, _overallMaxY)
               ],
-              color: errorColor.withOpacity(0.7),
+              color: errorColor.withValues(alpha: 0.7),
               barWidth: 1,
               dashArray: [4, 4],
               dotData: const FlDotData(show: false),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_apple_handoff/flutter_apple_handoff.dart';
 
@@ -107,7 +108,9 @@ class BottomSheetBottomContentPadding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: MediaQuery.of(context).viewPadding.bottom + 16,
+        height: BannerAdWidget.of(context)?.isEnabled() == true
+            ? 0
+            : MediaQuery.of(context).viewPadding.bottom + 16,
       );
 }
 

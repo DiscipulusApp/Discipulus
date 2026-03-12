@@ -463,7 +463,7 @@ class ChangeInAverageCard extends StatelessWidget {
               value: changeInAverage.averageBefore.displayNumber()),
           Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(
-              size: (24 * MediaQuery.of(context).textScaleFactor),
+              size: MediaQuery.textScalerOf(context).scale(24),
               color: changeInAverage.change == 0
                   ? Theme.of(context).colorScheme.surfaceContainerHighest
                   : (changeInAverage.change < 0 || changeInAverage.change > 10)

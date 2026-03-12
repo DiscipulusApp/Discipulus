@@ -294,7 +294,7 @@ Future<void> scheduleReminders(Profile profile) async {
           NotificationPayload.fromJson(e.payload!).channel ==
               NotificationChannel.reminders,
     ))
-      flutterLocalNotificationsPlugin.cancel(e.id)
+      flutterLocalNotificationsPlugin.cancel(id: e.id)
   ]);
 
   late List<Assignment> assignments;

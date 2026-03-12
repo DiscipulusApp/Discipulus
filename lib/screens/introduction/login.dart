@@ -21,7 +21,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-Future<TokenSet?> showMagisterLoginDialog(BuildContext context) async {
+Future<TokenSet?> showMagisterLoginDialog(
+  BuildContext context, {
+  String? tenant,
+  String? username,
+}) async {
   ValueNotifier<Uri?> redirectUrl = ValueNotifier<Uri?>(null);
   Authentication auth = Authentication();
 
@@ -73,11 +77,13 @@ Future<TokenSet?> showMagisterLoginDialog(BuildContext context) async {
             await Dio().getUri(uri).then((value) => print(value.realUri));
           }
         })
-        ..launch(auth.generateLoginURL().toString());
+        ..launch(auth
+            .generateLoginURL(tenant: tenant, username: username)
+            .toString());
     } else {
       await launchUrl(
-        auth.generateLoginURL(),
-        mode: LaunchMode.externalNonBrowserApplication,
+        auth.generateLoginURL(tenant: tenant, username: username),
+        mode: LaunchMode.externalApplication,
         webViewConfiguration:
             const WebViewConfiguration(enableDomStorage: false),
       );
@@ -225,7 +231,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       Future.delayed(
         const Duration(seconds: 5),
         () {
-          if (!textState.value.contains("ERROR: ")) {
+          if (!textState.value.contains("ERROR: ") && context.mounted) {
             textState.value = "Nog even wachten, je data wordt opgehaald...";
           }
         },

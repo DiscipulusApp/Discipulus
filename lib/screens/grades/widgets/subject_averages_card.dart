@@ -184,7 +184,9 @@ class _SubjectAverageTileState extends State<SubjectAverageTile> {
   TextStyle? get textStyle => widget.big
       ? Theme.of(context).listTileTheme.titleTextStyle ??
           Theme.of(context).textTheme.bodyLarge
-      : Theme.of(context).textTheme.titleSmall;
+      : Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          );
 
   @override
   Widget build(BuildContext context) {
@@ -202,125 +204,147 @@ class _SubjectAverageTileState extends State<SubjectAverageTile> {
                     .capitalized,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: textStyle,
+                style: textStyle?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
-          FutureBuilder(
-            future: Future(() async => await widget.subject.grades
-                .filter()
-                .applyGradeFilter()
-                .changeInAverageLastMonth()),
-            builder: (context, snapshot) => CustomCard(
-              margin: EdgeInsets.zero,
-              elevation: 9,
-              surfaceTintColor: (snapshot.data?.change.isNegative ?? false)
-                  ? Theme.of(context).colorScheme.error
-                  : null,
-              child: Row(
-                children: [
-                  CustomAnimatedSize(
-                    child: ConstrainedBox(
-                      // When the change tile should be shown the width
-                      // should be more than 0
-                      constraints:
-                          ((widget.big && (snapshot.data?.change ?? 0) >= 0.1 ||
-                                      (snapshot.data?.change ?? 0) <= -0.1) &&
-                                  widget.showTrend)
-                              ? const BoxConstraints(
-                                  minWidth: 78, // 64 + 8 * 2
-                                )
-                              : const BoxConstraints(maxWidth: 0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Icon(
-                                (snapshot.data?.change ?? 0).isNegative
-                                    ? Icons.trending_down
-                                    : Icons.trending_up,
-                                color: (snapshot.data?.change ?? 0).isNegative
-                                    ? Theme.of(context).colorScheme.error
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                size: 22,
-                              ),
-                            ),
-                            Text(
-                              snapshot.data?.change
-                                      .displayNumber(decimalDigits: 1) ??
-                                  "",
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: textStyle?.copyWith(
-                                color:
-                                    (snapshot.data?.change.isNegative ?? false)
-                                        ? Theme.of(context).colorScheme.error
-                                        : null,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  FutureBuilder(
-                    future: Future(() async => (await widget.subject.grades
-                            .filter()
-                            .applyGradeFilter()
-                            .findAll())
-                        .average),
-                    builder: (context, snapshot) {
-                      return CustomCard(
-                        color: snapshot.hasData &&
-                                snapshot.data! < appSettings.sufficientFrom
-                            ? Theme.of(context).colorScheme.errorContainer
-                            : Theme.of(context).colorScheme.primaryContainer,
-                        margin: EdgeInsets.zero,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CustomAnimatedSize(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minWidth: widget.rounded ? 24 : 40,
-                              ),
-                              child: ElasticAnimation(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  key: ValueKey(snapshot.data ?? ""),
-                                  snapshot.data?.displayNumber(
-                                        decimalDigits: widget.rounded ? 0 : 2,
-                                      ) ??
-                                      "-",
-                                  maxLines: 1,
-                                  textAlign: TextAlign.center,
-                                  style: textStyle?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: snapshot.hasData &&
-                                              snapshot.data! <
-                                                  appSettings.sufficientFrom
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .onErrorContainer
+          CustomCard(
+            margin: EdgeInsets.zero,
+            surfaceTintColor: Theme.of(context).colorScheme.primary,
+            elevation: 2,
+            child: Row(
+              children: [
+                FutureBuilder(
+                  future: Future(() async => await widget.subject.grades
+                      .filter()
+                      .applyGradeFilter()
+                      .changeInAverageLastMonth()),
+                  builder: (context, snapshot) => CustomCard(
+                    margin: EdgeInsets.zero,
+                    elevation: 9,
+                    surfaceTintColor:
+                        (snapshot.data?.change.isNegative ?? false)
+                            ? Theme.of(context).colorScheme.error
+                            : null,
+                    child: Row(
+                      children: [
+                        CustomAnimatedSize(
+                          child: ConstrainedBox(
+                            // When the change tile should be shown the width
+                            // should be more than 0
+                            constraints: ((widget.big &&
+                                            (snapshot.data?.change ?? 0) >=
+                                                0.1 ||
+                                        (snapshot.data?.change ?? 0) <= -0.1) &&
+                                    widget.showTrend)
+                                ? const BoxConstraints(
+                                    minWidth: 78, // 64 + 8 * 2
+                                  )
+                                : const BoxConstraints(maxWidth: 0),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Icon(
+                                      (snapshot.data?.change ?? 0).isNegative
+                                          ? Icons.trending_down
+                                          : Icons.trending_up,
+                                      color: (snapshot.data?.change ?? 0)
+                                              .isNegative
+                                          ? Theme.of(context).colorScheme.error
                                           : Theme.of(context)
                                               .colorScheme
-                                              .onPrimaryContainer),
-                                ),
+                                              .onSurfaceVariant,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  Text(
+                                    snapshot.data?.change
+                                            .displayNumber(decimalDigits: 1) ??
+                                        "",
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: textStyle?.copyWith(
+                                      color: (snapshot
+                                                  .data?.change.isNegative ??
+                                              false)
+                                          ? Theme.of(context).colorScheme.error
+                                          : null,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
+                        FutureBuilder(
+                          future: Future(() async => (await widget
+                                  .subject.grades
+                                  .filter()
+                                  .applyGradeFilter()
+                                  .findAll())
+                              .average),
+                          builder: (context, snapshot) {
+                            return CustomCard(
+                              color: snapshot.hasData &&
+                                      snapshot.data! <
+                                          appSettings.sufficientFrom
+                                  ? Theme.of(context).colorScheme.errorContainer
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                              margin: EdgeInsets.zero,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CustomAnimatedSize(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minWidth: widget.rounded ? 24 : 40,
+                                    ),
+                                    child: ElasticAnimation(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        key: ValueKey(snapshot.data ?? ""),
+                                        snapshot.data?.displayNumber(
+                                              decimalDigits:
+                                                  widget.rounded ? 0 : 2,
+                                            ) ??
+                                            "-",
+                                        maxLines: 1,
+                                        textAlign: TextAlign.center,
+                                        style: textStyle?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: snapshot.hasData &&
+                                                    snapshot.data! <
+                                                        appSettings
+                                                            .sufficientFrom
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .onErrorContainer
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimaryContainer),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                Icon(Icons.navigate_next),
+              ],
             ),
-          )
+          ),
         ],
       ),
     );

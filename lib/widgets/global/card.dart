@@ -11,6 +11,7 @@ class CustomCard extends Card {
     super.color,
     super.margin,
     super.elevation,
+    super.clipBehavior,
   });
 
   static CustomCard? of(BuildContext context) =>
@@ -54,7 +55,7 @@ class CustomCard extends Card {
         surfaceTintColor: surfaceTintColor,
         margin: margin,
         color: color,
-        // clipBehavior: Clip.hardEdge, // This is not that great for performance
+        clipBehavior: clipBehavior,
         child: child,
       ),
     );

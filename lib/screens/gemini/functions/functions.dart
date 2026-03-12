@@ -1,131 +1,78 @@
 import 'dart:convert';
-
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/routes.dart';
+import 'package:discipulus/screens/gemini/functions/ai_models.dart';
 import 'package:discipulus/screens/gemini/functions/logic.dart';
 import 'package:discipulus/utils/account_manager.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
-List<FunctionDeclaration> discipulusFunctions = [
-  FunctionDeclaration(
+List<AIFunctionDeclaration> discipulusFunctions = [
+  AIFunctionDeclaration(
     'navigateToScreen',
     'Navigeer naar een specifiek scherm binnen de Discipulus app.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "screen": Schema.enumString(
+        "screen": AISchema.enumString(
           enumValues: [
             for (var segment
                 in destinations(activeProfile.account.value!.permissions))
               for (var destination in segment.destinations) destination.label
           ],
           description:
-              "De naam van het scherm waarnaar genavigeerd moet worden. Bijvoorbeeld: 'Rooster', 'Cijfers', 'Berichten'. Kies exact één van de beschikbare opties.", // Duidelijker beschrijving met voorbeelden en instructie
+              "De naam van het scherm waarnaar genavigeerd moet worden. Bijvoorbeeld: 'Rooster', 'Cijfers', 'Berichten'. Kies exact één van de beschikbare opties.",
         ),
       },
       requiredProperties: ["screen"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getScheduleForDateRange',
     'Haal het lesrooster op voor een bepaalde periode. De periode mag maximaal 30 dagen lang zijn.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "date": Schema.string(
+        "date": AISchema.string(
           description:
-              "De startdatum van de periode waarvoor het rooster moet worden opgehaald. Formatteer de datum als YYYY-MM-DD. Bijvoorbeeld: '2024-09-15'.", // Verbeterde beschrijving met formaat instructie en voorbeeld in het Nederlands
+              "De startdatum van de periode waarvoor het rooster moet worden opgehaald. Formatteer de datum als YYYY-MM-DD. Bijvoorbeeld: '2024-09-15'.",
         ),
-        "dayAmount": Schema.integer(
+        "dayAmount": AISchema.integer(
           description:
-              "Het aantal dagen van het rooster dat moet worden opgehaald, beginnend vanaf de opgegeven startdatum.  Moet een geheel getal zijn. Standaard is dit 1 dag, maximum is 12 dagen.", // Verbeterde beschrijving in het Nederlands, type gespecificeerd, standaard en maximum vermeld
+              "Het aantal dagen van het rooster dat moet worden opgehaald, beginnend vanaf de opgegeven startdatum. Moet een geheel getal zijn. Standaard is dit 1 dag, maximum is 12 dagen.",
         ),
-        "events": Schema.array(
-          items: Schema.object(
-              description: "Een individueel lesrooster item.",
-              properties: {
-                "eventId": Schema.integer(),
-                "lesuurVan": Schema.integer(),
-                "lesuurTot": Schema.integer(),
-                "start": Schema.string(
-                    description:
-                        "Starttijd van de les in ISO 8601 formaat (YYYY-MM-DDTHH:mm:ssZ)."),
-                "end": Schema.string(
-                    description:
-                        "Eindtijd van de les in ISO 8601 formaat (YYYY-MM-DDTHH:mm:ssZ)."),
-                "title": Schema.string(
-                    description:
-                        "De titel van de les, bijvoorbeeld 'Wiskunde'."),
-                "description": Schema.string(
-                    description:
-                        "Extra details over de les, bijvoorbeeld 'Hoofdstuk 3' of 'Projectwerk'."),
-                "location": Schema.string(
-                    description:
-                        "De locatie van de les, bijvoorbeeld 'Lokaal 101' of 'Gymzaal'."),
-                "type": Schema.enumString(
-                    enumValues: [for (var e in InfoType.values) e.toName],
-                    description:
-                        "Het type rooster item, bijvoorbeeld 'Les', 'Toets', 'Huiswerk'. Kies exact één van de beschikbare opties."),
-                "status": Schema.enumString(
-                    enumValues: [for (var e in Status.values) e.toName],
-                    description:
-                        "De status van het rooster item, bijvoorbeeld 'Gepland', 'Uitgevallen', 'Verplaatst'. Kies exact één van de beschikbare opties."),
-                "aanwezigheid": Schema.string(
-                    description:
-                        "Aanwezigheidsinformatie, bijvoorbeeld 'Verplicht' of 'Optioneel'."),
-                "afgerond": Schema.boolean(
-                    description:
-                        "Geeft aan of het huiswerk of de toets is afgerond (waar of niet waar)."),
-              },
-              requiredProperties: [
-                "eventId",
-                "lesuurVan",
-                "lesuurTot",
-                "start",
-                "end",
-                "title",
-                "description",
-                "location",
-                "type",
-                "status",
-                "aanwezigheid",
-                "afgerond",
-              ]),
-        )
       },
       requiredProperties: ["date"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'changeEvent',
     'Verander de details van een specifiek rooster item.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "eventId": Schema.string(
+        "eventId": AISchema.string(
           description:
               "De unieke ID van het rooster item dat veranderd moet worden. Dit ID identificeert de specifieke les, toets of huiswerkopdracht.",
         ),
-        "location": Schema.string(
+        "location": AISchema.string(
           description:
               "De nieuwe locatie van de les, bijvoorbeeld 'Lokaal 101' of 'Gymzaal'.",
           nullable: true,
         ),
-        "content": Schema.string(
+        "content": AISchema.string(
           description:
               "Extra details over de les, bijvoorbeeld 'Hoofdstuk 3' of 'Projectwerk'.",
           nullable: true,
         ),
-        "status": Schema.enumString(
+        "status": AISchema.enumString(
           enumValues: [for (var e in Status.values) e.toName],
           description:
               "De nieuwe status van het rooster item, bijvoorbeeld 'Gepland', 'Uitgevallen', 'Verplaatst'. Kies exact één van de beschikbare opties.",
           nullable: true,
         ),
-        "infoType": Schema.enumString(
+        "infoType": AISchema.enumString(
           enumValues: [for (var e in InfoType.values) e.toName],
           description:
               "Het nieuwe type rooster item, bijvoorbeeld 'Les', 'Toets', 'Huiswerk'. Kies exact één van de beschikbare opties.",
           nullable: true,
         ),
-        "done": Schema.boolean(
+        "done": AISchema.boolean(
           description:
               "Geef aan of het rooster item als 'afgerond' (waar) of 'niet afgerond' (niet waar) moet worden gemarkeerd.",
           nullable: true,
@@ -134,265 +81,114 @@ List<FunctionDeclaration> discipulusFunctions = [
       requiredProperties: ["eventId"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getMessages',
     'Haal een lijst op van de meest recente berichten van de gebruiker.',
-    Schema.object(
-      properties: {
-        "messages": Schema.array(
-          items: Schema.object(
-            description: "Een individueel bericht.",
-            properties: {
-              "id": Schema.string(description: "De unieke ID van het bericht."),
-              "subject":
-                  Schema.string(description: "Het onderwerp van het bericht."),
-              "sender": Schema.string(
-                  description: "De naam van de afzender van het bericht."),
-              "date": Schema.string(
-                  description:
-                      "De datum en tijd waarop het bericht is verzonden, in ISO 8601 formaat (YYYY-MM-DDTHH:mm:ssZ)."),
-              "read": Schema.boolean(
-                  description:
-                      "Geeft aan of het bericht al gelezen is (waar of niet waar)."),
-            },
-            requiredProperties: [
-              "id",
-              "subject",
-              "sender",
-              "date",
-              "read",
-            ],
-          ),
-        ),
-      },
-      requiredProperties: ["messages"],
+    AISchema.object(
+      properties: {},
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'searchMessages',
     'Zoek berichten van de gebruiker op basis van een zoekterm.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "searchTerm": Schema.string(
+        "searchTerm": AISchema.string(
           description:
-              "De zoekterm die gebruikt moet worden om berichten te zoeken. Bijvoorbeeld: 'huiswerk' of 'cijferlijst'.", // Verbeterde beschrijving met voorbeeld in het Nederlands
-        ),
-        "messages": Schema.array(
-          // 'messages' array behouden, structuur is goed
-          items: Schema.object(
-            description:
-                "Een individueel bericht dat overeenkomt met de zoekterm.",
-            properties: {
-              "id": Schema.string(description: "De unieke ID van het bericht."),
-              "subject":
-                  Schema.string(description: "Het onderwerp van het bericht."),
-              "sender": Schema.string(
-                  description: "De naam van de afzender van het bericht."),
-              "date": Schema.string(
-                  description:
-                      "De datum en tijd waarop het bericht is verzonden, in ISO 8601 formaat (YYYY-MM-DDTHH:mm:ssZ)."),
-              "read": Schema.boolean(
-                  description:
-                      "Geeft aan of het bericht al gelezen is (waar of niet waar)."),
-            },
-            requiredProperties: [
-              "id",
-              "subject",
-              "sender",
-              "date",
-              "read",
-            ],
-          ),
+              "De zoekterm die gebruikt moet worden om berichten te zoeken. Bijvoorbeeld: 'huiswerk' of 'cijferlijst'.",
         ),
       },
-      requiredProperties: [
-        "searchTerm"
-      ], // Alleen searchTerm is input, 'messages' is output
+      requiredProperties: ["searchTerm"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'writeEmail',
-    'Stel een nieuwe e-mail op.', // Verbeterde beschrijving in het Nederlands
-    Schema.object(
+    'Stel een nieuwe e-mail op.',
+    AISchema.object(
       properties: {
-        "recipient": Schema.string(
-          description:
-              "De naam van de ontvanger. Bijvoorbeeld: 'Joost'.", // Verbeterde beschrijving met voorbeeld
+        "recipient": AISchema.string(
+          description: "De naam van de ontvanger. Bijvoorbeeld: 'Joost'.",
         ),
-        "subject": Schema.string(
-          description: "Het onderwerp van de e-mail.", // Beschrijving behouden
+        "subject": AISchema.string(
+          description: "Het onderwerp van de e-mail.",
         ),
-        "body": Schema.string(
+        "body": AISchema.string(
           description:
-              "De hoofdtekst van de e-mail. Dit is de inhoud van het bericht dat je wilt versturen.", // Verbeterde beschrijving, verduidelijkt 'body'
+              "De hoofdtekst van de e-mail. Dit is de inhoud van het bericht dat je wilt versturen.",
         ),
       },
       requiredProperties: ["recipient", "subject", "body"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getMessageDetail',
-    'Haal de volledige details van een specifiek bericht op, inclusief de inhoud en bijlagen.', // Verbeterde beschrijving in het Nederlands, specificeert details en bijlagen
-    Schema.object(
+    'Haal de volledige details van een specifiek bericht op, inclusief de inhoud en bijlagen.',
+    AISchema.object(
       properties: {
-        "id": Schema.string(
+        "id": AISchema.string(
           description:
-              "De ID van het bericht waarvan de details moeten worden opgehaald. Gebruik de ID van een bericht verkregen via `getMessages` of `searchMessages`.", // Verbeterde beschrijving met context en instructie over ID herkomst
+              "De ID van het bericht waarvan de details moeten worden opgehaald. Gebruik de ID van een bericht verkregen via `getMessages` of `searchMessages`.",
         ),
-        "subject": Schema.string(
-            description:
-                "Het onderwerp van het bericht."), // Beschrijving toegevoegd
-        "content": Schema.string(
-            description:
-                "De volledige inhoud van het bericht, inclusief de tekst van de e-mail zelf."), // Beschrijving toegevoegd
-        "sender": Schema.string(
-            description:
-                "De naam van de afzender van het bericht."), // Beschrijving toegevoegd
-        "date": Schema.string(
-            description:
-                "De datum en tijd waarop het bericht is verzonden, in ISO 8601 formaat (YYYY-MM-DDTHH:mm:ssZ)."), // Beschrijving toegevoegd met formaat
-        "read": Schema.boolean(
-            description:
-                "Geeft aan of het bericht al gelezen is (waar of niet waar)."), // Beschrijving toegevoegd
-        "attachments": Schema.integer(
-            description:
-                "Het aantal bijlagen dat bij dit bericht hoort. Let op: de details van de bijlagen zelf worden hier niet gegeven."), // Beschrijving verduidelijkt, en waarschuwing over details
       },
-      requiredProperties: [
-        "id",
-        // 'subject', 'content', 'sender', 'date', 'read', 'attachments' zijn output, 'id' is input
-      ], // Alleen 'id' is echt nodig als input om details op te halen
+      requiredProperties: ["id"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getSchoolYears',
-    'Haal een lijst op van alle beschikbare schooljaren.', // Verbeterde beschrijving in het Nederlands
-    Schema.object(
-      properties: {
-        "schoolYears": Schema.array(
-          items: Schema.object(
-            description:
-                "Een individueel schooljaar.", // Duidelijkere beschrijving van 'schoolYears' array items
-            properties: {
-              "id": Schema.string(
-                  description:
-                      "De unieke ID van het schooljaar."), // Beschrijving toegevoegd
-              "name": Schema.string(
-                  description:
-                      "De naam van het schooljaar, bijvoorbeeld '2023-2024'."), // Beschrijving toegevoegd met voorbeeld
-              "start": Schema.string(
-                  description:
-                      "De startdatum van het schooljaar in YYYY-MM-DD formaat."), // Beschrijving toegevoegd met formaat
-              "end": Schema.string(
-                  description:
-                      "De einddatum van het schooljaar in YYYY-MM-DD formaat."), // Beschrijving toegevoegd met formaat
-            },
-            requiredProperties: [
-              "id",
-              "name",
-              "start",
-              "end",
-            ],
-          ),
-        ),
-      },
-      requiredProperties: [
-        "schoolYears"
-      ], // 'schoolYears' is output, niet echt 'required' als input
+    'Haal een lijst op van alle beschikbare schooljaren.',
+    AISchema.object(
+      properties: {},
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getSubjectsForSchoolYear',
-    'Haal een lijst op van de vakken die horen bij een specifiek schooljaar.', // Verbeterde beschrijving in het Nederlands
-    Schema.object(
+    'Haal een lijst op van de vakken die horen bij een specifiek schooljaar.',
+    AISchema.object(
       properties: {
-        "schoolYearId": Schema.string(
+        "schoolYearId": AISchema.string(
           description:
-              "De ID van het schooljaar waarvoor de vakken moeten worden opgehaald. Gebruik een ID verkregen via `getSchoolYears`.", // Verbeterde beschrijving met context en instructie over ID herkomst
-        ),
-        "subjects": Schema.array(
-          items: Schema.object(
-            description:
-                "Een individueel vak binnen het schooljaar.", // Duidelijkere beschrijving van 'subjects' array items
-            properties: {
-              "id": Schema.string(
-                  description:
-                      "De unieke ID van het vak."), // Beschrijving toegevoegd
-              "name": Schema.string(
-                  description:
-                      "De naam van het vak, bijvoorbeeld 'Wiskunde', 'Nederlands', 'Engels'."), // Beschrijving toegevoegd met voorbeelden
-            },
-            requiredProperties: [
-              "id",
-              "name",
-            ],
-          ),
+              "De ID van het schooljaar waarvoor de vakken moeten worden opgehaald. Gebruik een ID verkregen via `getSchoolYears`.",
         ),
       },
-      requiredProperties: [
-        "schoolYearId"
-      ], // Alleen schoolYearId is input, 'subjects' is output
+      requiredProperties: ["schoolYearId"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getGradesForSubjects',
-    'Haal de cijfers op voor een of meerdere specifieke vakken.', // Verbeterde beschrijving in het Nederlands, "een of meerdere"
-    Schema.object(properties: {
-      "subjects": Schema.array(
-        items: Schema.string(
-            description:
-                "Een lijst van de namen van de vakken waarvoor de cijfers moeten worden opgehaald. Bijvoorbeeld: ['wiskunde', 'nederlands']. Gebruik de exacte vaknamen zoals weergegeven in Discipulus."), // Verbeterde beschrijving met instructie over exacte namen en voorbeeld in het Nederlands
-      ),
-    }, requiredProperties: [
-      "subjects"
-    ]),
+    'Haal de cijfers op voor een of meerdere specifieke vakken.',
+    AISchema.object(
+      properties: {
+        "subjects": AISchema.array(
+          items: AISchema.string(
+              description:
+                  "Een lijst van de namen van de vakken waarvoor de cijfers moeten worden opgehaald. Bijvoorbeeld: ['wiskunde', 'nederlands']. Gebruik de exacte vaknamen zoals weergegeven in Discipulus."),
+        ),
+      },
+      requiredProperties: ["subjects"],
+    ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'getStudiewijzers',
     'Haal een lijst op van alle beschikbare studiewijzers.',
-    Schema.object(
-      properties: {
-        "studiewijzers": Schema.array(
-          items: Schema.object(
-            description: "Een individuele studiewijzer.",
-            properties: {
-              "id": Schema.number(
-                  description: "De unieke ID van de studiewijzer."),
-              "name": Schema.string(
-                description: "De naam van de studiewijzer.",
-                nullable: true,
-              ),
-              "emoji": Schema.string(
-                description: "Het emoji dat gebruikt wordt voor herkenning",
-                nullable: true,
-              ),
-              "favorite": Schema.boolean(
-                description: "If the studiewijzer is a favorite",
-                nullable: true,
-              )
-            },
-            requiredProperties: ["id"],
-          ),
-        ),
-      },
-      requiredProperties: ["studiewijzers"],
+    AISchema.object(
+      properties: {},
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'editStudiewijzer',
     'Pas een studiewijzer aan.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "id": Schema.number(description: "De unieke ID van de studiewijzer."),
-        "name": Schema.string(
+        "id": AISchema.number(description: "De unieke ID van de studiewijzer."),
+        "name": AISchema.string(
           description: "De nieuwe naam van de studiewijzer.",
           nullable: true,
         ),
-        "emoji": Schema.string(
+        "emoji": AISchema.string(
           description: "Het nieuwe emoji dat gebruikt wordt voor herkenning",
           nullable: true,
         ),
-        "favorite": Schema.boolean(
+        "favorite": AISchema.boolean(
           description: "Of de studiewijzer een favoriet is",
           nullable: true,
         )
@@ -400,31 +196,14 @@ List<FunctionDeclaration> discipulusFunctions = [
       requiredProperties: ["id"],
     ),
   ),
-  FunctionDeclaration(
+  AIFunctionDeclaration(
     'searchPeople',
     'Zoek naar mensen in de school.',
-    Schema.object(
+    AISchema.object(
       properties: {
-        "searchTerm": Schema.string(
+        "searchTerm": AISchema.string(
           description:
               "De zoekterm die gebruikt moet worden om mensen te zoeken. Bijvoorbeeld: 'Jan Jansen' of 'jansen'.",
-        ),
-        "people": Schema.array(
-          items: Schema.object(
-            description: "Een persoon die overeenkomt met de zoekterm.",
-            properties: {
-              "id": Schema.string(description: "De unieke ID van de persoon."),
-              "name": Schema.string(description: "De naam van de persoon."),
-              "type": Schema.string(
-                  description:
-                      "Het type van de persoon, bijvoorbeeld 'leerling' of 'docent'."),
-            },
-            requiredProperties: [
-              "id",
-              "name",
-              "type",
-            ],
-          ),
         ),
       },
       requiredProperties: ["searchTerm"],
@@ -432,7 +211,7 @@ List<FunctionDeclaration> discipulusFunctions = [
   ),
 ];
 
-Future<String> handleFunctionCall(FunctionCall functionCall) async {
+Future<String> handleFunctionCall(AIFunctionCall functionCall) async {
   try {
     final result = await _executeFunction(functionCall);
     return jsonEncode(result);
@@ -441,7 +220,7 @@ Future<String> handleFunctionCall(FunctionCall functionCall) async {
   }
 }
 
-Future<Map<String, dynamic>> _executeFunction(FunctionCall functionCall) async {
+Future<Map<String, dynamic>> _executeFunction(AIFunctionCall functionCall) async {
   switch (functionCall.name) {
     case 'writeEmail':
       return writeEmail(functionCall);
@@ -477,7 +256,7 @@ Future<Map<String, dynamic>> _executeFunction(FunctionCall functionCall) async {
   }
 }
 
-extension FunctionCallExtension on FunctionCall {
+extension AIFunctionCallExtension on AIFunctionCall {
   String get readableName {
     switch (name) {
       case 'writeEmail':

@@ -8,6 +8,7 @@ import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
@@ -56,6 +57,7 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                           isar.profiles.delete(e.uuid);
                         });
                         setState(() {});
+                        if (!mounted) return;
                         await MainApp.of(context).updateTheme();
                       },
                       icon: const Icon(Icons.remove)),
@@ -189,6 +191,53 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
           title: const Text("Show error"),
           trailing: const Icon(Icons.navigate_next),
           onTap: () => const ErrorsListScreen().push(context),
+        ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.alarm_add),
+          title: const Text("Slimme wekker berekening test"),
+          subtitle: const Text("Bereken de volgende wektijd"),
+          onTap: () async {
+            final (alarmTime, lesson) =
+                await activeProfile.calculateSmartAlarmTime();
+            if (!mounted) return;
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("Slimme wekker resultaat"),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        "Berekende tijd: ${alarmTime?.formattedDateAndTime ?? 'Geen'}"),
+                    const SizedBox(height: 8),
+                    Text(
+                        "Gebaseerd op les: ${lesson?.title ?? (lesson?.omschrijving ?? 'Geen')}"),
+                    if (lesson != null)
+                      Text("Les begint om: ${lesson.start.formattedTime}"),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Sluiten"),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      await activeProfile.scheduleSmartAlarm();
+                      if (!context.mounted) return;
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Alarm ingepland")),
+                      );
+                    },
+                    child: const Text("Nu inplannen"),
+                  ),
+                ],
+              ),
+            );
+          },
         )
       ],
     );

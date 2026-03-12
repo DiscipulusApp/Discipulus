@@ -7,7 +7,7 @@ class Leermiddel extends MagisterBase {
   final int materiaalType;
   final List<Link> links;
   final String titel;
-  final String uitgeverij;
+  final String? uitgeverij;
   final int status;
   final DateTime start;
   final DateTime eind;
