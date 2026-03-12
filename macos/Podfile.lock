@@ -19,6 +19,9 @@ PODS:
   - flutter_apple_spotlight (0.0.1):
     - Flutter
     - FlutterMacOS
+  - flutter_local_ai (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - flutter_local_notifications (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
@@ -57,6 +60,7 @@ DEPENDENCIES:
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_apple_handoff (from `Flutter/ephemeral/.symlinks/plugins/flutter_apple_handoff/darwin`)
   - flutter_apple_spotlight (from `Flutter/ephemeral/.symlinks/plugins/flutter_apple_spotlight/darwin`)
+  - flutter_local_ai (from `Flutter/ephemeral/.symlinks/plugins/flutter_local_ai/darwin`)
   - flutter_local_notifications (from `Flutter/ephemeral/.symlinks/plugins/flutter_local_notifications/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - home_widget (from `Flutter/ephemeral/.symlinks/plugins/home_widget/darwin`)
@@ -89,6 +93,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_apple_handoff/darwin
   flutter_apple_spotlight:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_apple_spotlight/darwin
+  flutter_local_ai:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_local_ai/darwin
   flutter_local_notifications:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_local_notifications/macos
   FlutterMacOS:
@@ -124,7 +130,8 @@ SPEC CHECKSUMS:
   file_selector_macos: 9e9e068e90ebee155097d00e89ae91edb2374db7
   flutter_apple_handoff: 084712ce2386f42a5c51d50daf8837cbbe80b568
   flutter_apple_spotlight: 938e3294e47ba04b79cb4afecf633e25520f6521
-  flutter_local_notifications: 4bf37a31afde695b56091b4ae3e4d9c7a7e6cda0
+  flutter_local_ai: f0d8ec87c8a56478ac06d72962633c5235c7b911
+  flutter_local_notifications: 1fc7ffb10a83d6a2eeeeddb152d43f1944b0aad0
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   home_widget: 834f4b097ec5bf675b54621de18db13adde80794
   irondash_engine_context: 893c7d96d20ce361d7e996f39d360c4c2f9869ba
@@ -137,6 +144,6 @@ SPEC CHECKSUMS:
   url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: 9ebaf0ce3d369aaa26a9ea0e159195ed94724cf3
+PODFILE CHECKSUM: f0c21717cb7ee9112f915044c74bfceb5b12e02a
 
 COCOAPODS: 1.16.2
