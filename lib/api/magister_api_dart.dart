@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:discipulus/api/models/account.dart';
 import 'package:discipulus/api/routes/messages.dart';
 import 'package:discipulus/api/routes/persons.dart';
+import 'package:discipulus/api/routes/user.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
@@ -28,6 +29,7 @@ class Magister {
       ApiAccount.fromMap((await dio.get("account?noCache=0")).data);
 
   PersonRoute person(int personId) => PersonRoute(this, personId: personId);
+  UserRoute user(String uuid) => UserRoute(this, uuid: uuid);
   MessagesRoute get messages => MessagesRoute(this);
 
   Magister({
@@ -37,7 +39,7 @@ class Magister {
     this.onTokenRefresh,
   });
 
-  Future<void> _refreshToken() async {
+  Future<void> refreshTokenSet() async {
     TokenSet? newTokenSet;
     try {
       newTokenSet = await (await tokenSet()).refresh();
@@ -93,7 +95,7 @@ class Magister {
             TokenSet tokenSet = await this.tokenSet();
             if (DateTime.now().compareTo(tokenSet.expiredDate!) >= 0) {
               // Token has expired, refreshing it
-              await _refreshToken();
+              await refreshTokenSet();
               tokenSet = await this.tokenSet();
             }
 
@@ -103,7 +105,7 @@ class Magister {
           onError: (error, handler) async {
             if (error.response?.data == "SecurityToken Expired") {
               // The refresh has expired before expected
-              await _refreshToken();
+              await refreshTokenSet();
               TokenSet tokenSet = await this.tokenSet();
               // Retry the request with the new tokenSet
               error.requestOptions.headers["Authorization"] =
@@ -200,7 +202,7 @@ class Magister {
                   );
             }
           },
-        )
+        ),
       ]);
   }
 }

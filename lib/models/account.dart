@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/dummy_magister_api_dart.dart';
 import 'package:discipulus/api/magister_api_dart.dart';
@@ -40,6 +41,9 @@ class DiscipulusAccount {
   /// I'm unsure if id's can be the same across different schools,
   /// so a special uuid is constructed.
   Id get uuid => "${endPoint.toString()}$id".hashCode;
+
+  /// The uuid of the user in Magister. This is used for the new calendar endpoint.
+  String? magisterUuid;
 
   @ignore
   Magister get api {
@@ -82,6 +86,7 @@ class DiscipulusAccount {
   Future<void> fill() async {
     // Construct account
     ApiAccount apiAccount = await api.account;
+    magisterUuid = apiAccount.uuid;
 
     if (permissions.hasPermissions(PermissionType.kinderen)) {
       // Parent account
@@ -190,6 +195,13 @@ class TokenSet {
         idToken: json["id_token"],
         refreshToken: json["refresh_token"],
       );
+
+  Map<String, dynamic> toJson() => {
+        "access_token": accessToken,
+        "expires_at": expiredDate?.difference(DateTime.now()).inSeconds,
+        "id_token": idToken,
+        "refresh_token": refreshToken,
+      };
 
   /// Refresh current [TokenSet]
   Future<TokenSet> refresh([TokenSet? tokenSet]) async {
@@ -319,7 +331,18 @@ class Profile {
   @Backlink(to: 'profile')
   final calendarEvents = IsarLinks<CalendarEvent>();
   Future<List<CalendarEvent>> getEvents(DateTimeRange range) async {
-    var events = (await account.value!.api.person(id).calendarEvents(range));
+    List<CalendarEvent> events = (await Future.wait([
+      // First, we get the normal events
+      account.value!.api.person(id).calendarEvents(range),
+
+      // Secondly, we get the other 'new' events if the uuid has been set
+      if (account.value!.magisterUuid != null)
+        account.value!.api
+            .user(account.value!.magisterUuid!)
+            .additionalAppointments(range)
+    ]))
+        .flattened
+        .toList();
 
     await Future.wait([
       for (var event in events) processCalendarEvent(range, event),

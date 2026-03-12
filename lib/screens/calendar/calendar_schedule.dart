@@ -343,6 +343,7 @@ class _CalendarScheduleScreenState extends State<_CalendarScheduleScreen> {
                 : CalendarType.schedule,
           );
 
+      if (!context.mounted) return;
       Navigator.pop(context, _selectedStartDate);
     } catch (e) {
       print("Failed to save event $e");

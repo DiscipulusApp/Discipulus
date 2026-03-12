@@ -1,5 +1,5 @@
 PODS:
-  - app_links (0.0.2):
+  - app_links (7.0.0):
     - Flutter
   - connectivity_plus (0.0.1):
     - Flutter
@@ -46,8 +46,18 @@ PODS:
   - flutter_apple_spotlight (0.0.1):
     - Flutter
     - FlutterMacOS
+  - flutter_local_ai (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - flutter_local_notifications (0.0.1):
     - Flutter
+  - Google-Mobile-Ads-SDK (11.13.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - google_mobile_ads (5.3.1):
+    - Flutter
+    - Google-Mobile-Ads-SDK (~> 11.13.0)
+    - webview_flutter_wkwebview
+  - GoogleUserMessagingPlatform (3.1.0)
   - home_widget (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -57,7 +67,10 @@ PODS:
     - Flutter
   - isar_flutter_libs (1.0.0):
     - Flutter
-  - open_file_ios (0.0.1):
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
+  - open_file_ios (1.0.3):
     - Flutter
   - path_provider_foundation (0.0.1):
     - Flutter
@@ -96,11 +109,14 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_apple_handoff (from `.symlinks/plugins/flutter_apple_handoff/darwin`)
   - flutter_apple_spotlight (from `.symlinks/plugins/flutter_apple_spotlight/darwin`)
+  - flutter_local_ai (from `.symlinks/plugins/flutter_local_ai/darwin`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
   - home_widget (from `.symlinks/plugins/home_widget/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - irondash_engine_context (from `.symlinks/plugins/irondash_engine_context/ios`)
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - open_file_ios (from `.symlinks/plugins/open_file_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -116,6 +132,8 @@ SPEC REPOS:
   trunk:
     - DKImagePickerController
     - DKPhotoGallery
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
     - SDWebImage
     - SwiftyGif
 
@@ -134,8 +152,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_apple_handoff/darwin"
   flutter_apple_spotlight:
     :path: ".symlinks/plugins/flutter_apple_spotlight/darwin"
+  flutter_local_ai:
+    :path: ".symlinks/plugins/flutter_local_ai/darwin"
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  google_mobile_ads:
+    :path: ".symlinks/plugins/google_mobile_ads/ios"
   home_widget:
     :path: ".symlinks/plugins/home_widget/darwin"
   image_picker_ios:
@@ -144,6 +166,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/irondash_engine_context/ios"
   isar_flutter_libs:
     :path: ".symlinks/plugins/isar_flutter_libs/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
   open_file_ios:
     :path: ".symlinks/plugins/open_file_ios/ios"
   path_provider_foundation:
@@ -166,22 +190,27 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/workmanager/ios"
 
 SPEC CHECKSUMS:
-  app_links: 76b66b60cc809390ca1ad69bfd66b998d2387ac7
+  app_links: a754cbec3c255bd4bbb4d236ecc06f28cd9a7ce8
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_apple_handoff: 084712ce2386f42a5c51d50daf8837cbbe80b568
   flutter_apple_spotlight: 938e3294e47ba04b79cb4afecf633e25520f6521
-  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
+  flutter_local_ai: f0d8ec87c8a56478ac06d72962633c5235c7b911
+  flutter_local_notifications: 643a3eda1ce1c0599413ca31672536d423dee214
+  Google-Mobile-Ads-SDK: 14f57f2dc33532a24db288897e26494640810407
+  google_mobile_ads: 16ad301354fa6a7ea55770c6254bd4339bf8558b
+  GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
   home_widget: 834f4b097ec5bf675b54621de18db13adde80794
-  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
+  image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
   irondash_engine_context: 8e58ca8e0212ee9d1c7dc6a42121849986c88486
   isar_flutter_libs: 9fc2cfb928c539e1b76c481ba5d143d556d94920
-  open_file_ios: 5ff7526df64e4394b4fe207636b67a95e83078bb
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
+  open_file_ios: 46184d802ee7959203f6392abcfa0dd49fdb5be0
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
   share_handler_ios: e2244e990f826b2c8eaa291ac3831569438ba0fb
@@ -189,10 +218,10 @@ SPEC CHECKSUMS:
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   super_native_extensions: b763c02dc3a8fd078389f410bf15149179020cb4
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
   workmanager: 01be2de7f184bd15de93a1812936a2b7f42ef07e
 
-PODFILE CHECKSUM: 258adafa85ad9ea9631ea2b141934172c410f2a5
+PODFILE CHECKSUM: f0297a00cabd422aec3b8af4d18281352c20aa31
 
 COCOAPODS: 1.16.2

@@ -68,32 +68,40 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     controller.removeListener(onControllerUpdate);
     controller.dispose();
     super.dispose();
   }
 
-  void onControllerUpdate() async {
-    if (event.rawInfoType == InfoType.none &&
-        [InfoType.none, InfoType.homework].contains(event.infoType) &&
-        event.inhoud == null) {
-      // This event did not have any information before, so the user will
-      // most likely want a different infotype, because it is adding details
-      // to the event.
-      if (controller.document.toPlainText().trim().isEmpty) {
-        event
-          ..infoType = InfoType.none
-          ..save();
-      } else {
-        event
-          ..infoType = InfoType.homework
-          ..save();
+  Timer? _debounce;
+
+  void onControllerUpdate() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 1000), () async {
+      if (!mounted) return;
+
+      if (event.rawInfoType == InfoType.none &&
+          [InfoType.none, InfoType.homework].contains(event.infoType) &&
+          event.inhoud == null) {
+        // This event did not have any information before, so the user will
+        // most likely want a different infotype, because it is adding details
+        // to the event.
+        if (controller.document.toPlainText().trim().isEmpty) {
+          event
+            ..infoType = InfoType.none
+            ..save();
+        } else {
+          event
+            ..infoType = InfoType.homework
+            ..save();
+        }
       }
-    }
-    setState(() {});
-    await event.sync();
-    await refresh();
-    await widget.callback?.call();
+      setState(() {});
+      await event.sync();
+      await refresh();
+      await widget.callback?.call();
+    });
   }
 
   void Function()? showLocationChanger() {
@@ -303,6 +311,7 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
                           TextButton(
                             onPressed: () async {
                               await event.remove();
+                              if (!context.mounted) return;
                               Navigator.pop(context, true);
                               await widget.callback?.call();
                             },
@@ -312,6 +321,7 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
                       ),
                     );
                     if (isDeleted == true) {
+                      if (!context.mounted) return;
                       Navigator.pop(context);
                     }
                   },

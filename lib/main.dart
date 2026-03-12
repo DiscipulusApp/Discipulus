@@ -44,11 +44,13 @@ import 'package:timezone/data/latest.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:dnd_manager/dnd_manager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/account_migration.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
@@ -85,6 +87,10 @@ void main(args) async {
   );
 
   await initIsar();
+
+  if (Platform.isIOS) {
+    unawaited(MobileAds.instance.initialize());
+  }
 
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
@@ -130,6 +136,9 @@ class MainApp extends StatefulWidget {
 }
 
 class MainAppState extends State<MainApp> {
+  // unilink subscription
+  late final StreamSubscription _linkSub;
+
   Future<void> updateTheme() async {
     accentColor = await DynamicColorPlugin.getAccentColor();
     if (mounted) setState(() {});
@@ -140,7 +149,19 @@ class MainAppState extends State<MainApp> {
   @override
   void initState() {
     updateTheme();
+    _linkSub = appLinks.uriLinkStream.listen(Intents.uniLinkListener);
+
+    Future(
+      () async => await AccountMigration.checkAndMigrateAccounts(),
+    );
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _linkSub.cancel();
+    super.dispose();
   }
 
   @override
@@ -276,7 +297,7 @@ class MainAppState extends State<MainApp> {
             expansionTileTheme: ExpansionTileThemeData(
               expansionAnimationStyle: CustomAnimatedSize.style(),
             ),
-            cardTheme: const CardTheme(shadowColor: Colors.transparent),
+            cardTheme: const CardThemeData(shadowColor: Colors.transparent),
             chipTheme: const ChipThemeData(),
             searchViewTheme: SearchViewThemeData(
               backgroundColor: colorScheme.surface.applySurfaceTint(
@@ -284,9 +305,11 @@ class MainAppState extends State<MainApp> {
                 elevation: 1,
               ),
             ),
-            dialogBackgroundColor: colorScheme.surface.applySurfaceTint(
-              tint: colorScheme.surfaceTint,
-              elevation: 1,
+            dialogTheme: DialogThemeData(
+              backgroundColor: colorScheme.surface.applySurfaceTint(
+                tint: colorScheme.surfaceTint,
+                elevation: 1,
+              ),
             ),
             badgeTheme: BadgeThemeData(
               textColor: colorScheme.onPrimaryContainer,

@@ -1,26 +1,19 @@
 import 'package:discipulus/models/settings.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
 
-/// Contains some general settings about Gemini
+/// Contains some general settings about AI
 
-class GeminiSettings {
-  static GeminiModel model = GeminiModel(
-      name: "gemini-2.0-flash-lite", friendlyName: "Flash 2.0 Lite");
-  static String? get apiKey => appSettings.geminiAPIKey;
-  static List<SafetySetting> safetySettings = [
-    SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.high),
-    SafetySetting(HarmCategory.harassment, HarmBlockThreshold.high),
-    SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.high),
-    SafetySetting(HarmCategory.sexuallyExplicit, HarmBlockThreshold.high),
-  ];
+class AISettings {
+  static AIModel model =
+      AIModel(name: "google/gemini-2.0-flash-lite:free", friendlyName: "Gemini 2.0 Flash Lite");
+  static String? get openRouterApiKey => appSettings.openRouterAPIKey;
 }
 
-class GeminiModel {
+class AIModel {
   String name;
   String friendlyName;
   bool isThinking;
 
-  GeminiModel({
+  AIModel({
     required this.name,
     required this.friendlyName,
     this.isThinking = false,

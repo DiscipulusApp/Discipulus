@@ -7,8 +7,10 @@ import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/bronnen/external_source_list.dart';
 // import 'package:discipulus/screens/calendar/calendar_week/calendar_week.dart';
-import 'package:discipulus/screens/calendar/experimental/calendar_stats.dart';
+
+import 'package:discipulus/screens/grades/grade_subject_list.dart';
 import 'package:discipulus/screens/grades/grades_subject.dart';
+import 'package:discipulus/screens/grades/grades_statistics.dart';
 import 'package:discipulus/screens/introduction/post_login.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/screens/messages/message_details.dart';
@@ -27,6 +29,7 @@ import 'package:discipulus/screens/grades/grades.dart';
 import 'package:discipulus/screens/leermiddelen.dart';
 import 'package:discipulus/screens/messages/messages.dart';
 import 'package:discipulus/screens/bronnen/bronnen_list.dart';
+import 'package:discipulus/screens/calendar/absences.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/screens/studiewijzers/studiewijzers.dart';
 import 'package:discipulus/screens/summary/home.dart';
@@ -72,7 +75,7 @@ class Destination {
 List<DestinationSegement> destinations(List<Permission> permissions,
         {bool forceDebug = false}) =>
     [
-      if (kDebugMode || forceDebug)
+      if (false) // (kDebugMode || forceDebug)
         DestinationSegement(destinations: const [
           Destination(
             label: "Samenvatting",
@@ -91,15 +94,13 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             shortcut: SingleActivator(LogicalKeyboardKey.keyK, alt: true),
             view: CalendarDayView(),
           ),
-        if (permissions.hasPermissions(PermissionType.cijfers))
-          const Destination(
-            label: "Cijfers",
-            icon: Icon(Icons.numbers_outlined),
-            filledIcon: Icon(Icons.numbers),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
-            view: GradesListScreen(),
-            subviews: [SubjectGradesScreen],
-          ),
+        const Destination(
+          label: "Absenties",
+          icon: Icon(Icons.person_remove_alt_1_outlined),
+          filledIcon: Icon(Icons.person_remove_alt_1),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyA, alt: true),
+          view: AbsencesScreen(),
+        ),
         if (permissions.hasPermissions(PermissionType.berichten))
           const Destination(
             label: "Berichten",
@@ -108,6 +109,35 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             shortcut: SingleActivator(LogicalKeyboardKey.keyB, alt: true),
             view: MessagesListScreen(),
             subviews: [MessageScreen],
+          ),
+      ]),
+      DestinationSegement(name: "Cijfers", destinations: [
+        if (permissions.hasPermissions(PermissionType.cijfers))
+          const Destination(
+            label: "Recente cijfers",
+            icon: Icon(Icons.numbers_outlined),
+            filledIcon: Icon(Icons.numbers),
+            shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
+            view: GradesListScreen(),
+            subviews: [SubjectGradesScreen],
+          ),
+        if (permissions.hasPermissions(PermissionType.cijfers))
+          Destination(
+            label: "Vak Gemiddelden",
+            icon: const Icon(Icons.book_outlined),
+            filledIcon: const Icon(Icons.book),
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyV, alt: true),
+            view: const SubjectListScreen(),
+            subviews: const [SubjectGradesScreen],
+          ),
+        if (permissions.hasPermissions(PermissionType.cijfers))
+          Destination(
+            label: "Statistieken",
+            icon: const Icon(Icons.bar_chart_outlined),
+            filledIcon: const Icon(Icons.bar_chart_rounded),
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
+            view: const GradesStatisticsScreen(),
+            subviews: const [SubjectGradesScreen],
           ),
       ]),
       DestinationSegement(name: "Elektronische leeromgeving", destinations: [
@@ -179,12 +209,6 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             label: "Post Login",
             view: PostLoginScreen(),
           ),
-          // const Destination(
-          //   icon: Icon(Icons.calendar_view_week_outlined),
-          //   filledIcon: Icon(Icons.calendar_view_week),
-          //   label: "Calendar Week",
-          //   view: CalendarWeekScreen(),
-          // ),
           const Destination(
             icon: Icon(Icons.screen_lock_landscape_outlined),
             filledIcon: Icon(Icons.screen_lock_landscape),
@@ -192,12 +216,6 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             view: VerticalIntroductionScreen(
               key: ValueKey("TRANSPARENT"),
             ),
-          ),
-          const Destination(
-            icon: Icon(Icons.start_outlined),
-            filledIcon: Icon(Icons.start),
-            label: "Calendar Statictics",
-            view: CalendarStatistics(),
           ),
         ])
     ].where((s) => s.destinations.isNotEmpty).toList();

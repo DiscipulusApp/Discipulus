@@ -12,6 +12,7 @@ import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
 import 'package:discipulus/screens/grades/grade_detail.dart';
 import 'package:discipulus/screens/grades/grades.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
+import 'package:discipulus/screens/settings/pages/login_with_discipulus.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -123,7 +124,7 @@ class NotificationController {
       macOS: initializationSettingsDarwin,
     );
     await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse:
           NotificationController.onActionReceivedMethod,
       onDidReceiveBackgroundNotificationResponse:
@@ -205,22 +206,22 @@ class NotificationController {
 
     if (time == null) {
       await flutterLocalNotificationsPlugin.show(
-        content.id,
-        content.title,
-        content.body,
+        id: content.id,
+        title: content.title,
+        body: content.body,
         payload: payload?.toJson(),
-        details,
+        notificationDetails: details,
       );
     } else {
       await flutterLocalNotificationsPlugin.zonedSchedule(
-        content.id,
-        content.title,
-        content.body,
-        tz.TZDateTime.fromMillisecondsSinceEpoch(
+        id: content.id,
+        title: content.title,
+        body: content.body,
+        scheduledDate: tz.TZDateTime.fromMillisecondsSinceEpoch(
           tz.UTC,
           time.toUtc().millisecondsSinceEpoch,
         ),
-        details,
+        notificationDetails: details,
         payload: payload?.toJson(),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
@@ -296,7 +297,25 @@ class NotificationController {
 class Intents {
   static uniLinkListener(Uri uri) async {
     if (uri.hasScheme && uri.scheme == "discipulus") {
-      if (uri.host == "calendar") {
+      if (uri.host == "login") {
+        // Handle login to alternative service.
+
+        final String? data = uri.queryParameters["data"];
+        if (data == null) return;
+
+        final Map<String, dynamic> json = jsonDecode(data);
+
+        final AuthQrResult qrResult = AuthQrResult.fromJson(json);
+
+        if (qrResult.requestId.isEmpty || qrResult.backendUrl.isEmpty) {
+          return;
+        }
+
+        LoginWithDiscipulusAccountSelector(
+          payload: qrResult,
+          redirect: true,
+        ).push(navKey.currentContext!);
+      } else if (uri.host == "calendar") {
         // Handle calendar related deeplinks
         int? personId = int.tryParse(uri.queryParameters["profileId"] ?? "");
         int? calendarId = int.tryParse(uri.queryParameters["eventId"] ?? "");

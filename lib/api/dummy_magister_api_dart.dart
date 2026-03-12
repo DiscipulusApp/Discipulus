@@ -7,6 +7,7 @@ import 'package:discipulus/api/models/account.dart';
 import 'package:discipulus/api/models/permissions.dart';
 import 'package:discipulus/api/routes/messages.dart';
 import 'package:discipulus/api/routes/persons.dart';
+import 'package:discipulus/api/routes/user.dart';
 import 'package:discipulus/models/account.dart';
 
 class DummyMagister implements Magister {
@@ -18,6 +19,11 @@ class DummyMagister implements Magister {
 
   @override
   Future<TokenSet> Function() tokenSet = () => Future.value(TokenSet());
+
+  @override
+  Future<void> refreshTokenSet() async {
+    return;
+  }
 
   @override
   int? uuid;
@@ -124,6 +130,12 @@ class DummyMagister implements Magister {
   @override
   PersonRoute person(int personId) {
     return DummyPersonRoute(this);
+  }
+
+  @override
+  UserRoute user(String uuid) {
+    // TODO: implement user
+    throw UnimplementedError();
   }
 }
 

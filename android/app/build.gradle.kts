@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "dev.harrydekat.discipulus"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "27.0.12077973" //flutter.ndkVersion
 
     compileOptions {
@@ -28,8 +28,8 @@ android {
         applicationId = "dev.harrydekat.discipulus"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 24 //flutter.minSdkVersion
-        targetSdk = 34 //flutter.targetSdkVersion
+        minSdk = 26 //flutter.minSdkVersion
+        targetSdk = 36 //flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -72,7 +72,7 @@ android {
             signingConfig = if (System.getenv("CI") == "true") signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             // You can add other release-specific settings here, like minification
             isMinifyEnabled = true
-            
+
         }
     }
 }
@@ -87,6 +87,8 @@ configurations.all {
 dependencies {
     // Add the core library desugaring dependency
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("com.google.mlkit:genai-prompt:1.0.0-alpha1")
+    implementation("com.google.android.gms:play-services-tasks:18.0.2")
 }
 
 flutter {

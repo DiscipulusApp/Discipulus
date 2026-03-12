@@ -83,7 +83,9 @@ class _LeermiddelenScreenState extends State<LeermiddelenScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: Text(e.uitgeverij),
+                            subtitle: e.uitgeverij != null
+                                ? Text(e.uitgeverij!)
+                                : null,
                             trailing: const Icon(Icons.open_in_browser),
                             onTap: () async => launchUrl(
                                 await e.redirectLocation,

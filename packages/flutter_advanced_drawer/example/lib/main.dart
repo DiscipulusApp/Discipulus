@@ -37,8 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       controller: _advancedDrawerController,
-      animationCurve: Curves.easeInOut,
-      animationDuration: const Duration(milliseconds: 300),
       animateChildDecoration: true,
       rtlOpening: false,
       // openScale: 1.0,

@@ -1,5 +1,3 @@
-import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/email_generation.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:discipulus/widgets/global/tiles/fleather_toolbar.dart';
@@ -7,7 +5,6 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:parchment/codecs.dart';
 
 class RichTextInput extends StatefulWidget {
   const RichTextInput({

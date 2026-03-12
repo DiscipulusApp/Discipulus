@@ -28,7 +28,6 @@ class _MessagesListScreenState extends State<MessagesListScreen>
   List<Bericht> _messages = [];
   List<MessageFilter> _messageFilters = List.of(Settings.activeMessageFilters);
   @override
-  late final ValueNotifier<bool> isLoadingExternally;
   late final ScrollController _scrollController;
 
   bool endWasReached = false;
@@ -342,7 +341,7 @@ class _MessagesListScreenState extends State<MessagesListScreen>
                       if (folder != null) {
                         await snapshot.data?.moveToFolder(folder.id);
                         // await _refreshEntries(online: false, replace: true);
-                        if (mounted) Navigator.of(context).pop();
+                        if (context.mounted) Navigator.of(context).pop();
                       }
                     },
                   ),
@@ -358,7 +357,7 @@ class _MessagesListScreenState extends State<MessagesListScreen>
                     onTap: () async {
                       await snapshot.data!.removeMessages();
                       // await _refreshEntries(online: false, replace: true);
-                      if (mounted) Navigator.of(context).pop();
+                      if (context.mounted) Navigator.of(context).pop();
                     },
                   ),
                 const SizedBox(

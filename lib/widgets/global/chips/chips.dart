@@ -394,6 +394,7 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
                                   title: Text(item.title),
                                   value: item.item,
                                   groupValue: widget.currentValue?.item,
+                                  // ignore: deprecated_member_use
                                   toggleable: widget.emptySelectionAllowed,
                                   onChanged: (sItem) {
                                     widget.onSelected(

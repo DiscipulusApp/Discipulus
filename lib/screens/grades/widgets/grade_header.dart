@@ -7,21 +7,19 @@ import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:flutter/material.dart';
-import 'package:isar/isar.dart';
 
 class StatisticalTilesHeader extends StatelessWidget {
   const StatisticalTilesHeader({super.key, required this.grades});
 
-  final QueryBuilder<Grade, Grade, QAfterFilterCondition> grades;
+  final List<Grade> grades;
 
   @override
   Widget build(BuildContext context) {
     List<double> doubles = grades.numericalGrades
-        .cijferStrProperty()
-        .findAllSync()
-        .map((e) => double.parse(e!.replaceAll(',', '.')))
+        .map((e) => double.tryParse(e.cijferStr?.replaceAll(',', '.') ?? ""))
+        .whereType<double>()
         .toList();
-    double average = grades.useable().averageSync;
+    double average = grades.useable.average;
     return LayoutBuilder(builder: (context, constraints) {
       return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),

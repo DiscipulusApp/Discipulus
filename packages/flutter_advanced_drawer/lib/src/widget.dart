@@ -16,12 +16,10 @@ class AdvancedDrawer extends StatefulWidget {
     this.rtlOpening = false,
     this.disabledGestures = false,
     this.animationController,
-    // Adjusted SpringDescription for a potentially bouncier feel
     this.springDescription = const SpringDescription(
-      mass: 5,
-      stiffness: 100, // Increased stiffness for quicker response
-      damping:
-          22, // Adjusted damping (slightly underdamped relative to stiffness)
+      mass: 0.8,
+      stiffness: 600,
+      damping: 45,
     ),
   }) : super(key: key);
 
@@ -339,19 +337,17 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
 
     final target = isOpening ? 1.0 : 0.0;
 
-    // Update the drawer controller state *immediately* if it doesn't match the target.
-    // This ensures ValueListenableBuilders using the controller react instantly.
+    // Run the spring animation from the current position with the calculated velocity
+    _runSpringAnimation(target: target, velocity: velocity);
+
+    // Update the drawer controller state *after* starting the animation.
+    // This allows _handleDrawerControllerChanged to see that the animation is already
+    // running and skip starting a redundant, zero-velocity animation (the bump).
     if (_drawerController.value.visible != isOpening) {
-      // Use the setter, which notifies listeners
       _drawerController.value = isOpening
           ? AdvancedDrawerValue.visible()
           : AdvancedDrawerValue.hidden();
-      // Note: _handleDrawerControllerChanged might be triggered, but the animation
-      // started below with velocity should take precedence.
     }
-
-    // Run the spring animation from the current position with the calculated velocity
-    _runSpringAnimation(target: target, velocity: velocity);
   }
 
   void _handleDragCancel() {
@@ -364,15 +360,15 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
     final isOpening = currentVal >= positionThreshold;
     final target = isOpening ? 1.0 : 0.0;
 
-    // Update controller state if needed
+    // Animate with zero velocity
+    _runSpringAnimation(target: target, velocity: 0.0);
+
+    // Update controller state after starting animation
     if (_drawerController.value.visible != isOpening) {
       _drawerController.value = isOpening
           ? AdvancedDrawerValue.visible()
           : AdvancedDrawerValue.hidden();
     }
-
-    // Animate with zero velocity
-    _runSpringAnimation(target: target, velocity: 0.0);
   }
 
   // --- Build Method ---
@@ -381,6 +377,7 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
   Widget build(BuildContext context) {
     // Ensure listener is attached (important after potential didUpdateWidget changes)
     // This check prevents adding multiple listeners if build is called without didUpdateWidget
+    // ignore: invalid_use_of_protected_member
     if (!_drawerController.hasListeners) {
       _drawerController.addListener(_handleDrawerControllerChanged);
     }
@@ -439,8 +436,8 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
               builder: (context, child) {
                 // Only allow tapping to close if the drawer is significantly open
                 final canTapToClose = _animationController.value > 0.5;
-                // Absorb pointers only when drawer is mostly open to prevent interaction bleed
-                final absorbPointers = _animationController.value > 0.9;
+                // Absorb pointers as soon as the drawer starts showing significantly
+                final absorbPointers = _animationController.value > 0.1;
 
                 // Apply transformations using Transition widgets linked to the animation controller
                 Widget transformedChild = SlideTransition(
@@ -455,8 +452,7 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
                     child: InkWell(
                       onTap:
                           canTapToClose ? _drawerController.hideDrawer : null,
-                      overlayColor:
-                          MaterialStateProperty.all(Colors.transparent),
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
                       child: Container(
                         clipBehavior: widget.childDecoration != null
                             ? Clip.antiAlias

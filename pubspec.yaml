@@ -1,10 +1,10 @@
 name: discipulus
 description: "Gelukkig geen onderdeel van Magister 🙌"
-publish_to: 'none'
-version: 0.1.6+18
+publish_to: "none"
+version: 0.1.7+19
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: ">=3.1.0 <4.0.0"
 
 dependencies:
   # Core
@@ -14,27 +14,28 @@ dependencies:
   pointycastle: ^4.0.0
   url_launcher: ^6.1.14
   mime: ^2.0.0
-  intl: ^0.19.0
   isar: ^3.1.0+1
   path_provider: ^2.1.1
   cross_file: ^0.3.3+6
   dio: ^5.3.3
+  intl: ^0.19.0
+  super_clipboard: ^0.9.1
   isar_flutter_libs: ^3.1.0+1
   flutter:
     sdk: flutter
 
-  # Firebase 
-  # 
+  # Firebase
+  #
   #   For sme reason this breaks macOS completely, so for now it is not included.
   #   firebase_messaging: ^15.1.3
-  #   firebase_core: ^3.6.0 
- 
+  #   firebase_core: ^3.6.0
+
   # Widgets
-  fl_chart: ^0.70.2
+  fl_chart: ^1.1.1
   flutter_adaptive_scaffold: ^0.3.2
-  flutter_advanced_drawer: 
+  flutter_advanced_drawer:
     path: packages/flutter_advanced_drawer/
-  fleather: 
+  fleather:
     git:
       url: https://github.com/fleather-editor/fleather.git
       path: packages/fleather
@@ -48,7 +49,7 @@ dependencies:
   html: ^0.15.4
   parchment: ^1.9.0
   html_unescape: ^2.0.0
-  
+
   # Others
   # scroll_to_index: ^3.0.1
   # sentry_flutter: ^8.1.0
@@ -57,32 +58,31 @@ dependencies:
   webview_flutter: ^4.4.1
   # kalender: ^0.4.1
   desktop_webview_window: ^0.2.3
-  google_generative_ai: ^0.4.6
 
   # Plugins
   #flutter_app_badger
-  open_file: 3.5.10
-  app_links: ^6.3.2
+  open_file: ^3.5.11
+  app_links: ^7.0.0
   # awesome_notifications: ^0.10.0
-  file_picker: ^9.1.0
+  file_picker: ^10.3.10
   share_handler: ^0.0.22
-  share_plus: ^10.0.2
-  home_widget: 
-    git: 
+  share_plus: ^12.0.1
+  home_widget:
+    git:
       url: https://github.com/DiscipulusApp/home_widget.git
       path: packages/home_widget/
-     
-  super_drag_and_drop: ^0.8.11
-  super_context_menu: ^0.8.16
-  flutter_apple_spotlight: 
+
+  super_drag_and_drop: ^0.9.1
+  super_context_menu: ^0.9.1
+  flutter_apple_spotlight:
     git:
       url: https://github.com/DiscipulusApp/flutter_apple_spotlight.git
     # path: /Users/donda/Documents/Git/Repos/flutter_apple_spotlight/
-  flutter_apple_handoff: 
+  flutter_apple_handoff:
     git:
       url: https://github.com/DiscipulusApp/flutter_apple_handoff.git
     # path: /Users/donda/Documents/Git/Repos/flutter_apple_handoff/
-  dnd_manager: 
+  dnd_manager:
     git:
       url: https://github.com/DiscipulusApp/dnd_manager.git
     # path: /Users/donda/Documents/Git/Repos/dnd_manager/
@@ -92,13 +92,16 @@ dependencies:
       ref: 4ce065135dc1b91fee918f81596b42a56850391d
       path: workmanager
   # widgets_to_image: ^1.0.0
-  connectivity_plus: ^6.0.3
-  android_alarm_manager_plus: ^4.0.4
-  permission_handler: ^11.3.1
-  flutter_local_notifications: ^19.0.0
-  timezone: ^0.10.0
+  connectivity_plus: ^7.0.0
+  android_alarm_manager_plus: ^5.0.0
+  permission_handler: ^12.0.1
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
   image_picker: ^1.1.2
   markdown: ^7.3.0
+  mobile_scanner: ^7.0.1
+  flutter_local_ai: ^0.0.6
+  google_mobile_ads: ^5.1.0
 
   # Unused
   # flutter_carousel_widget: ^2.2.0
@@ -111,10 +114,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   build_runner: ^2.4.6
   isar_generator: ^3.1.0+1
   msix: ^3.16.7
+
+dependency_overrides:
+  intl: 0.20.2
 
 flutter:
   uses-material-design: true

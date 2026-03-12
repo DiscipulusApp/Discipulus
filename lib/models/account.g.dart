@@ -27,14 +27,19 @@ const DiscipulusAccountSchema = CollectionSchema(
       name: r'id',
       type: IsarType.long,
     ),
-    r'permissions': PropertySchema(
+    r'magisterUuid': PropertySchema(
       id: 2,
+      name: r'magisterUuid',
+      type: IsarType.string,
+    ),
+    r'permissions': PropertySchema(
+      id: 3,
       name: r'permissions',
       type: IsarType.objectList,
       target: r'Permission',
     ),
     r'tokenSet': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'tokenSet',
       type: IsarType.object,
       target: r'TokenSet',
@@ -71,6 +76,12 @@ int _discipulusAccountEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.endPoint.length * 3;
+  {
+    final value = object.magisterUuid;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.permissions.length * 3;
   {
     final offsets = allOffsets[Permission]!;
@@ -97,14 +108,15 @@ void _discipulusAccountSerialize(
 ) {
   writer.writeString(offsets[0], object.endPoint);
   writer.writeLong(offsets[1], object.id);
+  writer.writeString(offsets[2], object.magisterUuid);
   writer.writeObjectList<Permission>(
-    offsets[2],
+    offsets[3],
     allOffsets,
     PermissionSchema.serialize,
     object.permissions,
   );
   writer.writeObject<TokenSet>(
-    offsets[3],
+    offsets[4],
     allOffsets,
     TokenSetSchema.serialize,
     object.tokenSet,
@@ -121,18 +133,19 @@ DiscipulusAccount _discipulusAccountDeserialize(
     endPoint: reader.readString(offsets[0]),
     id: reader.readLong(offsets[1]),
     permissions: reader.readObjectList<Permission>(
-          offsets[2],
+          offsets[3],
           PermissionSchema.deserialize,
           allOffsets,
           Permission(),
         ) ??
         const [],
     tokenSet: reader.readObjectOrNull<TokenSet>(
-      offsets[3],
+      offsets[4],
       TokenSetSchema.deserialize,
       allOffsets,
     ),
   );
+  object.magisterUuid = reader.readStringOrNull(offsets[2]);
   return object;
 }
 
@@ -148,6 +161,8 @@ P _discipulusAccountDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
       return (reader.readObjectList<Permission>(
             offset,
             PermissionSchema.deserialize,
@@ -155,7 +170,7 @@ P _discipulusAccountDeserializeProp<P>(
             Permission(),
           ) ??
           const []) as P;
-    case 3:
+    case 4:
       return (reader.readObjectOrNull<TokenSet>(
         offset,
         TokenSetSchema.deserialize,
@@ -455,6 +470,160 @@ extension DiscipulusAccountQueryFilter
   }
 
   QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'magisterUuid',
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'magisterUuid',
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'magisterUuid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'magisterUuid',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'magisterUuid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
+      magisterUuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'magisterUuid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterFilterCondition>
       permissionsLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
@@ -727,6 +896,20 @@ extension DiscipulusAccountQuerySortBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterSortBy>
+      sortByMagisterUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterSortBy>
+      sortByMagisterUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.desc);
+    });
+  }
 }
 
 extension DiscipulusAccountQuerySortThenBy
@@ -759,6 +942,20 @@ extension DiscipulusAccountQuerySortThenBy
   }
 
   QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterSortBy>
+      thenByMagisterUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterSortBy>
+      thenByMagisterUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QAfterSortBy>
       thenByUuid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.asc);
@@ -787,6 +984,13 @@ extension DiscipulusAccountQueryWhereDistinct
       return query.addDistinctBy(r'id');
     });
   }
+
+  QueryBuilder<DiscipulusAccount, DiscipulusAccount, QDistinct>
+      distinctByMagisterUuid({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'magisterUuid', caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension DiscipulusAccountQueryProperty
@@ -806,6 +1010,13 @@ extension DiscipulusAccountQueryProperty
   QueryBuilder<DiscipulusAccount, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<DiscipulusAccount, String?, QQueryOperations>
+      magisterUuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'magisterUuid');
     });
   }
 

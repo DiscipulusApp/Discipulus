@@ -4,7 +4,6 @@ import 'package:discipulus/screens/summary/widgets/favorite_studiewijzers.dart';
 import 'package:discipulus/screens/summary/widgets/next_lesson.dart';
 import 'package:discipulus/screens/summary/widgets/recent_grades.dart';
 import 'package:discipulus/screens/summary/widgets/recent_messages.dart';
-import 'package:discipulus/screens/summary/widgets/week_heatmap.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:flutter/material.dart';

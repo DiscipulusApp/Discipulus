@@ -65,130 +65,140 @@ const CalendarEventSchema = CollectionSchema(
       name: r'excludeFromAutoDND',
       type: IsarType.bool,
     ),
-    r'gewijzigd': PropertySchema(
+    r'extId': PropertySchema(
       id: 9,
+      name: r'extId',
+      type: IsarType.string,
+    ),
+    r'gewijzigd': PropertySchema(
+      id: 10,
       name: r'gewijzigd',
       type: IsarType.dateTime,
     ),
     r'heeftBijlagen': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'heeftBijlagen',
       type: IsarType.bool,
     ),
     r'herhaalStatus': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'herhaalStatus',
       type: IsarType.long,
     ),
     r'id': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'id',
       type: IsarType.long,
     ),
     r'infoType': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'infoType',
       type: IsarType.byte,
       enumMap: _CalendarEventinfoTypeEnumValueMap,
     ),
     r'inhoud': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'inhoud',
       type: IsarType.string,
     ),
     r'isOnlineDeelname': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'isOnlineDeelname',
       type: IsarType.bool,
     ),
     r'lesuurTotMet': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'lesuurTotMet',
       type: IsarType.long,
     ),
     r'lesuurVan': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'lesuurVan',
       type: IsarType.long,
     ),
     r'lokalen': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'lokalen',
       type: IsarType.objectList,
       target: r'Lokalen',
     ),
     r'lokatie': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'lokatie',
       type: IsarType.string,
     ),
+    r'magisterUuid': PropertySchema(
+      id: 21,
+      name: r'magisterUuid',
+      type: IsarType.string,
+    ),
     r'omschrijving': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'omschrijving',
       type: IsarType.string,
     ),
     r'opdrachtId': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'opdrachtId',
       type: IsarType.long,
     ),
     r'rawInfoType': PropertySchema(
-      id: 22,
+      id: 24,
       name: r'rawInfoType',
       type: IsarType.byte,
       enumMap: _CalendarEventrawInfoTypeEnumValueMap,
     ),
     r'rawInhoud': PropertySchema(
-      id: 23,
+      id: 25,
       name: r'rawInhoud',
       type: IsarType.string,
     ),
     r'rawLokatie': PropertySchema(
-      id: 24,
+      id: 26,
       name: r'rawLokatie',
       type: IsarType.string,
     ),
     r'rawStatus': PropertySchema(
-      id: 25,
+      id: 27,
       name: r'rawStatus',
       type: IsarType.byte,
       enumMap: _CalendarEventrawStatusEnumValueMap,
     ),
     r'selfUrl': PropertySchema(
-      id: 26,
+      id: 28,
       name: r'selfUrl',
       type: IsarType.string,
     ),
     r'start': PropertySchema(
-      id: 27,
+      id: 29,
       name: r'start',
       type: IsarType.dateTime,
     ),
     r'status': PropertySchema(
-      id: 28,
+      id: 30,
       name: r'status',
       type: IsarType.byte,
       enumMap: _CalendarEventstatusEnumValueMap,
     ),
     r'subtype': PropertySchema(
-      id: 29,
+      id: 31,
       name: r'subtype',
       type: IsarType.long,
     ),
     r'type': PropertySchema(
-      id: 30,
+      id: 32,
       name: r'type',
       type: IsarType.byte,
       enumMap: _CalendarEventtypeEnumValueMap,
     ),
     r'vakken': PropertySchema(
-      id: 31,
+      id: 33,
       name: r'vakken',
       type: IsarType.objectList,
       target: r'Vakken',
     ),
     r'weergaveType': PropertySchema(
-      id: 32,
+      id: 34,
       name: r'weergaveType',
       type: IsarType.long,
     )
@@ -279,6 +289,12 @@ int _calendarEventEstimateSize(
     }
   }
   {
+    final value = object.extId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.inhoud;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -299,6 +315,12 @@ int _calendarEventEstimateSize(
   }
   {
     final value = object.lokatie;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.magisterUuid;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -373,40 +395,42 @@ void _calendarEventSerialize(
   writer.writeBool(offsets[6], object.duurtHeleDag);
   writer.writeDateTime(offsets[7], object.einde);
   writer.writeBool(offsets[8], object.excludeFromAutoDND);
-  writer.writeDateTime(offsets[9], object.gewijzigd);
-  writer.writeBool(offsets[10], object.heeftBijlagen);
-  writer.writeLong(offsets[11], object.herhaalStatus);
-  writer.writeLong(offsets[12], object.id);
-  writer.writeByte(offsets[13], object.infoType.index);
-  writer.writeString(offsets[14], object.inhoud);
-  writer.writeBool(offsets[15], object.isOnlineDeelname);
-  writer.writeLong(offsets[16], object.lesuurTotMet);
-  writer.writeLong(offsets[17], object.lesuurVan);
+  writer.writeString(offsets[9], object.extId);
+  writer.writeDateTime(offsets[10], object.gewijzigd);
+  writer.writeBool(offsets[11], object.heeftBijlagen);
+  writer.writeLong(offsets[12], object.herhaalStatus);
+  writer.writeLong(offsets[13], object.id);
+  writer.writeByte(offsets[14], object.infoType.index);
+  writer.writeString(offsets[15], object.inhoud);
+  writer.writeBool(offsets[16], object.isOnlineDeelname);
+  writer.writeLong(offsets[17], object.lesuurTotMet);
+  writer.writeLong(offsets[18], object.lesuurVan);
   writer.writeObjectList<Lokalen>(
-    offsets[18],
+    offsets[19],
     allOffsets,
     LokalenSchema.serialize,
     object.lokalen,
   );
-  writer.writeString(offsets[19], object.lokatie);
-  writer.writeString(offsets[20], object.omschrijving);
-  writer.writeLong(offsets[21], object.opdrachtId);
-  writer.writeByte(offsets[22], object.rawInfoType.index);
-  writer.writeString(offsets[23], object.rawInhoud);
-  writer.writeString(offsets[24], object.rawLokatie);
-  writer.writeByte(offsets[25], object.rawStatus.index);
-  writer.writeString(offsets[26], object.selfUrl);
-  writer.writeDateTime(offsets[27], object.start);
-  writer.writeByte(offsets[28], object.status.index);
-  writer.writeLong(offsets[29], object.subtype);
-  writer.writeByte(offsets[30], object.type.index);
+  writer.writeString(offsets[20], object.lokatie);
+  writer.writeString(offsets[21], object.magisterUuid);
+  writer.writeString(offsets[22], object.omschrijving);
+  writer.writeLong(offsets[23], object.opdrachtId);
+  writer.writeByte(offsets[24], object.rawInfoType.index);
+  writer.writeString(offsets[25], object.rawInhoud);
+  writer.writeString(offsets[26], object.rawLokatie);
+  writer.writeByte(offsets[27], object.rawStatus.index);
+  writer.writeString(offsets[28], object.selfUrl);
+  writer.writeDateTime(offsets[29], object.start);
+  writer.writeByte(offsets[30], object.status.index);
+  writer.writeLong(offsets[31], object.subtype);
+  writer.writeByte(offsets[32], object.type.index);
   writer.writeObjectList<Vakken>(
-    offsets[31],
+    offsets[33],
     allOffsets,
     VakkenSchema.serialize,
     object.vakken,
   );
-  writer.writeLong(offsets[32], object.weergaveType);
+  writer.writeLong(offsets[34], object.weergaveType);
 }
 
 CalendarEvent _calendarEventDeserialize(
@@ -432,41 +456,43 @@ CalendarEvent _calendarEventDeserialize(
     ),
     duurtHeleDag: reader.readBoolOrNull(offsets[6]) ?? false,
     einde: reader.readDateTime(offsets[7]),
-    gewijzigd: reader.readDateTimeOrNull(offsets[9]),
-    heeftBijlagen: reader.readBoolOrNull(offsets[10]) ?? false,
-    herhaalStatus: reader.readLongOrNull(offsets[11]) ?? 0,
-    id: reader.readLongOrNull(offsets[12]) ?? 0,
-    isOnlineDeelname: reader.readBoolOrNull(offsets[15]) ?? false,
-    lesuurTotMet: reader.readLongOrNull(offsets[16]),
-    lesuurVan: reader.readLongOrNull(offsets[17]),
+    extId: reader.readStringOrNull(offsets[9]),
+    gewijzigd: reader.readDateTimeOrNull(offsets[10]),
+    heeftBijlagen: reader.readBoolOrNull(offsets[11]) ?? false,
+    herhaalStatus: reader.readLongOrNull(offsets[12]) ?? 0,
+    id: reader.readLongOrNull(offsets[13]) ?? 0,
+    isOnlineDeelname: reader.readBoolOrNull(offsets[16]) ?? false,
+    lesuurTotMet: reader.readLongOrNull(offsets[17]),
+    lesuurVan: reader.readLongOrNull(offsets[18]),
     lokalen: reader.readObjectList<Lokalen>(
-      offsets[18],
+      offsets[19],
       LokalenSchema.deserialize,
       allOffsets,
       Lokalen(),
     ),
-    omschrijving: reader.readStringOrNull(offsets[20]),
-    opdrachtId: reader.readLongOrNull(offsets[21]) ?? 0,
+    magisterUuid: reader.readStringOrNull(offsets[21]),
+    omschrijving: reader.readStringOrNull(offsets[22]),
+    opdrachtId: reader.readLongOrNull(offsets[23]) ?? 0,
     rawInfoType: _CalendarEventrawInfoTypeValueEnumMap[
-            reader.readByteOrNull(offsets[22])] ??
+            reader.readByteOrNull(offsets[24])] ??
         InfoType.information,
-    rawInhoud: reader.readStringOrNull(offsets[23]),
-    rawLokatie: reader.readStringOrNull(offsets[24]),
+    rawInhoud: reader.readStringOrNull(offsets[25]),
+    rawLokatie: reader.readStringOrNull(offsets[26]),
     rawStatus: _CalendarEventrawStatusValueEnumMap[
-            reader.readByteOrNull(offsets[25])] ??
+            reader.readByteOrNull(offsets[27])] ??
         Status.manuallyScheduled,
-    selfUrl: reader.readStringOrNull(offsets[26]),
-    start: reader.readDateTime(offsets[27]),
-    subtype: reader.readLongOrNull(offsets[29]) ?? 1,
-    type: _CalendarEventtypeValueEnumMap[reader.readByteOrNull(offsets[30])] ??
+    selfUrl: reader.readStringOrNull(offsets[28]),
+    start: reader.readDateTime(offsets[29]),
+    subtype: reader.readLongOrNull(offsets[31]) ?? 1,
+    type: _CalendarEventtypeValueEnumMap[reader.readByteOrNull(offsets[32])] ??
         CalendarType.personal,
     vakken: reader.readObjectList<Vakken>(
-      offsets[31],
+      offsets[33],
       VakkenSchema.deserialize,
       allOffsets,
       Vakken(),
     ),
-    weergaveType: reader.readLongOrNull(offsets[32]) ?? 1,
+    weergaveType: reader.readLongOrNull(offsets[34]) ?? 1,
   );
   object.customCalendarProperties =
       reader.readObjectOrNull<CustomCalendarProperties>(
@@ -476,12 +502,12 @@ CalendarEvent _calendarEventDeserialize(
   );
   object.excludeFromAutoDND = reader.readBool(offsets[8]);
   object.infoType =
-      _CalendarEventinfoTypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+      _CalendarEventinfoTypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
           InfoType.none;
-  object.inhoud = reader.readStringOrNull(offsets[14]);
-  object.lokatie = reader.readStringOrNull(offsets[19]);
+  object.inhoud = reader.readStringOrNull(offsets[15]);
+  object.lokatie = reader.readStringOrNull(offsets[20]);
   object.status =
-      _CalendarEventstatusValueEnumMap[reader.readByteOrNull(offsets[28])] ??
+      _CalendarEventstatusValueEnumMap[reader.readByteOrNull(offsets[30])] ??
           Status.unknown;
   return object;
 }
@@ -525,70 +551,74 @@ P _calendarEventDeserializeProp<P>(
     case 8:
       return (reader.readBool(offset)) as P;
     case 9:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 11:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 12:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     case 13:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 14:
       return (_CalendarEventinfoTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           InfoType.none) as P;
-    case 14:
-      return (reader.readStringOrNull(offset)) as P;
     case 15:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 16:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 17:
       return (reader.readLongOrNull(offset)) as P;
     case 18:
+      return (reader.readLongOrNull(offset)) as P;
+    case 19:
       return (reader.readObjectList<Lokalen>(
         offset,
         LokalenSchema.deserialize,
         allOffsets,
         Lokalen(),
       )) as P;
-    case 19:
-      return (reader.readStringOrNull(offset)) as P;
     case 20:
       return (reader.readStringOrNull(offset)) as P;
     case 21:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 22:
+      return (reader.readStringOrNull(offset)) as P;
+    case 23:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 24:
       return (_CalendarEventrawInfoTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           InfoType.information) as P;
-    case 23:
-      return (reader.readStringOrNull(offset)) as P;
-    case 24:
-      return (reader.readStringOrNull(offset)) as P;
     case 25:
-      return (_CalendarEventrawStatusValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          Status.manuallyScheduled) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 26:
       return (reader.readStringOrNull(offset)) as P;
     case 27:
-      return (reader.readDateTime(offset)) as P;
+      return (_CalendarEventrawStatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          Status.manuallyScheduled) as P;
     case 28:
+      return (reader.readStringOrNull(offset)) as P;
+    case 29:
+      return (reader.readDateTime(offset)) as P;
+    case 30:
       return (_CalendarEventstatusValueEnumMap[reader.readByteOrNull(offset)] ??
           Status.unknown) as P;
-    case 29:
+    case 31:
       return (reader.readLongOrNull(offset) ?? 1) as P;
-    case 30:
+    case 32:
       return (_CalendarEventtypeValueEnumMap[reader.readByteOrNull(offset)] ??
           CalendarType.personal) as P;
-    case 31:
+    case 33:
       return (reader.readObjectList<Vakken>(
         offset,
         VakkenSchema.deserialize,
         allOffsets,
         Vakken(),
       )) as P;
-    case 32:
+    case 34:
       return (reader.readLongOrNull(offset) ?? 1) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1285,6 +1315,160 @@ extension CalendarEventQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'excludeFromAutoDND',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'extId',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'extId',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'extId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'extId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'extId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'extId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      extIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'extId',
+        value: '',
       ));
     });
   }
@@ -2107,6 +2291,160 @@ extension CalendarEventQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'lokatie',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'magisterUuid',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'magisterUuid',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'magisterUuid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'magisterUuid',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'magisterUuid',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'magisterUuid',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      magisterUuidIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'magisterUuid',
         value: '',
       ));
     });
@@ -3610,6 +3948,18 @@ extension CalendarEventQuerySortBy
     });
   }
 
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> sortByExtId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> sortByExtIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extId', Sort.desc);
+    });
+  }
+
   QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> sortByGewijzigd() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'gewijzigd', Sort.asc);
@@ -3738,6 +4088,20 @@ extension CalendarEventQuerySortBy
   QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> sortByLokatieDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lokatie', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy>
+      sortByMagisterUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy>
+      sortByMagisterUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.desc);
     });
   }
 
@@ -3976,6 +4340,18 @@ extension CalendarEventQuerySortThenBy
     });
   }
 
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> thenByExtId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> thenByExtIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'extId', Sort.desc);
+    });
+  }
+
   QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> thenByGewijzigd() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'gewijzigd', Sort.asc);
@@ -4104,6 +4480,20 @@ extension CalendarEventQuerySortThenBy
   QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy> thenByLokatieDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lokatie', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy>
+      thenByMagisterUuid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterSortBy>
+      thenByMagisterUuidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'magisterUuid', Sort.desc);
     });
   }
 
@@ -4314,6 +4704,13 @@ extension CalendarEventQueryWhereDistinct
     });
   }
 
+  QueryBuilder<CalendarEvent, CalendarEvent, QDistinct> distinctByExtId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'extId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<CalendarEvent, CalendarEvent, QDistinct> distinctByGewijzigd() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'gewijzigd');
@@ -4377,6 +4774,13 @@ extension CalendarEventQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lokatie', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<CalendarEvent, CalendarEvent, QDistinct> distinctByMagisterUuid(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'magisterUuid', caseSensitive: caseSensitive);
     });
   }
 
@@ -4526,6 +4930,12 @@ extension CalendarEventQueryProperty
     });
   }
 
+  QueryBuilder<CalendarEvent, String?, QQueryOperations> extIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'extId');
+    });
+  }
+
   QueryBuilder<CalendarEvent, DateTime?, QQueryOperations> gewijzigdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'gewijzigd');
@@ -4591,6 +5001,13 @@ extension CalendarEventQueryProperty
   QueryBuilder<CalendarEvent, String?, QQueryOperations> lokatieProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lokatie');
+    });
+  }
+
+  QueryBuilder<CalendarEvent, String?, QQueryOperations>
+      magisterUuidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'magisterUuid');
     });
   }
 

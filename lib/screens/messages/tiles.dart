@@ -446,13 +446,13 @@ class FolderTile extends StatefulWidget {
 }
 
 class _FolderTileState extends State<FolderTile> {
-  late final ExpansionTileController controller;
+  late final ExpansibleController controller;
   DateTime? startHover;
   bool isExpanded = false;
 
   @override
   void initState() {
-    controller = ExpansionTileController();
+    controller = ExpansibleController();
     super.initState();
   }
 

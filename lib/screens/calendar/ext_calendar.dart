@@ -193,8 +193,6 @@ extension DateTimeHelp on DateTime {
     return weeksPassed + 1; // Adding 1 as week number starts from 1
   }
 
-  //TODO: For god sake, make this more practical
-
   String get formattedDate {
     if (year == DateTime.now().year) {
       // The year is not relevant when it is the current year.

@@ -113,13 +113,15 @@ class BackgroundScheduler {
       ]);
     }
 
-    await Future.forEach(
-      await isar.profiles
-          .filter()
-          .settings((q) => q.useAutoDNDEqualTo(true))
-          .findAll(),
-      (p) async => await schedule(p),
-    );
+    List<Profile> profiles = await isar.profiles
+        .filter()
+        .settings((q) => q.useAutoDNDEqualTo(true).or().smartAlarmEnabledEqualTo(true))
+        .findAll();
+
+    for (Profile p in profiles) {
+      if (p.settings.useAutoDND) await schedule(p);
+      if (p.settings.smartAlarmEnabled) await p.scheduleSmartAlarm();
+    }
   }
 }
 
@@ -271,5 +273,127 @@ extension on DNDAlarm {
     }
 
     return true;
+  }
+}
+
+/// This alarm is used to wake the user up based on their first lesson
+class SmartAlarm {
+  final int offset;
+  final DateTime? latestTime;
+
+  SmartAlarm({required this.offset, this.latestTime});
+
+  factory SmartAlarm.fromJson(Map<String, dynamic> json) => SmartAlarm(
+        offset: json["offset"],
+        latestTime: json["latestTime"] != null
+            ? DateTime.parse(json["latestTime"])
+            : null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "offset": offset,
+        "latestTime": latestTime?.toIso8601String(),
+      };
+}
+
+@pragma('vm:entry-point')
+Future<void> toggleSmartAlarm(int scheduleId, dynamic params) async {
+  // This function is called when the alarm fires.
+  await NotificationController.init();
+  await NotificationController.createNotification(
+    NativeNotification(
+      id: scheduleId,
+      title: "Slimme wekker",
+      body: "Het is tijd om op te staan voor je eerste les!",
+      channel: NotificationChannel.calendar,
+      payload: NotificationPayload(
+        payload: {"type": "smart_alarm"},
+      ),
+    ),
+  );
+}
+
+extension SmartAlarmScheduler on Profile {
+  /// Calculates the next smart alarm time for this profile.
+  /// Returns a record with the alarm time and the first lesson found (if any).
+  Future<(DateTime?, CalendarEvent?)> calculateSmartAlarmTime() async {
+    // Find the first lesson of the next day (or today if early morning)
+    DateTime now = DateTime.now();
+    DateTime end = now.add(const Duration(hours: 24));
+
+    List<CalendarEvent> events = await calendarEvents
+        .filter()
+        .startGreaterThan(now)
+        .startLessThan(end)
+        .sortByStart()
+        .findAll();
+
+    // Filter for actual lessons (not cancelled, not free hours if possible to distinguish)
+    CalendarEvent? firstLesson =
+        events.where((e) => !e.isCanceled && !e.duurtHeleDag).firstOrNull;
+
+    DateTime? alarmTime;
+
+    if (firstLesson != null) {
+      alarmTime = firstLesson.start
+          .subtract(Duration(minutes: settings.smartAlarmOffset));
+    }
+
+    // Check boundaries
+    if (settings.smartAlarmLatestTime != null) {
+      DateTime targetDate =
+          alarmTime?.dayOnly ?? now.add(const Duration(days: 1)).dayOnly;
+
+      DateTime latest = DateTime(
+        targetDate.year,
+        targetDate.month,
+        targetDate.day,
+        settings.smartAlarmLatestTime!.hour,
+        settings.smartAlarmLatestTime!.minute,
+      );
+
+      // If there's no lesson, or the lesson-based alarm is after the latest time,
+      // use the latest time.
+      if (alarmTime == null || alarmTime.isAfter(latest)) {
+        alarmTime = latest;
+      }
+    }
+
+    // Final check: if the calculated time is in the past, move it forward if it was latestTime?
+    // Actually, if it's in the past, we shouldn't schedule it.
+    if (alarmTime != null && alarmTime.isBefore(now)) {
+      // If it's already past the latest time today, maybe we should look at tomorrow?
+      // But this function is typically called periodically.
+      return (null, firstLesson);
+    }
+
+    return (alarmTime, firstLesson);
+  }
+
+  Future<void> scheduleSmartAlarm() async {
+    if (!settings.smartAlarmEnabled || !Platform.isAndroid) return;
+
+    final (alarmTime, _) = await calculateSmartAlarmTime();
+
+    if (alarmTime != null) {
+      final int alarmId = uuid + 999999;
+      // Schedule the alarm
+      await AndroidAlarm(
+        time: alarmTime,
+        id: alarmId,
+        callback: toggleSmartAlarm,
+        allowWhileIdle: true,
+        exact: true,
+        rescheduleOnReboot: true,
+        params: SmartAlarm(
+          offset: settings.smartAlarmOffset,
+          latestTime: settings.smartAlarmLatestTime,
+        ).toJson(),
+      ).schedule();
+      print(
+          "SmartAlarm: Scheduled alarm for $name at ${alarmTime.formattedDateAndTime}");
+    } else {
+      print("SmartAlarm: No suitable alarm time found for $name");
+    }
   }
 }

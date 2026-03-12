@@ -265,7 +265,7 @@ class CalcResult extends StatelessWidget {
                     : (result.change < 0 || result.change > 10)
                         ? Theme.of(context).colorScheme.error
                         : Theme.of(context).colorScheme.primary,
-                size: (32 * MediaQuery.of(context).textScaleFactor),
+                size: MediaQuery.textScalerOf(context).scale(32),
                 result.change.isNegative
                     ? Icons.trending_down
                     : result.change == 0

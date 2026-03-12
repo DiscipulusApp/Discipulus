@@ -2,10 +2,13 @@ import 'dart:io';
 
 import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/screens/settings/pages/discipulus_settings.dart';
+import 'package:discipulus/screens/settings/pages/login_with_discipulus.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -74,6 +77,48 @@ class _VerticalIntroductionScreenState
     _controller.dispose();
     _offset.dispose();
     super.dispose();
+  }
+
+  void _showAlternativeLogins() {
+    showScrollableModalBottomSheet(
+      context: context,
+      builder: (context, setState, scrollController) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              for (var tile in [
+                ListTile(
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: const Text("Login met Discipulus QR-code"),
+                  subtitle: const Text(
+                      "Scan een QR-code van een ander Discipulus apparaat"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    const LoginWithDiscipulusPage().push(context);
+                  },
+                ),
+                if (!kReleaseMode)
+                  ListTile(
+                    leading: const Icon(Icons.bug_report),
+                    title: const Text("Login met dummy account"),
+                    subtitle: const Text("Voor testdoeleinden"),
+                    onTap: () {
+                      Navigator.pop(context);
+                      const CreateAccountScreen(dummy: true).push(context);
+                    },
+                  ),
+              ])
+                CustomCard(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  elevation: 0,
+                  child: tile,
+                )
+            ],
+          ),
+        );
+      },
+    );
   }
 
   double get _screenFileHeight =>
@@ -574,7 +619,7 @@ class _VerticalIntroductionScreenState
                           delay: Durations.medium2,
                           duration: Durations.medium3,
                           child: (animation) => TextButton(
-                            onPressed: () => {},
+                            onPressed: _showAlternativeLogins,
                             child: FadeTransition(
                               opacity: animation,
                               child: const Text("Anders"),

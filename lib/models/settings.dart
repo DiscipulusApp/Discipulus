@@ -23,7 +23,7 @@ Settings get appSettings {
 class Settings {
   Id id = 0;
   bool? useMaterialYou;
-  int activeMaterialYouColorInt = Colors.blue.value;
+  int activeMaterialYouColorInt = Colors.blue.toARGB32();
   @enumerated
   ThemeBrightness brightness = ThemeBrightness.system;
   @enumerated
@@ -88,8 +88,9 @@ class Settings {
   /// This contains the active message filters, this value won't be saved.
   static List<MessageFilter> activeMessageFilters = [];
 
-  String? geminiAPIKey;
-  bool sharePersonalInformationWithGemini = false;
+  String? openRouterAPIKey;
+  String openRouterModel = "google/gemini-2.0-flash-lite:free";
+  bool useLocalAI = false;
 
   DateTime? dndTurnedOnTime;
 
@@ -205,6 +206,11 @@ class ProfileSettings {
 
   /// When a grade will be counted as sufficient
   double sufficientFrom = 5.5;
+
+  /// Smart Alarm settings
+  bool smartAlarmEnabled = false;
+  int smartAlarmOffset = 60; // Minutes before the first lesson
+  DateTime? smartAlarmLatestTime; // The latest time to wake up
 
   ProfileSettings({
     this.lastRefresh,

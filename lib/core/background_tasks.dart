@@ -108,7 +108,6 @@ class BackgroundRefresh {
 
   /// Updates the native widgets for the activeProfile.
   static Future<void> updateWidgets() async {
-    //TODO: Android
     int profileUUID =
         appSettings.activeProfileUuidWidgets ?? activeProfile.uuid;
     if ((Platform.isIOS || Platform.isMacOS)) {
@@ -159,18 +158,17 @@ Future<void> refreshWidgetColorscheme(
     {required ColorScheme lightColorScheme,
     required ColorScheme darkColorScheme}) async {
   if (Platform.isIOS || Platform.isMacOS) {
-    // TODO: Android
     await HomeWidget.saveWidgetData<Map<String, int>>("colors", {
-      "background": lightColorScheme.surface.value,
-      "primary": lightColorScheme.primary.value,
-      "done": Colors.green.harmonizeWith(lightColorScheme.primary).value,
-      "test": lightColorScheme.tertiary.value,
-      "secondary": lightColorScheme.secondary.value,
-      "darkBackground": darkColorScheme.surface.value,
-      "darkPrimary": darkColorScheme.primary.value,
-      "darkDone": Colors.green.harmonizeWith(darkColorScheme.primary).value,
-      "darkTest": darkColorScheme.tertiary.value,
-      "darkSecondary": darkColorScheme.secondary.value
+      "background": lightColorScheme.surface.toARGB32(),
+      "primary": lightColorScheme.primary.toARGB32(),
+      "done": Colors.green.harmonizeWith(lightColorScheme.primary).toARGB32(),
+      "test": lightColorScheme.tertiary.toARGB32(),
+      "secondary": lightColorScheme.secondary.toARGB32(),
+      "darkBackground": darkColorScheme.surface.toARGB32(),
+      "darkPrimary": darkColorScheme.primary.toARGB32(),
+      "darkDone": Colors.green.harmonizeWith(darkColorScheme.primary).toARGB32(),
+      "darkTest": darkColorScheme.tertiary.toARGB32(),
+      "darkSecondary": darkColorScheme.secondary.toARGB32()
     });
   }
 }

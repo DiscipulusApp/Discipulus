@@ -144,7 +144,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
         if (containsNumericalGrades)
           StatisticalTilesHeader(
             key: const HeaderKey(),
-            grades: grades.applyGradeFilter(),
+            grades: grades.applyGradeFilter().findAllSync(),
           ),
         FilterChipList(
           key: const HeaderKey(),

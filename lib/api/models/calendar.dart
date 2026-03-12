@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 
 import 'package:discipulus/api/models/permissions.dart';
 import 'package:discipulus/api/models/subjects.dart';
@@ -18,6 +19,12 @@ class CalendarEvent {
   final profile = IsarLink<Profile>();
   final subject = IsarLink<Subject>();
   Id get uuid => "${profile.value!.uuid}$id".hashCode;
+
+  /// The uuid of the user in Magister. This is used for the new calendar endpoint.
+  String? magisterUuid;
+
+  /// The external id of the event. This is used for the new calendar endpoint.
+  String? extId;
 
   @ignore
   String get title => (vakken ?? []).isEmpty
@@ -151,6 +158,8 @@ class CalendarEvent {
     this.afwezigheid,
     this.aangemaakt,
     this.gewijzigd,
+    this.extId,
+    this.magisterUuid,
   });
 
   factory CalendarEvent.fromJson(String str) =>
@@ -193,6 +202,9 @@ class CalendarEvent {
                       json["Lokalen"].map((x) => Lokalen.fromMap(x))),
           opdrachtId: json["OpdrachtId"],
           heeftBijlagen: json["HeeftBijlagen"],
+          afwezigheid: json["Afwezigheid"] != null
+              ? Absence.fromMap(json["Afwezigheid"])
+              : null,
           aangemaakt: json["TaakAangemaaktOp"] == null
               ? null
               : DateTime.parse(json["TaakAangemaaktOp"]).toUtc(),
@@ -219,6 +231,48 @@ class CalendarEvent {
           }
           return null;
         }).call();
+
+  factory CalendarEvent.fromExtensionMap(
+          Map<String, dynamic> json, String magisterUuid) =>
+      CalendarEvent(
+        id: "ext_${json["id"]}".hashCode, // New events don't have an int id, but a string UUID
+        extId: json["id"],
+        magisterUuid: magisterUuid,
+        start: DateTime.parse(json["start"]).toUtc(),
+        einde: DateTime.parse(json["end"]).toUtc(),
+        lesuurVan: json["startTimeSlot"],
+        lesuurTotMet: json["endTimeSlot"],
+        duurtHeleDag: false, // Not provided in new JSON, assuming false
+        omschrijving: json["topic"],
+        rawLokatie: (json["locations"] as List?)
+            ?.map((e) => e["description"])
+            .join(", "),
+        rawStatus: json["status"] == "confirmed"
+            ? Status.manuallyScheduled
+            : Status.unknown, // Basic mapping
+        type: CalendarType.personal, // Assuming personal for now
+        subtype: 1,
+        isOnlineDeelname: false,
+        weergaveType: 1,
+        rawInhoud: json["remark"] ?? "",
+        rawInfoType: InfoType.none,
+        aantekening: null,
+        afgerond: json["status"] == "completed",
+        herhaalStatus: 0,
+        vakken: (json["subjects"] as List?)
+            ?.map((e) => Vakken(naam: e["description"]))
+            .toList(),
+        docenten: (json["participants"] as List?)
+            ?.where((e) => e["type"] == "staffMember")
+            .map((e) => Docenten(naam: "${e["firstName"]} ${e["lastName"]}", docentcode: e["code"]))
+            .toList(),
+        lokalen: (json["locations"] as List?)
+            ?.map((e) => Lokalen(naam: e["description"]))
+            .toList(),
+        opdrachtId: 0,
+        heeftBijlagen: false,
+        selfUrl: json["links"]?["enroll"]?["href"],
+      );
 
   Map<String, dynamic> toMap() => {
         "Id": id,
@@ -258,6 +312,9 @@ class CalendarEvent {
             : null,
         "OpdrachtId": opdrachtId,
         "HeeftBijlagen": heeftBijlagen,
+        "Afwezigheid": afwezigheid?.toMap(),
+        "extId": extId,
+        "magisterUuid": magisterUuid,
       };
 
   void save() => isar.writeTxnSync(() => isar.calendarEvents.putSync(this));
@@ -274,12 +331,18 @@ class CalendarEvent {
     var res = (await profile.value!.account.value!.api.dio.get(selfUrl!)).data;
     var bijlagen = List<Bron>.from(res["Bijlagen"].map((x) =>
         Bron.fromMap(x..["BronSoort"] = 1)..profile.value = profile.value));
-    var event = CalendarEvent.fromMap(res, selfUrl: selfUrl)
+    var newEvent = CalendarEvent.fromMap(res, selfUrl: selfUrl)
       ..profile.value = profile.value;
+
+    // Preserve existing absence if the new one is null
+    if (newEvent.afwezigheid == null && afwezigheid != null) {
+      newEvent.afwezigheid = afwezigheid;
+    }
+
     bronnen.addAll(bijlagen);
     isar.writeTxnSync(() {
       isar.brons.putAllSync(bronnen.toList());
-      isar.calendarEvents.putSync(event);
+      isar.calendarEvents.putSync(newEvent);
       bronnen.saveSync();
     });
   }
@@ -623,6 +686,18 @@ class Absence {
         code: json["Code"],
         rawAfspraak: CalendarEvent.fromMap(json["Afspraak"]),
       );
+
+  Map<String, dynamic> toMap() => {
+        "Id": id,
+        "Start": start?.toIso8601String(),
+        "Eind": eind?.toIso8601String(),
+        "Lesuur": lesuur,
+        "Geoorloofd": geoorloofd,
+        "AfspraakId": afspraakId,
+        "Omschrijving": omschrijving,
+        "Verantwoordingtype": absenceValues.reverse[verantwoordingtype],
+        "Code": code,
+      };
 }
 
 enum AbsenceType {
@@ -634,6 +709,50 @@ enum AbsenceType {
   books,
   homework,
   unknown
+}
+
+extension AbsenceTypeName on AbsenceType {
+  String get name {
+    switch (this) {
+      case AbsenceType.absent:
+        return "Afwezigheid";
+      case AbsenceType.late:
+        return "Te laat";
+      case AbsenceType.sick:
+        return "Ziek";
+      case AbsenceType.discharged:
+        return "Verwijderd";
+      case AbsenceType.exemption:
+        return "Vrijstelling";
+      case AbsenceType.books:
+        return "Boeken vergeten";
+      case AbsenceType.homework:
+        return "Huiswerk vergeten";
+      case AbsenceType.unknown:
+        return "Onbekend";
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AbsenceType.absent:
+        return Icons.person_remove_alt_1_outlined;
+      case AbsenceType.late:
+        return Icons.access_time_outlined;
+      case AbsenceType.sick:
+        return Icons.sick_outlined;
+      case AbsenceType.discharged:
+        return Icons.exit_to_app_outlined;
+      case AbsenceType.exemption:
+        return Icons.verified_outlined;
+      case AbsenceType.books:
+        return Icons.menu_book_outlined;
+      case AbsenceType.homework:
+        return Icons.assignment_late_outlined;
+      case AbsenceType.unknown:
+        return Icons.help_outline;
+    }
+  }
 }
 
 final absenceValues = EnumValues({
