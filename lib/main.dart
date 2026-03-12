@@ -45,6 +45,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:dnd_manager/dnd_manager.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
@@ -89,6 +90,10 @@ void main(args) async {
   await initIsar();
 
   if (Platform.isIOS) {
+    if (await AppTrackingTransparency.trackingAuthorizationStatus ==
+        TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
     unawaited(MobileAds.instance.initialize());
   }
 

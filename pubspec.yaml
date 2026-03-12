@@ -102,6 +102,7 @@ dependencies:
   mobile_scanner: ^7.0.1
   flutter_local_ai: ^0.0.6
   google_mobile_ads: ^5.1.0
+  app_tracking_transparency: ^2.0.4
 
   # Unused
   # flutter_carousel_widget: ^2.2.0
