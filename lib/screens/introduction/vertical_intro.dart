@@ -87,16 +87,17 @@ class _VerticalIntroductionScreenState
           child: Wrap(
             children: [
               for (var tile in [
-                ListTile(
-                  leading: const Icon(Icons.qr_code_scanner),
-                  title: const Text("Login met Discipulus QR-code"),
-                  subtitle: const Text(
-                      "Scan een QR-code van een ander Discipulus apparaat"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    const LoginWithDiscipulusPage().push(context);
-                  },
-                ),
+                if (!Platform.isMacOS)
+                  ListTile(
+                    leading: const Icon(Icons.qr_code_scanner),
+                    title: const Text("Login met Discipulus QR-code"),
+                    subtitle: const Text(
+                        "Scan een QR-code van een ander Discipulus apparaat"),
+                    onTap: () {
+                      Navigator.pop(context);
+                      const LoginWithDiscipulusPage().push(context);
+                    },
+                  ),
                 if (!kReleaseMode)
                   ListTile(
                     leading: const Icon(Icons.bug_report),
@@ -619,7 +620,7 @@ class _VerticalIntroductionScreenState
                           delay: Durations.medium2,
                           duration: Durations.medium3,
                           child: (animation) => TextButton(
-                            onPressed: _showAlternativeLogins,
+                            onPressed: (!Platform.isMacOS) ? _showAlternativeLogins : null,
                             child: FadeTransition(
                               opacity: animation,
                               child: const Text("Anders"),
