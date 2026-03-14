@@ -1,3 +1,5 @@
+import 'package:discipulus/api/models/calendar.dart';
+import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/dummy_routes/interceptors.dart';
 import 'package:discipulus/api/dummy_routes/messages.dart';
@@ -134,8 +136,17 @@ class DummyMagister implements Magister {
 
   @override
   UserRoute user(String uuid) {
-    // TODO: implement user
-    throw UnimplementedError();
+    return DummyUserRoute(this, uuid: uuid);
+  }
+}
+
+class DummyUserRoute extends UserRoute {
+  DummyUserRoute(super.magister, {required super.uuid});
+
+  @override
+  Future<List<CalendarEvent>> additionalAppointments(
+      DateTimeRange range) async {
+    return [];
   }
 }
 

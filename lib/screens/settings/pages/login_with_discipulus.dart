@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
@@ -96,41 +97,55 @@ class _LoginWithDiscipulusPageState extends State<LoginWithDiscipulusPage> {
         title: const Text("Login met Discipulus"),
       ),
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AspectRatio(
-                aspectRatio: 1,
-                child: CustomCard(
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      MobileScanner(
-                        controller: controller,
-                        onDetect: (result) => _onDetect(result),
-                      ),
-                      // Scanner overlay/mask
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.5),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        if (Platform.isMacOS)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: CustomCard(
+              child: ListTile(
+                leading: Icon(Icons.error_outline),
+                title: Text("Niet beschikbaar op macOS"),
+                subtitle: Text(
+                  "QR-code scannen is momenteel niet beschikbaar op macOS omdat dit voor problemen zorgt. Gebruik een ander platform of login met uw Magister account.",
                 ),
               ),
-            ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: CustomCard(
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      children: [
+                        MobileScanner(
+                          controller: controller,
+                          onDetect: (result) => _onDetect(result),
+                        ),
+                        // Scanner overlay/mask
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.5),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
       customBuilder: (body) {
         return Center(
