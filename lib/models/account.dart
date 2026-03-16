@@ -97,6 +97,7 @@ class DiscipulusAccount {
           return profiles.add(Profile(
             id: child.id,
             name: child.roepnaam,
+            birthdate: child.geboortedatum,
             magisterBase64ProfilePicture:
                 await api.person(child.id).profilepicture,
           )..account.value = this);
@@ -107,6 +108,7 @@ class DiscipulusAccount {
         id: apiAccount.persoon.id,
         name: apiAccount.persoon.roepnaam ??
             "${apiAccount.persoon.voorletters} ${apiAccount.persoon.achternaam}",
+        birthdate: apiAccount.persoon.geboortedatum,
         magisterBase64ProfilePicture:
             await api.person(apiAccount.persoon.id).profilepicture,
       )..account.value = this);
@@ -232,6 +234,24 @@ class Profile {
   /// This is the id returned from the Magister API
   late int id;
   late String name;
+  DateTime? birthdate;
+
+  /// Returns the age of the user based on their birthdate.
+  @ignore
+  int? get age {
+    if (birthdate == null) return null;
+    DateTime today = DateTime.now();
+    int age = today.year - birthdate!.year;
+    if (today.month < birthdate!.month ||
+        (today.month == birthdate!.month && today.day < birthdate!.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  /// Whether the user is under 13 years old.
+  @ignore
+  bool get isUnderage => birthdate != null && (age ?? 0) < 13;
 
   /// The profile picture that is used for this profile. This can be edited, but
   /// the original will always be saved.
@@ -613,6 +633,7 @@ class Profile {
   Profile({
     required this.id,
     required this.name,
+    this.birthdate,
     this.magisterBase64ProfilePicture,
     this.isOffline = false,
   });

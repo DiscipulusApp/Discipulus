@@ -1046,33 +1046,38 @@ const ProfileSchema = CollectionSchema(
   name: r'Profile',
   id: 1266279811925214857,
   properties: {
-    r'customBase64ProfilePicture': PropertySchema(
+    r'birthdate': PropertySchema(
       id: 0,
+      name: r'birthdate',
+      type: IsarType.dateTime,
+    ),
+    r'customBase64ProfilePicture': PropertySchema(
+      id: 1,
       name: r'customBase64ProfilePicture',
       type: IsarType.string,
     ),
     r'id': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'id',
       type: IsarType.long,
     ),
     r'isOffline': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'isOffline',
       type: IsarType.bool,
     ),
     r'magisterBase64ProfilePicture': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'magisterBase64ProfilePicture',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     ),
     r'settings': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'settings',
       type: IsarType.object,
       target: r'ProfileSettings',
@@ -1177,13 +1182,14 @@ void _profileSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.customBase64ProfilePicture);
-  writer.writeLong(offsets[1], object.id);
-  writer.writeBool(offsets[2], object.isOffline);
-  writer.writeString(offsets[3], object.magisterBase64ProfilePicture);
-  writer.writeString(offsets[4], object.name);
+  writer.writeDateTime(offsets[0], object.birthdate);
+  writer.writeString(offsets[1], object.customBase64ProfilePicture);
+  writer.writeLong(offsets[2], object.id);
+  writer.writeBool(offsets[3], object.isOffline);
+  writer.writeString(offsets[4], object.magisterBase64ProfilePicture);
+  writer.writeString(offsets[5], object.name);
   writer.writeObject<ProfileSettings>(
-    offsets[5],
+    offsets[6],
     allOffsets,
     ProfileSettingsSchema.serialize,
     object.settings,
@@ -1197,14 +1203,15 @@ Profile _profileDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Profile(
-    id: reader.readLong(offsets[1]),
-    isOffline: reader.readBoolOrNull(offsets[2]) ?? false,
-    magisterBase64ProfilePicture: reader.readStringOrNull(offsets[3]),
-    name: reader.readString(offsets[4]),
+    birthdate: reader.readDateTimeOrNull(offsets[0]),
+    id: reader.readLong(offsets[2]),
+    isOffline: reader.readBoolOrNull(offsets[3]) ?? false,
+    magisterBase64ProfilePicture: reader.readStringOrNull(offsets[4]),
+    name: reader.readString(offsets[5]),
   );
-  object.customBase64ProfilePicture = reader.readStringOrNull(offsets[0]);
+  object.customBase64ProfilePicture = reader.readStringOrNull(offsets[1]);
   object.settings = reader.readObjectOrNull<ProfileSettings>(
-        offsets[5],
+        offsets[6],
         ProfileSettingsSchema.deserialize,
         allOffsets,
       ) ??
@@ -1220,16 +1227,18 @@ P _profileDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
-    case 3:
       return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readString(offset)) as P;
+    case 6:
       return (reader.readObjectOrNull<ProfileSettings>(
             offset,
             ProfileSettingsSchema.deserialize,
@@ -1354,6 +1363,75 @@ extension ProfileQueryWhere on QueryBuilder<Profile, Profile, QWhereClause> {
 
 extension ProfileQueryFilter
     on QueryBuilder<Profile, Profile, QFilterCondition> {
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'birthdate',
+      ));
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'birthdate',
+      ));
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'birthdate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'birthdate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'birthdate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterFilterCondition> birthdateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'birthdate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Profile, Profile, QAfterFilterCondition>
       customBase64ProfilePictureIsNull() {
     return QueryBuilder.apply(this, (query) {
@@ -2359,6 +2437,18 @@ extension ProfileQueryLinks
 }
 
 extension ProfileQuerySortBy on QueryBuilder<Profile, Profile, QSortBy> {
+  QueryBuilder<Profile, Profile, QAfterSortBy> sortByBirthdate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'birthdate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterSortBy> sortByBirthdateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'birthdate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Profile, Profile, QAfterSortBy>
       sortByCustomBase64ProfilePicture() {
     return QueryBuilder.apply(this, (query) {
@@ -2426,6 +2516,18 @@ extension ProfileQuerySortBy on QueryBuilder<Profile, Profile, QSortBy> {
 
 extension ProfileQuerySortThenBy
     on QueryBuilder<Profile, Profile, QSortThenBy> {
+  QueryBuilder<Profile, Profile, QAfterSortBy> thenByBirthdate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'birthdate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Profile, Profile, QAfterSortBy> thenByBirthdateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'birthdate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Profile, Profile, QAfterSortBy>
       thenByCustomBase64ProfilePicture() {
     return QueryBuilder.apply(this, (query) {
@@ -2505,6 +2607,12 @@ extension ProfileQuerySortThenBy
 
 extension ProfileQueryWhereDistinct
     on QueryBuilder<Profile, Profile, QDistinct> {
+  QueryBuilder<Profile, Profile, QDistinct> distinctByBirthdate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'birthdate');
+    });
+  }
+
   QueryBuilder<Profile, Profile, QDistinct>
       distinctByCustomBase64ProfilePicture({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2546,6 +2654,12 @@ extension ProfileQueryProperty
   QueryBuilder<Profile, int, QQueryOperations> uuidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'uuid');
+    });
+  }
+
+  QueryBuilder<Profile, DateTime?, QQueryOperations> birthdateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'birthdate');
     });
   }
 

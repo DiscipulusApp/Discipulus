@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:discipulus/utils/account_manager.dart';
 
 class BannerAdWidget extends StatefulWidget {
   const BannerAdWidget({super.key});
@@ -36,7 +37,7 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (Platform.isIOS && _bannerAd == null) {
+    if (Platform.isIOS && _bannerAd == null && !activeProfile.isUnderage) {
       _loadAd();
     }
   }
@@ -88,7 +89,7 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isIOS || _bannerAd == null || !_isLoaded) {
+    if (!Platform.isIOS || _bannerAd == null || !_isLoaded || activeProfile.isUnderage) {
       return const SizedBox.shrink();
     }
 

@@ -23,6 +23,7 @@ import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
+import 'package:discipulus/core/ad_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -44,9 +45,6 @@ import 'package:timezone/data/latest.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:dnd_manager/dnd_manager.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
@@ -88,14 +86,7 @@ void main(args) async {
   );
 
   await initIsar();
-
-  if (Platform.isIOS) {
-    if (await AppTrackingTransparency.trackingAuthorizationStatus ==
-        TrackingStatus.notDetermined) {
-      await AppTrackingTransparency.requestTrackingAuthorization();
-    }
-    unawaited(MobileAds.instance.initialize());
-  }
+  await AdService.initialize();
 
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
