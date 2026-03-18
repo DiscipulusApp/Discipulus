@@ -86,7 +86,6 @@ void main(args) async {
   );
 
   await initIsar();
-  await AdService.initialize();
 
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
@@ -147,9 +146,10 @@ class MainAppState extends State<MainApp> {
     updateTheme();
     _linkSub = appLinks.uriLinkStream.listen(Intents.uniLinkListener);
 
-    Future(
-      () async => await AccountMigration.checkAndMigrateAccounts(),
-    );
+    Future(() async {
+      await AccountMigration.checkAndMigrateAccounts();
+      await AdService.initialize();
+    });
 
     super.initState();
   }

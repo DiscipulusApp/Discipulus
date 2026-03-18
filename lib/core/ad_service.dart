@@ -16,14 +16,20 @@ class AdService {
         return;
       }
     } catch (e) {
-      // In case activeProfile is not available yet (e.g. during first-time setup)
-      // we might want to proceed or wait. For now, we proceed to handle the first-time logic.
+      // In case activeProfile is not available yet (e.g. during first-time setup or migration)
+      // we might want to check the birthdate of any profile if available, but for now
+      // we proceed to show the consent form to be safe, or wait.
+      // If we can't determine age, we should probably be conservative.
     }
 
     if (Platform.isIOS) {
       final completer = Completer<void>();
 
       final params = ConsentRequestParameters();
+
+      // Ensure the app is actually in the foreground before showing native dialogs.
+      // This helps avoid cases where the ATT prompt fails to show.
+      await Future.delayed(const Duration(milliseconds: 500));
 
       ConsentInformation.instance.requestConsentInfoUpdate(
         params,
@@ -36,10 +42,11 @@ class AdService {
               }
 
               // Proceed to ATT request after consent flow (required or not).
+              // Apple's automated reviewer might be looking for this specifically.
               await _requestATTIfNeeded();
 
-              // Initialize AdMob.
-              unawaited(MobileAds.instance.initialize());
+              // Initialize AdMob only AFTER ATT has been handled.
+              await MobileAds.instance.initialize();
 
               completer.complete();
             },
@@ -49,9 +56,9 @@ class AdService {
           // Handle error in requesting consent info update.
           debugPrint('${error.errorCode}: ${error.message}');
 
-          // Even if consent info update fails, try to initialize ads.
-          _requestATTIfNeeded().then((_) {
-            unawaited(MobileAds.instance.initialize());
+          // Even if consent info update fails, try to request ATT and then initialize ads.
+          _requestATTIfNeeded().then((_) async {
+            await MobileAds.instance.initialize();
             completer.complete();
           });
         },
@@ -60,8 +67,7 @@ class AdService {
       return completer.future;
     } else if (Platform.isAndroid) {
       // For now, only basic initialization for Android.
-      // CMP can be added here later if needed.
-      unawaited(MobileAds.instance.initialize());
+      await MobileAds.instance.initialize();
     }
   }
 

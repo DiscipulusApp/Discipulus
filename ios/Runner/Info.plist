@@ -123,7 +123,7 @@
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-8698376572242605~4002596510</string>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>This identifier will be used to deliver personalized ads to you.</string>
+	<string>Uw gegevens worden gebruikt om gepersonaliseerde advertenties weer te geven en de app-ervaring te verbeteren.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

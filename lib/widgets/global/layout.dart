@@ -285,21 +285,24 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
     return StatefulBuilder(
       builder: (context, setState) {
         return MouseRegion(
-          onEnter: (_) {
-            hoverTimer = Timer(hoverDuration, () {
-              setState(() {
-                _hoveredChild = true;
-              });
-            });
-          },
-          onExit: (_) {
-            hoverTimer?.cancel();
-            if (_hoveredChild) {
-              setState(() {
-                _hoveredChild = false;
-              });
-            }
-          },
+          //
+          // Idea was good, but this is honestly horrible UX wise.
+          //
+          // onEnter: (_) {
+          //   hoverTimer = Timer(hoverDuration, () {
+          //     setState(() {
+          //       _hoveredChild = true;
+          //     });
+          //   });
+          // },
+          // onExit: (_) {
+          //   hoverTimer?.cancel();
+          //   if (_hoveredChild) {
+          //     setState(() {
+          //       _hoveredChild = false;
+          //     });
+          //   }
+          // },
           child: CustomAnimatedSize(
             child: _hoveredChild ? hoverChild : child,
           ),
