@@ -1,0 +1,3 @@
+[submodule "watchOS"]
+	path = watchOS
+	url = ./watchOS

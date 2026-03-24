@@ -26,29 +26,36 @@ struct NavigatorWidget: Widget {
     }
 
     private func supportedFamilies() -> [WidgetFamily] {
-        var families: [WidgetFamily] = [
+        #if os(iOS) || os(macOS)
+        return [
             .systemSmall,
             .systemMedium,
             .systemLarge,
-            .systemExtraLarge
-        ]
-        
-        /// Only iOS supports these widgets families for now.
-        #if os(iOS)
-        families.append(contentsOf: [
+            .systemExtraLarge,
             .accessoryCircular,
             .accessoryInline,
             .accessoryRectangular
-        ])
+        ]
+        #elseif os(watchOS)
+        return [
+            .accessoryCircular,
+            .accessoryInline,
+            .accessoryRectangular
+        ]
+        #else
+        return []
         #endif
-
-        return families
     }
 }
 
 struct NavigatorWidget_Previews: PreviewProvider {
     static var previews: some View {
+        #if os(iOS) || os(macOS)
         NavigatorWidgetEntryView(entry: SimpleEntry(date: Date(), configuration: ConfigurationIntent(), events: sampleEvents))
             .previewContext(WidgetPreviewContext(family: .systemMedium))
+        #elseif os(watchOS)
+        NavigatorWidgetEntryView(entry: SimpleEntry(date: Date(), configuration: ConfigurationIntent(), events: sampleEvents))
+            .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
+        #endif
     }
 }

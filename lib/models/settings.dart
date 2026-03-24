@@ -95,6 +95,7 @@ class Settings {
   DateTime? dndTurnedOnTime;
 
   List<AndroidAlarm> alarms = [];
+  DateTime? lastWatchSync;
 
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
 }

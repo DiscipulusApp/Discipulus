@@ -5,9 +5,10 @@ func formatDate(_ date: Date, timeInterval: TimeInterval, short: Bool = false) -
     if timeInterval <= 0 {
         return "Nu"
     }
-    
-    let components = Calendar.current.dateComponents([.day, .hour, .minute], from: date, to: date.addingTimeInterval(timeInterval))
-    
+
+    let components = Calendar.current.dateComponents(
+        [.day, .hour, .minute], from: date, to: date.addingTimeInterval(timeInterval))
+
     if let day = components.day, day > 0 {
         return "in \(day)\(short ? "d" : day > 1 ? " dagen" : " dag")"
     } else if let hour = components.hour, hour > 0 {
@@ -15,7 +16,7 @@ func formatDate(_ date: Date, timeInterval: TimeInterval, short: Bool = false) -
     } else if let minute = components.minute, minute > 0 {
         return "in \(minute)\(short ? "m" : " min")"
     }
-    
+
     return "Nu"
 }
 
@@ -32,35 +33,32 @@ func formatDateHeader(_ date: Date) -> String {
     return formatter.string(from: date)
 }
 
-func getWidgetColors(for colorScheme: ColorScheme, native: Bool = true) -> WidgetColors {
-    let widgetColors: WidgetColors = WidgetColors()
+func getWidgetColors(for colorScheme: ColorScheme, native: Bool = false) -> WidgetColors {
+    let widgetColors = WidgetColors()
+
+    // If native is requested, we just return the default
+    if native {
+        return widgetColors
+    }
+
     let sharedDefaults = UserDefaults(suiteName: "group.DUGUWCFH8P.dev.harrydekat.discipulus")
-    
+
     if let colorData = sharedDefaults?.dictionary(forKey: "colors") as? [String: Int] {
-            
-        var background = Color(rgb: colorData["background"] ?? 0xFFFFFF)
-        var primary = Color(rgb: colorData["primary"] ?? 0xFFFFFF)
-        var done = Color(rgb: colorData["done"] ?? 0xFFFFFF)
-        var test = Color(rgb: colorData["test"] ?? 0xFFFFFF)
-        var secondary = Color(rgb: colorData["secondary"] ?? 0xFFFFFF)
-
         if colorScheme == .dark {
-            background = Color(rgb: colorData["darkBackground"] ?? 0xFFFFFF)
-            primary = Color(rgb: colorData["darkPrimary"] ?? 0xFFFFFF)
-            done = Color(rgb: colorData["darkDone"] ?? 0xFFFFFF)
-            test = Color(rgb: colorData["darkTest"] ?? 0xFFFFFF)
-            secondary = Color(rgb: colorData["darkSecondary"] ?? 0xFFFFFF)
-        }
-
-        if (!native) {
-            widgetColors.background = background
-            widgetColors.primary = primary
-            widgetColors.done = done
-            widgetColors.test = test
-            widgetColors.secondary = secondary
+            widgetColors.background = Color(rgb: colorData["darkBackground"] ?? 0x000000)
+            widgetColors.primary = Color(rgb: colorData["darkPrimary"] ?? 0xFFFFFF)
+            widgetColors.done = Color(rgb: colorData["darkDone"] ?? 0x4CD964)
+            widgetColors.test = Color(rgb: colorData["darkTest"] ?? 0x5856D6)
+            widgetColors.secondary = Color(rgb: colorData["darkSecondary"] ?? 0x8E8E93)
+        } else {
+            widgetColors.background = Color(rgb: colorData["background"] ?? 0xFFFFFF)
+            widgetColors.primary = Color(rgb: colorData["primary"] ?? 0x000000)
+            widgetColors.done = Color(rgb: colorData["done"] ?? 0x4CD964)
+            widgetColors.test = Color(rgb: colorData["test"] ?? 0x5856D6)
+            widgetColors.secondary = Color(rgb: colorData["secondary"] ?? 0x8E8E93)
         }
     }
-    
+
     return widgetColors
 }
 
@@ -75,13 +73,7 @@ extension Color {
 }
 
 class WidgetColors {
-    var background: SwiftUI.Color = ({ 
-        #if canImport(UIKit)
-            return Color(.systemBackground)
-        #elseif canImport(AppKit)
-            return Color(.windowBackgroundColor)
-        #endif
-    })()
+    var background: SwiftUI.Color = .clear
     var primary: SwiftUI.Color = .accentColor
     var done: SwiftUI.Color = .green
     var test: SwiftUI.Color = .indigo

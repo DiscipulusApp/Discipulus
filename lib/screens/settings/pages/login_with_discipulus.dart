@@ -12,17 +12,21 @@ import 'package:isar/isar.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:convert';
 
+import 'package:discipulus/utils/proxy.dart';
+import 'package:discipulus/screens/settings/pages/proxy_status.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AuthQrResult {
   String requestId;
   String backendUrl;
   final String? callbackUrl;
+  final bool? isWii;
 
   AuthQrResult({
     required this.requestId,
     required this.backendUrl,
     required this.callbackUrl,
+    this.isWii,
   });
 
   factory AuthQrResult.fromRawJson(String str) =>
@@ -34,12 +38,14 @@ class AuthQrResult {
         requestId: json["requestId"],
         backendUrl: json["backendUrl"],
         callbackUrl: json["callbackUrl"],
+        isWii: json["isWii"],
       );
 
   Map<String, dynamic> toJson() => {
         "requestId": requestId,
         "backendUrl": backendUrl,
         "callbackUrl": callbackUrl,
+        "isWii": isWii,
       };
 }
 
@@ -195,8 +201,53 @@ Future<void> loginToAlternativeService(
   Profile? profile,
   required AuthQrResult payload,
   bool skipTrustDialog = false,
+  bool resetServerOnSuccess = false,
   bool redirect = true,
 }) async {
+  // Wii Support
+  if (payload.isWii == true) {
+    if (profile == null) {
+      // If we are already in the selector, don't push another one.
+      // Instead, we might want to add a new account.
+      // For now, let's just push the selector if it's the first call.
+      if (context.widget is! LoginWithDiscipulusAccountSelector) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => LoginWithDiscipulusAccountSelector(
+              payload: payload,
+              redirect: false,
+            ),
+          ),
+        );
+        return;
+      }
+    } else {
+      String? proxyUrl = await WiiProxyService.start(profile);
+      if (proxyUrl != null) {
+        try {
+          await Dio().post(
+            '${payload.backendUrl}/api/auth/custom-login/complete',
+            data: {"proxyUrl": proxyUrl},
+          );
+          if (context.mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => WiiProxyStatusScreen(proxyUrl: proxyUrl),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Kon Wii niet bereiken: $e")),
+            );
+          }
+        }
+      }
+      return;
+    }
+  }
+
   // --- Step 1: Confirm Trust ---
   if (!skipTrustDialog) {
     bool? trusted = await isTrustedBackendUrl(

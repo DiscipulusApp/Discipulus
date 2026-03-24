@@ -3,7 +3,7 @@ import WidgetKit
 
 struct AccessoryRectangularView: View {
     let entry: SimpleEntry
-    
+
     var body: some View {
         if let event = entry.upcomingEvents.first(where: {
             $0.startTime > entry.date.addingTimeInterval(-300) && $0.startTime <= entry.date.addingTimeInterval(3600 * 24 * 7)
@@ -14,12 +14,12 @@ struct AccessoryRectangularView: View {
                         Circle()
                             .fill(Color.blue.opacity(0.2))
                             .frame(width: 44, height: 44)
-                        
+
                         Circle()
                             .fill(Material.thick)
                             .frame(width: 44, height: 44)
                             .blur(radius: 5)
-                        
+
                         Text(location.prefix(4))
                             .foregroundColor(.white)
                             .font(.system(size: 14, weight: .bold, design: .default))
@@ -48,17 +48,17 @@ struct AccessoryRectangularView: View {
         } else {
             ZStack {
                 RoundedRectangle(cornerSize: CGSize(width: 8, height: 8))
-                    .fill(Color.blue.opacity(0.2))
-                
+                    .fill(Color.blue.opacity(0.15))
+
                 RoundedRectangle(cornerSize: CGSize(width: 8, height: 8))
-                    .fill(Material.ultraThick)
+                    .fill(Material.thin)
                     .blur(radius: 5)
-                
-                HStack(spacing: 12) {
-                    Text("🎉")
-                    
-                    Text("Geen lessen gevonden")
-                        .font(.system(size: 14, weight: .regular, design: .default))
+
+                HStack(spacing: 8) {
+                    Text("📅")
+
+                    Text("Geen lessen gepland")
+                        .font(.system(size: 13, weight: .medium, design: .default))
                         .widgetAccentable()
                 }
             }

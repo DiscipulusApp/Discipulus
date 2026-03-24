@@ -90,90 +90,95 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.byteList,
       enumMap: _SettingsenabledGradeBadgeTypesEnumValueMap,
     ),
-    r'openAfterDownload': PropertySchema(
+    r'lastWatchSync': PropertySchema(
       id: 14,
+      name: r'lastWatchSync',
+      type: IsarType.dateTime,
+    ),
+    r'openAfterDownload': PropertySchema(
+      id: 15,
       name: r'openAfterDownload',
       type: IsarType.bool,
     ),
     r'openRouterAPIKey': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'openRouterAPIKey',
       type: IsarType.string,
     ),
     r'openRouterModel': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'openRouterModel',
       type: IsarType.string,
     ),
     r'saveVirtualFiles': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'saveVirtualFiles',
       type: IsarType.bool,
     ),
     r'sendCrashInfo': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'sendCrashInfo',
       type: IsarType.bool,
     ),
     r'shortBronTitle': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'shortBronTitle',
       type: IsarType.bool,
     ),
     r'showAutoCancelledEvents': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'showAutoCancelledEvents',
       type: IsarType.bool,
     ),
     r'showBronExtension': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'showBronExtension',
       type: IsarType.bool,
     ),
     r'showCalcCardsInGlobalAverageList': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'showCalcCardsInGlobalAverageList',
       type: IsarType.bool,
     ),
     r'showEmptySpaceBetweenLessons': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'showEmptySpaceBetweenLessons',
       type: IsarType.bool,
     ),
     r'subjectSortType': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'subjectSortType',
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
     r'themeVariant': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'themeVariant',
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'useHandoff': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useLocalAI': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'useLocalAI',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -243,23 +248,24 @@ void _settingsSerialize(
   writer.writeBool(offsets[12], object.drawerOpenOnRight);
   writer.writeByteList(
       offsets[13], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
-  writer.writeBool(offsets[14], object.openAfterDownload);
-  writer.writeString(offsets[15], object.openRouterAPIKey);
-  writer.writeString(offsets[16], object.openRouterModel);
-  writer.writeBool(offsets[17], object.saveVirtualFiles);
-  writer.writeBool(offsets[18], object.sendCrashInfo);
-  writer.writeBool(offsets[19], object.shortBronTitle);
-  writer.writeBool(offsets[20], object.showAutoCancelledEvents);
-  writer.writeBool(offsets[21], object.showBronExtension);
-  writer.writeBool(offsets[22], object.showCalcCardsInGlobalAverageList);
-  writer.writeBool(offsets[23], object.showEmptySpaceBetweenLessons);
-  writer.writeByte(offsets[24], object.subjectSortType.index);
-  writer.writeByte(offsets[25], object.themeVariant.index);
-  writer.writeBool(offsets[26], object.useHandoff);
-  writer.writeBool(offsets[27], object.useLocalAI);
-  writer.writeBool(offsets[28], object.useMaterialYou);
-  writer.writeBool(offsets[29], object.workWeek);
-  writer.writeBool(offsets[30], object.zoomLineGraph);
+  writer.writeDateTime(offsets[14], object.lastWatchSync);
+  writer.writeBool(offsets[15], object.openAfterDownload);
+  writer.writeString(offsets[16], object.openRouterAPIKey);
+  writer.writeString(offsets[17], object.openRouterModel);
+  writer.writeBool(offsets[18], object.saveVirtualFiles);
+  writer.writeBool(offsets[19], object.sendCrashInfo);
+  writer.writeBool(offsets[20], object.shortBronTitle);
+  writer.writeBool(offsets[21], object.showAutoCancelledEvents);
+  writer.writeBool(offsets[22], object.showBronExtension);
+  writer.writeBool(offsets[23], object.showCalcCardsInGlobalAverageList);
+  writer.writeBool(offsets[24], object.showEmptySpaceBetweenLessons);
+  writer.writeByte(offsets[25], object.subjectSortType.index);
+  writer.writeByte(offsets[26], object.themeVariant.index);
+  writer.writeBool(offsets[27], object.useHandoff);
+  writer.writeBool(offsets[28], object.useLocalAI);
+  writer.writeBool(offsets[29], object.useMaterialYou);
+  writer.writeBool(offsets[30], object.workWeek);
+  writer.writeBool(offsets[31], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -298,27 +304,28 @@ Settings _settingsDeserialize(
           .toList() ??
       [];
   object.id = id;
-  object.openAfterDownload = reader.readBool(offsets[14]);
-  object.openRouterAPIKey = reader.readStringOrNull(offsets[15]);
-  object.openRouterModel = reader.readString(offsets[16]);
-  object.saveVirtualFiles = reader.readBool(offsets[17]);
-  object.sendCrashInfo = reader.readBool(offsets[18]);
-  object.shortBronTitle = reader.readBool(offsets[19]);
-  object.showAutoCancelledEvents = reader.readBool(offsets[20]);
-  object.showBronExtension = reader.readBool(offsets[21]);
-  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[22]);
-  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[23]);
+  object.lastWatchSync = reader.readDateTimeOrNull(offsets[14]);
+  object.openAfterDownload = reader.readBool(offsets[15]);
+  object.openRouterAPIKey = reader.readStringOrNull(offsets[16]);
+  object.openRouterModel = reader.readString(offsets[17]);
+  object.saveVirtualFiles = reader.readBool(offsets[18]);
+  object.sendCrashInfo = reader.readBool(offsets[19]);
+  object.shortBronTitle = reader.readBool(offsets[20]);
+  object.showAutoCancelledEvents = reader.readBool(offsets[21]);
+  object.showBronExtension = reader.readBool(offsets[22]);
+  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[23]);
+  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[24]);
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
-          reader.readByteOrNull(offsets[24])] ??
+          reader.readByteOrNull(offsets[25])] ??
       SubjectSortType.alphabetical;
   object.themeVariant =
-      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[25])] ??
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[26])] ??
           ThemeVariant.system;
-  object.useHandoff = reader.readBool(offsets[26]);
-  object.useLocalAI = reader.readBool(offsets[27]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[28]);
-  object.workWeek = reader.readBool(offsets[29]);
-  object.zoomLineGraph = reader.readBool(offsets[30]);
+  object.useHandoff = reader.readBool(offsets[27]);
+  object.useLocalAI = reader.readBool(offsets[28]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[29]);
+  object.workWeek = reader.readBool(offsets[30]);
+  object.zoomLineGraph = reader.readBool(offsets[31]);
   return object;
 }
 
@@ -371,13 +378,13 @@ P _settingsDeserializeProp<P>(
               .toList() ??
           []) as P;
     case 14:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 15:
-      return (reader.readStringOrNull(offset)) as P;
-    case 16:
-      return (reader.readString(offset)) as P;
-    case 17:
       return (reader.readBool(offset)) as P;
+    case 16:
+      return (reader.readStringOrNull(offset)) as P;
+    case 17:
+      return (reader.readString(offset)) as P;
     case 18:
       return (reader.readBool(offset)) as P;
     case 19:
@@ -391,22 +398,24 @@ P _settingsDeserializeProp<P>(
     case 23:
       return (reader.readBool(offset)) as P;
     case 24:
+      return (reader.readBool(offset)) as P;
+    case 25:
       return (_SettingssubjectSortTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
-    case 25:
+    case 26:
       return (_SettingsthemeVariantValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeVariant.system) as P;
-    case 26:
-      return (reader.readBool(offset)) as P;
     case 27:
       return (reader.readBool(offset)) as P;
     case 28:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 29:
       return (reader.readBool(offset)) as P;
+    case 29:
+      return (reader.readBoolOrNull(offset)) as P;
     case 30:
+      return (reader.readBool(offset)) as P;
+    case 31:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1296,6 +1305,78 @@ extension SettingsQueryFilter
   }
 
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      lastWatchSyncIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastWatchSync',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      lastWatchSyncIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastWatchSync',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> lastWatchSyncEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastWatchSync',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      lastWatchSyncGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastWatchSync',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> lastWatchSyncLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastWatchSync',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> lastWatchSyncBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastWatchSync',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
       openAfterDownloadEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2010,6 +2091,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByLastWatchSync() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastWatchSync', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByLastWatchSyncDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastWatchSync', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByOpenAfterDownload() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'openAfterDownload', Sort.asc);
@@ -2387,6 +2480,18 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByLastWatchSync() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastWatchSync', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByLastWatchSyncDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastWatchSync', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByOpenAfterDownload() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'openAfterDownload', Sort.asc);
@@ -2682,6 +2787,12 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct> distinctByLastWatchSync() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastWatchSync');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByOpenAfterDownload() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'openAfterDownload');
@@ -2890,6 +3001,12 @@ extension SettingsQueryProperty
       enabledGradeBadgeTypesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'enabledGradeBadgeTypes');
+    });
+  }
+
+  QueryBuilder<Settings, DateTime?, QQueryOperations> lastWatchSyncProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastWatchSync');
     });
   }
 

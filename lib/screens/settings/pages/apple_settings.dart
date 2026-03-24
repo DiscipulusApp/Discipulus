@@ -1,3 +1,4 @@
+import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_apple_spotlight/flutter_apple_spotlight.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:isar/isar.dart';
+import 'package:watch_connectivity/watch_connectivity.dart';
 
 class AppleSettingsPage extends StatefulWidget {
   const AppleSettingsPage({super.key});
@@ -129,6 +131,51 @@ class _AppleSettingsPageState extends State<AppleSettingsPage> {
           ),
           trailing: LoadingButton(
             future: BackgroundRefresh.updateWidgets,
+            child: (isLoading, onTap) => IconButton(
+              onPressed: onTap,
+              icon: isLoading
+                  ? const SizedBox(
+                      height: 24,
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : const Icon(Icons.refresh),
+            ),
+          ),
+        ),
+        const ListTitle(child: Text("Apple Watch")),
+        FutureBuilder(
+          future: WatchConnectivity().isPaired,
+          builder: (context, snapshot) {
+            final isPaired = snapshot.data ?? false;
+
+            return ListTile(
+              leading: const Icon(Icons.watch),
+              title: const Text("Status"),
+              subtitle: Text(
+                !isPaired ? "Geen horloge gekoppeld" : "Gekoppeld",
+              ),
+              trailing: StreamBuilder(
+                stream: WatchConnectivity().messageStream,
+                builder: (context, snapshot) => Icon(
+                  Icons.circle,
+                  size: 12,
+                  color: isPaired ? Colors.green : Colors.red,
+                ),
+              ),
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.sync),
+          title: const Text("Laatste synchronisatie"),
+          subtitle: Text(appSettings.lastWatchSync == null
+              ? "Nog nooit gesynchroniseerd"
+              : "Laatst gesynchroniseerd op ${appSettings.lastWatchSync!.day}-${appSettings.lastWatchSync!.month}-${appSettings.lastWatchSync!.year} om ${appSettings.lastWatchSync!.hour}:${appSettings.lastWatchSync!.minute.toString().padLeft(2, '0')}"),
+          trailing: LoadingButton(
+            future: WatchService().syncAll,
             child: (isLoading, onTap) => IconButton(
               onPressed: onTap,
               icon: isLoading

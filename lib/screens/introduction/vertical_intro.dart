@@ -11,6 +11,7 @@ import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:watch_connectivity/watch_connectivity.dart';
 
 bool useTransparency = Platform.isMacOS;
 
@@ -61,6 +62,7 @@ class _VerticalIntroductionScreenState
     extends State<VerticalIntroductionScreen> {
   late final ScrollController _controller;
   late final ValueNotifier<double> _offset;
+  late final bool hasAppleWatch;
 
   @override
   void initState() {
@@ -70,6 +72,8 @@ class _VerticalIntroductionScreenState
     _controller.addListener(() {
       _offset.value = _controller.offset;
     });
+    Future(() async => hasAppleWatch = await WatchConnectivity().isPaired)
+        .then((_) => setState(() {}));
   }
 
   @override
@@ -207,6 +211,27 @@ class _VerticalIntroductionScreenState
           title: 'Spotlight-integratie',
           subtitle: const Text(
               'Zoek razendsnel naar berichten, studiewijzers en andere belangrijke informatie binnen Discipulus, rechtstreeks vanuit Spotlight.'),
+        ),
+      ];
+
+  List<IntroBulletPoint> get watchOSBulletPoints => [
+        IntroBulletPoint(
+          icon: const Text('📆'),
+          title: 'Rooster altijd bij de hand',
+          subtitle: const Text(
+              'Bekijk je lessen, lokalen en tijden direct op je horloge, zonder je telefoon te pakken.'),
+        ),
+        IntroBulletPoint(
+          icon: const Text('👀'),
+          title: 'Snel overzicht',
+          subtitle: const Text(
+              'Gebruik complicaties op je wijzerplaat om direct te zien waar je volgende les is.'),
+        ),
+        IntroBulletPoint(
+          icon: const Text('📳'),
+          title: 'Slimme meldingen',
+          subtitle: const Text(
+              'Ontvang subtiele trillingen op je pols voordat je volgende les begint, zodat je nooit meer te laat komt.'),
         ),
       ];
 
@@ -432,6 +457,21 @@ class _VerticalIntroductionScreenState
             ),
             ...iOSBulletPoints.dislayCards,
           ],
+          if (Platform.isIOS && hasAppleWatch) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 24, bottom: 16),
+              child: Text(
+                "Zozo, wat heb jij een mooi klokje om je pols",
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                  "Discipulus is ook gewoon beschikbaar op je Apple Watch."),
+            ),
+            ...watchOSBulletPoints.dislayCards,
+          ],
           if (Platform.isAndroid) ...[
             Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 16),
@@ -620,7 +660,9 @@ class _VerticalIntroductionScreenState
                           delay: Durations.medium2,
                           duration: Durations.medium3,
                           child: (animation) => TextButton(
-                            onPressed: (!Platform.isMacOS) ? _showAlternativeLogins : null,
+                            onPressed: (!Platform.isMacOS)
+                                ? _showAlternativeLogins
+                                : null,
                             child: FadeTransition(
                               opacity: animation,
                               child: const Text("Anders"),

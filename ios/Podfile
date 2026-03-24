@@ -35,12 +35,12 @@ target 'Runner' do
   target 'RunnerTests' do
     inherit! :search_paths
   end
-  
+
   target 'ShareExtension' do
     inherit! :search_paths
     pod "share_handler_ios_models", :path => ".symlinks/plugins/share_handler_ios/ios/Models"
   end
-  
+
 #  target 'NavigatorWidgetExtension' do
 #    use_frameworks!
 #    use_modular_headers!
@@ -62,7 +62,7 @@ post_install do |installer|
 #  awesome_pod_file = File.expand_path(File.join('plugins', 'awesome_notifications', 'ios', 'Scripts', 'AwesomePodFile'), '.symlinks')
 #  require awesome_pod_file
 #  update_awesome_pod_build_settings(installer)
-#  
+#
 #  installer.pods_project.build_configuration_list.build_configurations.each do |configuration|
 #      configuration.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
 #  end

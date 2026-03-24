@@ -34,7 +34,7 @@ Discipulus is een open-source alternatief voor de Magister-app. Dit project is o
 - **Geavanceerd bijlagesysteem** 📂: Bewaar je bijlages offline en vind ze razendsnel terug, zelfs als je geen internet hebt.
 - **Berichtensysteem** 📬: Lees, sorteer en beheer je berichten gemakkelijk met zelfs Spotlight intergratie op Apple!
 - **Lokale opslag** 🌐: Discipulus is volledig offline te gebuiken, waardoor het ook supersnel is.
-- **Widgets & Handoff** 🤝: Krijg direct inzicht in je volgende les zonder de app te openen en wissel moeiteloos tussen apparaten om precies daar verder te gaan waar je gebleven was.
+- **Widgets, Complicaties & Handoff** 🤝: Krijg direct inzicht in je volgende les op je iPhone, Mac of Apple Watch. Wissel moeiteloos tussen apparaten om precies daar verder te gaan waar je gebleven was.
 
 <img src=".readme_assets/banner_macbook_air.png" alt="Macbook Air">
 
@@ -83,6 +83,17 @@ Met Discipulus kun je je studiewijzers helemaal naar wens indelen. Voeg favoriet
 Schrijf je direct in voor activiteiten, sorteer op naam of datum, en filter op verplicht/optioneel. Filter sub-activiteiten op Magister volgorde, alfabetisch, datum en populariteit. Zoek en filter op volle activiteiten of alleen de activiteiten waarvoor je bent ingeschreven. Inschrijven is zo simpel als één knop indrukken. 🎉
 
 <img src=".readme_assets/banner_iphone_activities.png" alt="Activiteiten">
+
+### Apple Watch App
+
+Blijf verbonden, zelfs zonder je telefoon. De Discipulus Apple Watch-app is ontworpen voor maximale snelheid en focus in de klas.
+
+- **Live Lesoverzicht**: Zie direct welk vak je nu hebt, hoe lang de les nog duurt en waar je volgende les is.
+- **Haptische Herinneringen**: Krijg een subtiel tikje op je pols voordat je volgende les begint, zodat je nooit meer te laat komt.
+- **Cijfers bij de hand**: Bekijk snel je recentste cijfers en gemiddelden direct vanaf je pols.
+- **Complicaties & Smart Stack**: Voeg Discipulus toe aan je wijzerplaat of gebruik de Smart Stack (watchOS 10+) om je rooster in één oogopslag te zien.
+
+<img src=".readme_assets/banner_watchos.png" alt="Apple Watch">
 
 ## Installatie
 

@@ -24,6 +24,7 @@ import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/core/ad_service.dart';
+import 'package:discipulus/core/watch_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -110,6 +111,7 @@ void main(args) async {
   await NotificationController.init();
 
   if (Platform.isAndroid) await AndroidAlarmManager.initialize();
+  if (Platform.isIOS) WatchService().init();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
