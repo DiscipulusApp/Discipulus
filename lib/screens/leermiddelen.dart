@@ -59,7 +59,7 @@ class _LeermiddelenScreenState extends State<LeermiddelenScreen> {
         leading: leading,
       ),
       children: [
-        ...(leermiddelen.map((e) => e.vak.omschrijving).toSet()
+        ...(leermiddelen.map((e) => e.vak?.omschrijving ?? "Geen").toSet()
               ..sortedBy(
                 (element) => element,
               ))
@@ -73,7 +73,9 @@ class _LeermiddelenScreenState extends State<LeermiddelenScreen> {
                     ),
                   ),
                 ),
-                ...leermiddelen.where((l) => l.vak.omschrijving == e).map(
+                ...leermiddelen
+                    .where((l) => (l.vak?.omschrijving ?? "Geen") == e)
+                    .map(
                       (e) => AppearAnimation(
                         child: (animation) => FadeScaleTransition(
                           animation: animation,

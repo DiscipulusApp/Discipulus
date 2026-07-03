@@ -7,8 +7,10 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:haptic_kit/haptic_kit.dart';
 
 class GradeTile extends StatelessWidget {
   const GradeTile({
@@ -302,6 +304,7 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
   late final AnimationController _morphController;
   late final Animation<double> _morphAnimation;
   late final Animation<double> _tickerAnimation;
+  late final Animation<double> _colorAnimation;
 
   @override
   void initState() {
@@ -322,6 +325,10 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
       parent: _morphController,
       curve: Curves.easeOutExpo,
     );
+    _colorAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: const Interval(0.8, 1.0, curve: Easing.standard),
+    );
 
     if (widget.gradeString == "?") {
       _rotationController.repeat();
@@ -331,12 +338,141 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
     }
   }
 
+  List<int> generateCurvedNumbers({
+    required int start,
+    required int end,
+    required int count,
+    required Curve curve,
+  }) {
+    if (count <= 0) return [];
+    if (count == 1) return [start];
+
+    final List<int> numbers = [];
+    final tween = Tween<int>(begin: start, end: end);
+
+    for (int i = 0; i < count; i++) {
+      // Calculate the linear progress (0.0 to 1.0)
+      double linearProgress = i / (count - 1);
+
+      // Apply the Flutter Curve to the progress
+      double curvedProgress = curve.transform(linearProgress);
+
+      // Interpolate the value based on the curved progress
+      int value = tween.transform(curvedProgress);
+
+      numbers.add(value);
+    }
+
+    return numbers;
+  }
+
+  Future<void> _playHapticRevealPattern() async {
+    try {
+      await Vibration.cancel();
+      if (Platform.isAndroid) {
+        await Vibration.vibrateWaveform(
+          timings: const [
+            // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr
+            Duration.zero,
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            // Phase 2: Decelerating Sparks (Apex Climb) - Distinct >100ms clicks
+            Duration(milliseconds: 150), // Pause → Tick 1 at 1350ms
+            Duration(milliseconds: 10), // Tick 1
+            Duration(milliseconds: 240), // Pause → Tick 2 at 1600ms (color starts changing)
+            Duration(milliseconds: 10), // Tick 2
+            Duration(milliseconds: 390), // Pause → Pop at 2000ms (color fully revealed)
+            // Phase 3: The Explosion (Apex Pop) - Gentle 150 amplitude pop
+            Duration(milliseconds: 40),
+          ],
+          amplitudes: const [
+            0,
+            2, // Purr start (barely there)
+            3,
+            4,
+            6,
+            9,
+            14,
+            20,
+            30, // Peak — exponential surge
+            0,
+            35, // Click 1
+            0,
+            15, // Click 2
+            0,
+            40, // Gentle pop
+          ],
+        );
+      } else {
+        await HapticPattern.builder()
+            // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.10,
+                sharpness: 0.2)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.15,
+                sharpness: 0.3)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.22,
+                sharpness: 0.4)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.30,
+                sharpness: 0.5)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.38,
+                sharpness: 0.6)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.46,
+                sharpness: 0.7)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.54,
+                sharpness: 0.8)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.60,
+                sharpness: 0.9)
+            // Phase 2: Decelerating Sparks (Apex Climb) - Distinct >100ms clicks
+            .pause(const Duration(milliseconds: 150)) // Tick 1 at 1350ms
+            .tap(intensity: 0.35, sharpness: 0.5)
+            .pause(const Duration(milliseconds: 240)) // Tick 2 at 1600ms (color starts changing)
+            .tap(intensity: 0.15, sharpness: 0.3)
+            .pause(const Duration(milliseconds: 390)) // Pop at 2000ms (color fully revealed)
+            // Phase 3: The Explosion (Apex Pop) - Gentle 150 amplitude pop
+            .continuous(
+              duration: const Duration(milliseconds: 80),
+              intensity: 0.60,
+              sharpness: 0.6,
+            )
+            .play();
+      }
+    } catch (_) {
+      // Fallback for older devices/simulators
+      try {
+        await Vibration.vibrate(duration: const Duration(milliseconds: 150));
+      } catch (_) {}
+    }
+  }
+
   @override
   void didUpdateWidget(RevealGradeAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.gradeString == "?" && widget.gradeString != "?") {
       _morphController.forward(from: 0.0);
       _rotationController.stop();
+      _playHapticRevealPattern();
     } else if (oldWidget.gradeString != "?" && widget.gradeString == "?") {
       _morphController.reverse(from: 1.0);
       _rotationController.repeat();
@@ -385,11 +521,13 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
                 ? Theme.of(context).colorScheme.onErrorContainer
                 : Theme.of(context).colorScheme.onPrimaryContainer;
 
+            final double colorProgress = _colorAnimation.value;
+
             Color containerColor = Color.lerp(
-                    startContainerColor, finalContainerColor, progress) ??
+                    startContainerColor, finalContainerColor, colorProgress) ??
                 finalContainerColor;
-            Color onContainerColor = Color.lerp(
-                    startOnContainerColor, finalOnContainerColor, progress) ??
+            Color onContainerColor = Color.lerp(startOnContainerColor,
+                    finalOnContainerColor, colorProgress) ??
                 finalOnContainerColor;
 
             String displayedGrade;

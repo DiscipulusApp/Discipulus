@@ -2,6 +2,7 @@ import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/screens/grades/grade_detail.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/main.dart';
 import 'package:flutter/material.dart';
@@ -110,23 +111,28 @@ class _GradeRevealDialogState extends State<GradeRevealDialog> {
                 },
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 64,
+            ElasticAnimation(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FilledButton.icon(
-                  onPressed: _onNext,
-                  icon: Icon(isCurrentRevealed
-                      ? (_currentPageIndex < widget.grades.length - 1
-                          ? Icons.arrow_forward
-                          : Icons.check)
-                      : Icons.visibility),
-                  label: Text(isCurrentRevealed
-                      ? (_currentPageIndex < widget.grades.length - 1
-                          ? "Volgende"
-                          : "Sluiten")
-                      : "Onthullen"),
+                key: ValueKey(isCurrentRevealed
+                    ? (_currentPageIndex < widget.grades.length - 1 ? 0 : 1)
+                    : 2),
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 64,
+                  child: FilledButton.icon(
+                    onPressed: _onNext,
+                    icon: Icon(isCurrentRevealed
+                        ? (_currentPageIndex < widget.grades.length - 1
+                            ? Icons.arrow_forward
+                            : Icons.check)
+                        : Icons.visibility),
+                    label: Text(isCurrentRevealed
+                        ? (_currentPageIndex < widget.grades.length - 1
+                            ? "Volgende"
+                            : "Sluiten")
+                        : "Onthullen"),
+                  ),
                 ),
               ),
             )
