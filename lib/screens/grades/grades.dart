@@ -1,4 +1,5 @@
 import 'package:discipulus/core/handoff.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/widgets/global/chips/chip_filter.dart';
@@ -68,6 +69,17 @@ class _GradesListScreenState extends State<GradesListScreen> {
   void dispose() {
     highlightGrade.dispose();
     isRefreshing.dispose();
+    if (gradesList != null) {
+      final unrevealed = gradesList!.where((g) => !g.wasRevealed).toList();
+      if (unrevealed.isNotEmpty) {
+        isar.writeTxnSync(() {
+          for (var g in unrevealed) {
+            g.wasRevealed = true;
+            isar.grades.putSync(g);
+          }
+        });
+      }
+    }
     super.dispose();
   }
 

@@ -29,17 +29,24 @@ void showGradeDetailSheet(
       modelSheet: modelSheet,
       builder: (p0, p1, scrollcontroller) {
         return ListView(
-          controller: scrollcontroller,
-          children: [gradeInformation],
+            controller: scrollcontroller,
+            children: [gradeInformation],
+
         );
       },
     );
 
 class GradeInformation extends StatefulWidget {
-  const GradeInformation({super.key, required this.grade, this.setStateTop});
+  const GradeInformation({
+    super.key,
+    required this.grade,
+    this.setStateTop,
+    this.showTile = true,
+  });
 
   final Grade grade;
   final void Function(void Function())? setStateTop;
+  final bool showTile;
 
   @override
   State<GradeInformation> createState() => _GradeInformationState();
@@ -94,7 +101,7 @@ class _GradeInformationState extends State<GradeInformation> {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      AbsorbPointer(child: GradeTile(grade: widget.grade)),
+      if (widget.showTile) AbsorbPointer(child: GradeTile(grade: widget.grade)),
       ...[
         Row(
           children: [

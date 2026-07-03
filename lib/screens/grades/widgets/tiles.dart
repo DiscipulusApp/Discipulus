@@ -7,6 +7,7 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class GradeTile extends StatelessWidget {
@@ -197,6 +198,7 @@ class GradeAvatar extends StatelessWidget {
     this.badge,
     this.decimalDigits,
     this.heroTag,
+    this.radius,
   });
 
   final String? gradeString;
@@ -204,6 +206,7 @@ class GradeAvatar extends StatelessWidget {
   final bool enableAnimatedSwitcher;
   final int? decimalDigits;
   final String? badge;
+  final double? radius;
 
   /// Is used for the hero animation, but can be left null
   final int? heroTag;
@@ -247,16 +250,252 @@ class GradeAvatar extends StatelessWidget {
           key: ValueKey<String>(displayedGrade),
           child: CircleAvatar(
             backgroundColor: containerColor,
-            radius: 25,
-            child: Text(
-              displayedGrade,
-              style: !finaliIsSufficient
-                  ? TextStyle(color: onContainerColor)
-                  : null,
+            radius: radius ?? 25,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                fontSize: radius != null ? radius! * 0.60 : null,
+                color: onContainerColor,
+              ),
+              child: Text(
+                displayedGrade,
+                style: !finaliIsSufficient
+                    ? TextStyle(color: onContainerColor)
+                    : null,
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class RevealGradeAvatar extends StatefulWidget {
+  const RevealGradeAvatar({
+    super.key,
+    required this.gradeString,
+    this.isSufficient,
+    this.enableAnimatedSwitcher = false,
+    this.badge,
+    this.decimalDigits,
+    this.heroTag,
+    this.radius,
+  });
+
+  final String? gradeString;
+  final bool? isSufficient;
+  final bool enableAnimatedSwitcher;
+  final int? decimalDigits;
+  final String? badge;
+  final double? radius;
+
+  /// Is used for the hero animation, but can be left null
+  final int? heroTag;
+
+  @override
+  State<RevealGradeAvatar> createState() => _RevealGradeAvatarState();
+}
+
+class _RevealGradeAvatarState extends State<RevealGradeAvatar>
+    with TickerProviderStateMixin {
+  late final AnimationController _rotationController;
+  late final AnimationController _morphController;
+  late final Animation<double> _morphAnimation;
+  late final Animation<double> _tickerAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 16),
+    );
+    _morphController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _morphAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: const Interval(0.0, 0.4, curve: Easing.standard),
+    );
+    _tickerAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: Curves.easeOutExpo,
+    );
+
+    if (widget.gradeString == "?") {
+      _rotationController.repeat();
+      _morphController.value = 0.0;
+    } else {
+      _morphController.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(RevealGradeAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gradeString == "?" && widget.gradeString != "?") {
+      _morphController.forward(from: 0.0);
+      _rotationController.stop();
+    } else if (oldWidget.gradeString != "?" && widget.gradeString == "?") {
+      _morphController.reverse(from: 1.0);
+      _rotationController.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    _morphController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double? grade =
+        double.tryParse((widget.gradeString ?? "-").replaceAll(',', '.'));
+
+    bool finaliIsSufficient = (grade == null || grade.isNaN)
+        ? (widget.isSufficient ?? true)
+        : num.parse(grade.toStringAsFixed(widget.decimalDigits ?? 2)) >=
+            appSettings.sufficientFrom;
+
+    final double avatarRadius = widget.radius ?? 25;
+    final double diameter = avatarRadius * 2;
+
+    return ElasticAnimation(
+      isEnabled: widget.enableAnimatedSwitcher,
+      child: Hero(
+        tag: widget.heroTag ?? hashCode,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_rotationController, _morphController]),
+          builder: (context, child) {
+            final double progress = _morphAnimation.value;
+            final double rotationAngle = _rotationController.value * 2 * pi;
+
+            Color startContainerColor =
+                Theme.of(context).colorScheme.tertiaryContainer;
+            Color startOnContainerColor =
+                Theme.of(context).colorScheme.onTertiaryContainer;
+
+            Color finalContainerColor = !finaliIsSufficient
+                ? Theme.of(context).colorScheme.errorContainer
+                : Theme.of(context).colorScheme.primaryContainer;
+            Color finalOnContainerColor = !finaliIsSufficient
+                ? Theme.of(context).colorScheme.onErrorContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer;
+
+            Color containerColor = Color.lerp(
+                    startContainerColor, finalContainerColor, progress) ??
+                finalContainerColor;
+            Color onContainerColor = Color.lerp(
+                    startOnContainerColor, finalOnContainerColor, progress) ??
+                finalOnContainerColor;
+
+            String displayedGrade;
+            if (grade == null || grade.isNaN) {
+              displayedGrade =
+                  (widget.gradeString == "null" ? null : widget.gradeString) ??
+                      "-";
+            } else {
+              if (progress == 0.0 && widget.gradeString == "?") {
+                displayedGrade = "?";
+              } else {
+                final double tickerProgress = _tickerAnimation.value;
+                displayedGrade = (tickerProgress * grade)
+                    .displayNumber(decimalDigits: widget.decimalDigits);
+              }
+            }
+
+            return Badge(
+              alignment: Alignment.centerRight,
+              offset: Offset(-(widget.badge?.length.toDouble() ?? 0) * 2, 7),
+              textColor: onContainerColor,
+              isLabelVisible: widget.badge != null,
+              label: widget.badge != null
+                  ? Text(
+                      widget.badge!,
+                      textAlign: TextAlign.end,
+                      textDirection: TextDirection.rtl,
+                    )
+                  : null,
+              key: ValueKey<String>(displayedGrade),
+              child: SizedBox(
+                width: diameter,
+                height: diameter,
+                child: ClipPath(
+                  clipper: MorphClipper(progress, rotationAngle),
+                  child: Container(
+                    color: containerColor,
+                    alignment: Alignment.center,
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(
+                        fontSize: widget.radius != null
+                            ? widget.radius! * 0.60
+                            : null,
+                        color: onContainerColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      child: Text(
+                        displayedGrade,
+                        style: !finaliIsSufficient
+                            ? TextStyle(color: onContainerColor)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class MorphClipper extends CustomClipper<Path> {
+  final double progress;
+  final double rotationAngle;
+
+  MorphClipper(this.progress, this.rotationAngle);
+
+  @override
+  Path getClip(Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = min(size.width, size.height) / 2;
+    final path = Path();
+
+    final double rOut = maxRadius;
+    final double rIn = maxRadius * (0.72 + 0.28 * progress);
+
+    const int pointsCount = 16;
+    final List<Offset> points = [];
+    for (int i = 0; i < pointsCount; i++) {
+      final double angle = rotationAngle + (i * 2 * pi / pointsCount);
+      final double r = (i % 2 == 0) ? rOut : rIn;
+      points.add(Offset(
+        center.dx + r * cos(angle),
+        center.dy + r * sin(angle),
+      ));
+    }
+
+    path.moveTo((points[0].dx + points[pointsCount - 1].dx) / 2,
+        (points[0].dy + points[pointsCount - 1].dy) / 2);
+    for (int i = 0; i < pointsCount; i++) {
+      final pCurrent = points[i];
+      final pNext = points[(i + 1) % pointsCount];
+      final xMid = (pCurrent.dx + pNext.dx) / 2;
+      final yMid = (pCurrent.dy + pNext.dy) / 2;
+      path.quadraticBezierTo(pCurrent.dx, pCurrent.dy, xMid, yMid);
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant MorphClipper oldClipper) {
+    return oldClipper.progress != progress ||
+        oldClipper.rotationAngle != rotationAngle;
   }
 }

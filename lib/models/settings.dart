@@ -97,6 +97,9 @@ class Settings {
   List<AndroidAlarm> alarms = [];
   DateTime? lastWatchSync;
 
+  /// Variable-Ratio
+  bool disableGradeReveal = false;
+
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
 }
 

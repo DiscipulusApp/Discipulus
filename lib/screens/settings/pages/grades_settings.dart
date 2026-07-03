@@ -131,6 +131,20 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
           },
         ),
         SwitchListTile(
+          value: !appSettings.disableGradeReveal,
+          secondary: const Icon(Icons.stars_rounded),
+          title: const Text("Cijfer onthullingen"),
+          subtitle: const Text(
+              "Onthul nieuwe cijfers met een animatie en statistieken"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..disableGradeReveal = !value
+                ..save();
+            });
+          },
+        ),
+        SwitchListTile(
           value: appSettings.showCalcCardsInGlobalAverageList,
           secondary: const Icon(Icons.calculate_rounded),
           title: const Text("Rekenkaarten in globaal gemiddelde"),
