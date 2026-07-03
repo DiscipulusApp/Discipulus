@@ -51,6 +51,7 @@ class LayoutState extends State<Layout>
 
   StreamSubscription? _gradeSubscription;
   bool _isRevealDialogOpen = false;
+  bool _isCheckingForGrades = false;
 
   // Small drawer
   late final AdvancedDrawerController drawerController;
@@ -561,28 +562,33 @@ class LayoutState extends State<Layout>
   }
 
   Future<void> checkForNewGradesToReveal() async {
-    if (_isRevealDialogOpen) return;
+    if (_isRevealDialogOpen || _isCheckingForGrades) return;
     if (appSettings.disableGradeReveal) return;
     if (appSettings.activeProfileUuid == null) return;
 
-    List<Grade> unrevealedGrades = await isar.grades
-        .filter()
-        .wasRevealedEqualTo(false)
-        .useable()
-        .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
-        .findAll();
+    _isCheckingForGrades = true;
+    try {
+      List<Grade> unrevealedGrades = await isar.grades
+          .filter()
+          .wasRevealedEqualTo(false)
+          .useable()
+          .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
+          .findAll();
 
-    if (unrevealedGrades.isNotEmpty) {
-      _isRevealDialogOpen = true;
-      if (mounted && navKey.currentContext != null) {
-        await showDialog(
-          context: navKey.currentContext!,
-          barrierDismissible: false,
-          useSafeArea: false,
-          builder: (context) => GradeRevealDialog(grades: unrevealedGrades),
-        );
+      if (unrevealedGrades.isNotEmpty) {
+        _isRevealDialogOpen = true;
+        if (mounted && navKey.currentContext != null) {
+          await showDialog(
+            context: navKey.currentContext!,
+            barrierDismissible: false,
+            useSafeArea: false,
+            builder: (context) => GradeRevealDialog(grades: unrevealedGrades),
+          );
+        }
+        _isRevealDialogOpen = false;
       }
-      _isRevealDialogOpen = false;
+    } finally {
+      _isCheckingForGrades = false;
     }
   }
 }
