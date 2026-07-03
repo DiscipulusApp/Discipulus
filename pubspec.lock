@@ -648,6 +648,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  haptic_kit:
+    dependency: "direct main"
+    description:
+      name: haptic_kit
+      sha256: "457f825a3413be2651954639bed27bb2987570f75d90c4e8e1cb9be62db2e59d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   home_widget:
     dependency: "direct main"
     description:
@@ -1049,6 +1057,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  package_info_plus:
+    dependency: "direct main"
+    description:
+      name: package_info_plus
+      sha256: "468c26b4254ab01979fa5e4a98cb343ea3631b9acee6f21028997419a80e1a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.1"
+  package_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: package_info_plus_platform_interface
+      sha256: "202a487f08836a592a6bd4f901ac69b3a8f146af552bbd14407b6b41e1c3f086"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.1"
   parchment:
     dependency: "direct main"
     description:

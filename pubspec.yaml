@@ -105,6 +105,8 @@ dependencies:
   app_tracking_transparency: ^2.0.4
   watch_connectivity: ^0.2.8
   network_info_plus: ^7.0.0
+  haptic_kit: ^1.0.1
+  package_info_plus: ^9.0.1
 
   # Unused
   # flutter_carousel_widget: ^2.2.0

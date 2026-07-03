@@ -60,6 +60,8 @@ PODS:
     - Google-Mobile-Ads-SDK (~> 11.13.0)
     - webview_flutter_wkwebview
   - GoogleUserMessagingPlatform (3.1.0)
+  - haptic_kit (1.0.0):
+    - Flutter
   - home_widget (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -119,6 +121,7 @@ DEPENDENCIES:
   - flutter_local_ai (from `.symlinks/plugins/flutter_local_ai/darwin`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
+  - haptic_kit (from `.symlinks/plugins/haptic_kit/ios`)
   - home_widget (from `.symlinks/plugins/home_widget/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - irondash_engine_context (from `.symlinks/plugins/irondash_engine_context/ios`)
@@ -169,6 +172,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
+  haptic_kit:
+    :path: ".symlinks/plugins/haptic_kit/ios"
   home_widget:
     :path: ".symlinks/plugins/home_widget/darwin"
   image_picker_ios:
@@ -220,6 +225,7 @@ SPEC CHECKSUMS:
   Google-Mobile-Ads-SDK: 14f57f2dc33532a24db288897e26494640810407
   google_mobile_ads: 16ad301354fa6a7ea55770c6254bd4339bf8558b
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  haptic_kit: b22c4fbb2aa7b0d66f2891f81a9e950ad2de5758
   home_widget: 834f4b097ec5bf675b54621de18db13adde80794
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
   irondash_engine_context: 8e58ca8e0212ee9d1c7dc6a42121849986c88486
