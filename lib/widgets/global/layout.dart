@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:animations/animations.dart';
+import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/core/spotlight_search.dart';
@@ -9,6 +10,7 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
+import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
@@ -20,7 +22,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 import 'package:collection/collection.dart';
+import 'package:discipulus/api/models/grades.dart';
+import 'package:discipulus/screens/grades/widgets/grade_reveal_dialog.dart';
 import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
+import 'package:isar/isar.dart';
 
 /// Creates the base layout of the app.
 ///
@@ -39,9 +44,14 @@ class Layout extends StatefulWidget {
       context.findAncestorStateOfType<LayoutState>();
 }
 
-class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
+class LayoutState extends State<Layout>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   // The current active destinations
   late final ValueNotifier<List<DestinationSegement>> _desinations;
+
+  StreamSubscription? _gradeSubscription;
+  bool _isRevealDialogOpen = false;
+  bool _isCheckingForGrades = false;
 
   // Small drawer
   late final AdvancedDrawerController drawerController;
@@ -186,6 +196,7 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
           _desinations.value = destinations(
               (profile ?? activeProfile).account.value!.permissions);
           updateMenuBar(destinations: _desinations.value);
+          _setupGradeListener(); // Reset listener for the new active profile
         }),
       );
 
@@ -231,10 +242,19 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
 
     // Deep links
     Intents.uniLinkListener(Uri());
+
+    // Lifecycle and Grade Reveal database listener
+    WidgetsBinding.instance.addObserver(this);
+    _setupGradeListener();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkForNewGradesToReveal();
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _gradeSubscription?.cancel();
     drawerController.dispose();
     animationController.dispose();
     _desinations.dispose();
@@ -512,6 +532,64 @@ class LayoutState extends State<Layout> with SingleTickerProviderStateMixin {
         child: const BigDrawerBase(),
       ),
     );
+  }
+
+  void _setupGradeListener() {
+    _gradeSubscription?.cancel();
+    if (appSettings.activeProfileUuid == null) return;
+
+    _gradeSubscription = isar.grades
+        .filter()
+        .wasRevealedEqualTo(false)
+        .useable()
+        .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
+        .watch(fireImmediately: true)
+        .listen((unrevealedGrades) {
+      if (unrevealedGrades.isNotEmpty &&
+          (WidgetsBinding.instance.lifecycleState == null ||
+              WidgetsBinding.instance.lifecycleState ==
+                  AppLifecycleState.resumed)) {
+        checkForNewGradesToReveal();
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      checkForNewGradesToReveal();
+    }
+  }
+
+  Future<void> checkForNewGradesToReveal() async {
+    if (_isRevealDialogOpen || _isCheckingForGrades) return;
+    if (appSettings.disableGradeReveal) return;
+    if (appSettings.activeProfileUuid == null) return;
+
+    _isCheckingForGrades = true;
+    try {
+      List<Grade> unrevealedGrades = await isar.grades
+          .filter()
+          .wasRevealedEqualTo(false)
+          .useable()
+          .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
+          .findAll();
+
+      if (unrevealedGrades.isNotEmpty) {
+        _isRevealDialogOpen = true;
+        if (mounted && navKey.currentContext != null) {
+          await showDialog(
+            context: navKey.currentContext!,
+            barrierDismissible: false,
+            useSafeArea: false,
+            builder: (context) => GradeRevealDialog(grades: unrevealedGrades),
+          );
+        }
+        _isRevealDialogOpen = false;
+      }
+    } finally {
+      _isCheckingForGrades = false;
+    }
   }
 }
 

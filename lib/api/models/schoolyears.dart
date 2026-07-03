@@ -103,9 +103,14 @@ class Schoolyear {
     grades.addAll(newGrades);
 
     // Save the internal database
+    int existingGradesCount = await grades.filter().count();
     isar.writeTxnSync(() {
       isar.grades.putAllSync(newGrades.map((e) {
         Grade? currentGrade = isar.grades.getSync(e.uuid);
+        bool wasRevealed = true;
+        if (existingGradesCount > 0) {
+          wasRevealed = currentGrade?.wasRevealed ?? false;
+        }
         return e
           ..period.value?.schoolyear.value = this
           ..subject.value?.schoolyear.value = this
@@ -117,7 +122,8 @@ class Schoolyear {
               .addAll([if (e.period.value != null) e.period.value!])
           ..weight = currentGrade?.weight
           ..description = currentGrade?.description
-          ..testDate = currentGrade?.testDate;
+          ..testDate = currentGrade?.testDate
+          ..wasRevealed = wasRevealed;
       }).toList());
       isar.gradePeriods.putAllSync(newGrades
           .where((g) => g.period.value != null)

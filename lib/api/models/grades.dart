@@ -42,6 +42,7 @@ class Grade {
   double? weight;
   DateTime? testDate;
   bool isEnabled = true;
+  bool wasRevealed = true;
 
   Grade({
     required this.id,

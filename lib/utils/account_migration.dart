@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:discipulus/api/models/account.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:isar/isar.dart';
+import 'package:discipulus/api/models/grades.dart';
 
 class AccountMigration {
   /// Checks if there are any accounts that do not have a magisterUuid set.
@@ -58,6 +60,27 @@ class AccountMigration {
       } catch (e) {
         print("Failed to migrate account ${account.id}: $e");
       }
+    }
+
+    // Migrate pre-existing grades to revealed state to prevent a giant backlog on first launch after update.
+    // On the first launch after the update, all existing grades in the database default to wasRevealed = false.
+    // This means 100% of the grades are unrevealed (unrevealedCount == totalGrades).
+    // Once any grade is revealed or newly synced, this condition becomes false and the migration never runs again.
+    try {
+      final unrevealedCount = await isar.grades.filter().wasRevealedEqualTo(false).count();
+      final totalGrades = await isar.grades.count();
+      if (totalGrades > 0 && unrevealedCount == totalGrades) {
+        final allUnrevealed = await isar.grades.filter().wasRevealedEqualTo(false).findAll();
+        await isar.writeTxn(() async {
+          for (var grade in allUnrevealed) {
+            grade.wasRevealed = true;
+          }
+          await isar.grades.putAll(allUnrevealed);
+        });
+        print("Migrated ${allUnrevealed.length} old grades to 'revealed' state.");
+      }
+    } catch (e) {
+      print("Failed to migrate old grades wasRevealed state: $e");
     }
   }
 }

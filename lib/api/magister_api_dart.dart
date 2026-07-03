@@ -32,6 +32,8 @@ class Magister {
   UserRoute user(String uuid) => UserRoute(this, uuid: uuid);
   MessagesRoute get messages => MessagesRoute(this);
 
+  bool showSnackbars = true;
+
   Magister({
     this.uuid,
     required this.apiEndpoint,
@@ -123,7 +125,7 @@ class Magister {
             ));
 
             // Show a snackbar with the error when the error is relevant
-            if (navKey.currentContext?.mounted ?? false) {
+            if (showSnackbars && (navKey.currentContext?.mounted ?? false)) {
               if (error.response?.statusCode == 429) {
                 sendSnackBar(
                   uuid: uuid,

@@ -4,16 +4,16 @@ import 'package:discipulus/api/magister_api_dart.dart';
 
 class Leermiddel extends MagisterBase {
   final int id;
-  final int materiaalType;
+  final int? materiaalType;
   final List<Link> links;
   final String titel;
   final String? uitgeverij;
   final int status;
   final DateTime start;
   final DateTime eind;
-  final String ean;
+  final String? ean;
   final String? previewImageUrl;
-  final Vak vak;
+  final Vak? vak;
 
   Leermiddel(
     super.magister, {

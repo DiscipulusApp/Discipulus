@@ -7,7 +7,10 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:haptic_kit/haptic_kit.dart';
 
 class GradeTile extends StatelessWidget {
   const GradeTile({
@@ -197,6 +200,7 @@ class GradeAvatar extends StatelessWidget {
     this.badge,
     this.decimalDigits,
     this.heroTag,
+    this.radius,
   });
 
   final String? gradeString;
@@ -204,6 +208,7 @@ class GradeAvatar extends StatelessWidget {
   final bool enableAnimatedSwitcher;
   final int? decimalDigits;
   final String? badge;
+  final double? radius;
 
   /// Is used for the hero animation, but can be left null
   final int? heroTag;
@@ -247,16 +252,388 @@ class GradeAvatar extends StatelessWidget {
           key: ValueKey<String>(displayedGrade),
           child: CircleAvatar(
             backgroundColor: containerColor,
-            radius: 25,
-            child: Text(
-              displayedGrade,
-              style: !finaliIsSufficient
-                  ? TextStyle(color: onContainerColor)
-                  : null,
+            radius: radius ?? 25,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                fontSize: radius != null ? radius! * 0.60 : null,
+                color: onContainerColor,
+              ),
+              child: Text(
+                displayedGrade,
+                style: !finaliIsSufficient
+                    ? TextStyle(color: onContainerColor)
+                    : null,
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class RevealGradeAvatar extends StatefulWidget {
+  const RevealGradeAvatar({
+    super.key,
+    required this.gradeString,
+    this.isSufficient,
+    this.enableAnimatedSwitcher = false,
+    this.badge,
+    this.decimalDigits,
+    this.heroTag,
+    this.radius,
+  });
+
+  final String? gradeString;
+  final bool? isSufficient;
+  final bool enableAnimatedSwitcher;
+  final int? decimalDigits;
+  final String? badge;
+  final double? radius;
+
+  /// Is used for the hero animation, but can be left null
+  final int? heroTag;
+
+  @override
+  State<RevealGradeAvatar> createState() => _RevealGradeAvatarState();
+}
+
+class _RevealGradeAvatarState extends State<RevealGradeAvatar>
+    with TickerProviderStateMixin {
+  late final AnimationController _rotationController;
+  late final AnimationController _morphController;
+  late final Animation<double> _morphAnimation;
+  late final Animation<double> _tickerAnimation;
+  late final Animation<double> _colorAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 16),
+    );
+    _morphController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _morphAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: const Interval(0.0, 0.4, curve: Easing.standard),
+    );
+    _tickerAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: Curves.easeOutExpo,
+    );
+    _colorAnimation = CurvedAnimation(
+      parent: _morphController,
+      curve: const Interval(0.8, 1.0, curve: Easing.standard),
+    );
+
+    if (widget.gradeString == "?") {
+      _rotationController.repeat();
+      _morphController.value = 0.0;
+    } else {
+      _morphController.value = 1.0;
+    }
+  }
+
+  List<int> generateCurvedNumbers({
+    required int start,
+    required int end,
+    required int count,
+    required Curve curve,
+  }) {
+    if (count <= 0) return [];
+    if (count == 1) return [start];
+
+    final List<int> numbers = [];
+    final tween = Tween<int>(begin: start, end: end);
+
+    for (int i = 0; i < count; i++) {
+      // Calculate the linear progress (0.0 to 1.0)
+      double linearProgress = i / (count - 1);
+
+      // Apply the Flutter Curve to the progress
+      double curvedProgress = curve.transform(linearProgress);
+
+      // Interpolate the value based on the curved progress
+      int value = tween.transform(curvedProgress);
+
+      numbers.add(value);
+    }
+
+    return numbers;
+  }
+
+  Future<void> _playHapticRevealPattern() async {
+    try {
+      await Vibration.cancel();
+      if (Platform.isAndroid) {
+        await Vibration.vibrateWaveform(
+          timings: const [
+            // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr
+            Duration.zero,
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            Duration(milliseconds: 150),
+            // Phase 2: Decelerating Sparks (Apex Climb) - Distinct >100ms clicks
+            Duration(milliseconds: 150), // Pause → Tick 1 at 1350ms
+            Duration(milliseconds: 10), // Tick 1
+            Duration(milliseconds: 240), // Pause → Tick 2 at 1600ms (color starts changing)
+            Duration(milliseconds: 10), // Tick 2
+            Duration(milliseconds: 390), // Pause → Pop at 2000ms (color fully revealed)
+            // Phase 3: The Explosion (Apex Pop) - Gentle 150 amplitude pop
+            Duration(milliseconds: 40),
+          ],
+          amplitudes: const [
+            0,
+            2, // Purr start (barely there)
+            3,
+            4,
+            6,
+            9,
+            14,
+            20,
+            30, // Peak — exponential surge
+            0,
+            35, // Click 1
+            0,
+            15, // Click 2
+            0,
+            40, // Gentle pop
+          ],
+        );
+      } else {
+        await HapticPattern.builder()
+            // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.10,
+                sharpness: 0.2)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.15,
+                sharpness: 0.3)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.22,
+                sharpness: 0.4)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.30,
+                sharpness: 0.5)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.38,
+                sharpness: 0.6)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.46,
+                sharpness: 0.7)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.54,
+                sharpness: 0.8)
+            .continuous(
+                duration: const Duration(milliseconds: 150),
+                intensity: 0.60,
+                sharpness: 0.9)
+            // Phase 2: Decelerating Sparks (Apex Climb) - Distinct >100ms clicks
+            .pause(const Duration(milliseconds: 150)) // Tick 1 at 1350ms
+            .tap(intensity: 0.35, sharpness: 0.5)
+            .pause(const Duration(milliseconds: 240)) // Tick 2 at 1600ms (color starts changing)
+            .tap(intensity: 0.15, sharpness: 0.3)
+            .pause(const Duration(milliseconds: 390)) // Pop at 2000ms (color fully revealed)
+            // Phase 3: The Explosion (Apex Pop) - Gentle 150 amplitude pop
+            .continuous(
+              duration: const Duration(milliseconds: 80),
+              intensity: 0.60,
+              sharpness: 0.6,
+            )
+            .play();
+      }
+    } catch (_) {
+      // Fallback for older devices/simulators
+      try {
+        await Vibration.vibrate(duration: const Duration(milliseconds: 150));
+      } catch (_) {}
+    }
+  }
+
+  @override
+  void didUpdateWidget(RevealGradeAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gradeString == "?" && widget.gradeString != "?") {
+      _morphController.forward(from: 0.0);
+      _rotationController.stop();
+      _playHapticRevealPattern();
+    } else if (oldWidget.gradeString != "?" && widget.gradeString == "?") {
+      _morphController.reverse(from: 1.0);
+      _rotationController.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    _morphController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double? grade =
+        double.tryParse((widget.gradeString ?? "-").replaceAll(',', '.'));
+
+    bool finaliIsSufficient = (grade == null || grade.isNaN)
+        ? (widget.isSufficient ?? true)
+        : num.parse(grade.toStringAsFixed(widget.decimalDigits ?? 2)) >=
+            appSettings.sufficientFrom;
+
+    final double avatarRadius = widget.radius ?? 25;
+    final double diameter = avatarRadius * 2;
+
+    return ElasticAnimation(
+      isEnabled: widget.enableAnimatedSwitcher,
+      child: Hero(
+        tag: widget.heroTag ?? hashCode,
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_rotationController, _morphController]),
+          builder: (context, child) {
+            final double progress = _morphAnimation.value;
+            final double rotationAngle = _rotationController.value * 2 * pi;
+
+            Color startContainerColor =
+                Theme.of(context).colorScheme.tertiaryContainer;
+            Color startOnContainerColor =
+                Theme.of(context).colorScheme.onTertiaryContainer;
+
+            Color finalContainerColor = !finaliIsSufficient
+                ? Theme.of(context).colorScheme.errorContainer
+                : Theme.of(context).colorScheme.primaryContainer;
+            Color finalOnContainerColor = !finaliIsSufficient
+                ? Theme.of(context).colorScheme.onErrorContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer;
+
+            final double colorProgress = _colorAnimation.value;
+
+            Color containerColor = Color.lerp(
+                    startContainerColor, finalContainerColor, colorProgress) ??
+                finalContainerColor;
+            Color onContainerColor = Color.lerp(startOnContainerColor,
+                    finalOnContainerColor, colorProgress) ??
+                finalOnContainerColor;
+
+            String displayedGrade;
+            if (grade == null || grade.isNaN) {
+              displayedGrade =
+                  (widget.gradeString == "null" ? null : widget.gradeString) ??
+                      "-";
+            } else {
+              if (progress == 0.0 && widget.gradeString == "?") {
+                displayedGrade = "?";
+              } else {
+                final double tickerProgress = _tickerAnimation.value;
+                displayedGrade = (tickerProgress * grade)
+                    .displayNumber(decimalDigits: widget.decimalDigits);
+              }
+            }
+
+            return Badge(
+              alignment: Alignment.centerRight,
+              offset: Offset(-(widget.badge?.length.toDouble() ?? 0) * 2, 7),
+              textColor: onContainerColor,
+              isLabelVisible: widget.badge != null,
+              label: widget.badge != null
+                  ? Text(
+                      widget.badge!,
+                      textAlign: TextAlign.end,
+                      textDirection: TextDirection.rtl,
+                    )
+                  : null,
+              key: ValueKey<String>(displayedGrade),
+              child: SizedBox(
+                width: diameter,
+                height: diameter,
+                child: ClipPath(
+                  clipper: MorphClipper(progress, rotationAngle),
+                  child: Container(
+                    color: containerColor,
+                    alignment: Alignment.center,
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(
+                        fontSize: widget.radius != null
+                            ? widget.radius! * 0.60
+                            : null,
+                        color: onContainerColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      child: Text(
+                        displayedGrade,
+                        style: !finaliIsSufficient
+                            ? TextStyle(color: onContainerColor)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class MorphClipper extends CustomClipper<Path> {
+  final double progress;
+  final double rotationAngle;
+
+  MorphClipper(this.progress, this.rotationAngle);
+
+  @override
+  Path getClip(Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = min(size.width, size.height) / 2;
+    final path = Path();
+
+    final double rOut = maxRadius;
+    final double rIn = maxRadius * (0.72 + 0.28 * progress);
+
+    const int pointsCount = 16;
+    final List<Offset> points = [];
+    for (int i = 0; i < pointsCount; i++) {
+      final double angle = rotationAngle + (i * 2 * pi / pointsCount);
+      final double r = (i % 2 == 0) ? rOut : rIn;
+      points.add(Offset(
+        center.dx + r * cos(angle),
+        center.dy + r * sin(angle),
+      ));
+    }
+
+    path.moveTo((points[0].dx + points[pointsCount - 1].dx) / 2,
+        (points[0].dy + points[pointsCount - 1].dy) / 2);
+    for (int i = 0; i < pointsCount; i++) {
+      final pCurrent = points[i];
+      final pNext = points[(i + 1) % pointsCount];
+      final xMid = (pCurrent.dx + pNext.dx) / 2;
+      final yMid = (pCurrent.dy + pNext.dy) / 2;
+      path.quadraticBezierTo(pCurrent.dx, pCurrent.dy, xMid, yMid);
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant MorphClipper oldClipper) {
+    return oldClipper.progress != progress ||
+        oldClipper.rotationAngle != rotationAngle;
   }
 }

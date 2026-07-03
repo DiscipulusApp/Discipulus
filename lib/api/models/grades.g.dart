@@ -103,8 +103,13 @@ const GradeSchema = CollectionSchema(
       name: r'vrijstelling',
       type: IsarType.bool,
     ),
-    r'weight': PropertySchema(
+    r'wasRevealed': PropertySchema(
       id: 17,
+      name: r'wasRevealed',
+      type: IsarType.bool,
+    ),
+    r'weight': PropertySchema(
+      id: 18,
       name: r'weight',
       type: IsarType.double,
     )
@@ -207,7 +212,8 @@ void _gradeSerialize(
   writer.writeBool(offsets[14], object.vakOntheffing);
   writer.writeBool(offsets[15], object.vakVrijstelling);
   writer.writeBool(offsets[16], object.vrijstelling);
-  writer.writeDouble(offsets[17], object.weight);
+  writer.writeBool(offsets[17], object.wasRevealed);
+  writer.writeDouble(offsets[18], object.weight);
 }
 
 Grade _gradeDeserialize(
@@ -235,11 +241,12 @@ Grade _gradeDeserialize(
     vakOntheffing: reader.readBoolOrNull(offsets[14]) ?? false,
     vakVrijstelling: reader.readBoolOrNull(offsets[15]) ?? false,
     vrijstelling: reader.readBoolOrNull(offsets[16]) ?? false,
-    weight: reader.readDoubleOrNull(offsets[17]),
+    weight: reader.readDoubleOrNull(offsets[18]),
   );
   object.description = reader.readStringOrNull(offsets[4]);
   object.isEnabled = reader.readBool(offsets[9]);
   object.testDate = reader.readDateTimeOrNull(offsets[13]);
+  object.wasRevealed = reader.readBool(offsets[17]);
   return object;
 }
 
@@ -290,6 +297,8 @@ P _gradeDeserializeProp<P>(
     case 16:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 17:
+      return (reader.readBool(offset)) as P;
+    case 18:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1405,6 +1414,16 @@ extension GradeQueryFilter on QueryBuilder<Grade, Grade, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterFilterCondition> wasRevealedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'wasRevealed',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterFilterCondition> weightIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1728,6 +1747,18 @@ extension GradeQuerySortBy on QueryBuilder<Grade, Grade, QSortBy> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterSortBy> sortByWasRevealed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'wasRevealed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Grade, Grade, QAfterSortBy> sortByWasRevealedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'wasRevealed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterSortBy> sortByWeight() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'weight', Sort.asc);
@@ -1947,6 +1978,18 @@ extension GradeQuerySortThenBy on QueryBuilder<Grade, Grade, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterSortBy> thenByWasRevealed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'wasRevealed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Grade, Grade, QAfterSortBy> thenByWasRevealedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'wasRevealed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterSortBy> thenByWeight() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'weight', Sort.asc);
@@ -2059,6 +2102,12 @@ extension GradeQueryWhereDistinct on QueryBuilder<Grade, Grade, QDistinct> {
   QueryBuilder<Grade, Grade, QDistinct> distinctByVrijstelling() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'vrijstelling');
+    });
+  }
+
+  QueryBuilder<Grade, Grade, QDistinct> distinctByWasRevealed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'wasRevealed');
     });
   }
 
@@ -2176,6 +2225,12 @@ extension GradeQueryProperty on QueryBuilder<Grade, Grade, QQueryProperty> {
   QueryBuilder<Grade, bool, QQueryOperations> vrijstellingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'vrijstelling');
+    });
+  }
+
+  QueryBuilder<Grade, bool, QQueryOperations> wasRevealedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'wasRevealed');
     });
   }
 
