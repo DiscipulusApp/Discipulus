@@ -138,6 +138,9 @@ class DummyMagister implements Magister {
   UserRoute user(String uuid) {
     return DummyUserRoute(this, uuid: uuid);
   }
+
+  @override
+  bool showSnackbars = false;
 }
 
 class DummyUserRoute extends UserRoute {

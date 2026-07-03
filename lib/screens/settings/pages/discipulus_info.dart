@@ -1,4 +1,5 @@
 import 'package:discipulus/screens/settings/pages/debug_settings.dart';
+import 'package:discipulus/screens/settings/pages/diagnostic_check.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,13 @@ class _InfoSettingsPageState extends State<InfoSettingsPage> {
             applicationName: "Discipulus",
           ),
           onLongPress: () => const DebugSettingsPage().push(context),
+        ),
+        ListTile(
+          leading: const Icon(Icons.troubleshoot_rounded),
+          title: const Text("Diagnostische check"),
+          subtitle: const Text("Controleer of de verbindingen en endpoints goed werken"),
+          trailing: const Icon(Icons.navigate_next),
+          onTap: () => const DiagnosticCheckPage().push(context),
         ),
         ListTile(
           leading: const Icon(Icons.device_hub_rounded),
