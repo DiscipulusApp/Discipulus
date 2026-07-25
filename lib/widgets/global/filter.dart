@@ -86,16 +86,20 @@ extension GradeFilterExtension
           f.schoolyearUuid != findFirstSync()?.schoolyear.value?.uuid);
     }
 
-    return
+    return optional(
+          !appSettings.showArchivedGrades,
+          (q) => q.isArchivedEqualTo(false),
+        )
+        .and()
         // Filter for periods
-        optional(
-                activeFilters.any((e) => e is PeriodFilter),
-                (q) => q.period(
-                      (q) => q.anyOf(activeFilters.whereType<PeriodFilter>(),
-                          (q, element) => q.uuidEqualTo(element.uuid)),
-                    ))
-            // Filter for subjects
-            .optional(
+        .optional(
+            activeFilters.any((e) => e is PeriodFilter),
+            (q) => q.period(
+                  (q) => q.anyOf(activeFilters.whereType<PeriodFilter>(),
+                      (q, element) => q.uuidEqualTo(element.uuid)),
+                ))
+        // Filter for subjects
+        .optional(
                 activeFilters.any((e) => e is SubjectFilter),
                 (q) => q.subject(
                       (q) => q.anyOf(activeFilters.whereType<SubjectFilter>(),

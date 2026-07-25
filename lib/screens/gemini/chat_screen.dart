@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:discipulus/api/models/bronnen.dart';
@@ -8,6 +7,7 @@ import 'package:discipulus/screens/gemini/functions/ai_models.dart';
 import 'package:discipulus/screens/gemini/functions/functions.dart';
 import 'package:discipulus/screens/gemini/gemini.dart';
 import 'package:discipulus/screens/gemini/instructions.dart';
+import 'package:discipulus/screens/gemini/open_router.dart';
 import 'package:discipulus/screens/gemini/summarizer.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
@@ -19,7 +19,6 @@ import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/tiles/loading_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_ai/flutter_local_ai.dart';
 
 class ChatMessage {
   final String text;
@@ -146,6 +145,7 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
   String? loadingState;
   TextEditingController controller = TextEditingController();
   String? summary;
+  Future<void>? _summaryFuture;
 
   List<AIModel> models = [
     AIModel(name: appSettings.openRouterModel, friendlyName: "OpenRouter"),
@@ -156,8 +156,28 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
     super.initState();
     if (widget.settings != null) {
       summary = widget.settings?.initialSummary;
+      if (summary == null && widget.settings!.instantSummery) {
+        _startSummary();
+      }
     }
     _initializeChatModel();
+  }
+
+  void _startSummary() {
+    _summaryFuture = Future(() async {
+      final result = await summarizeText(widget.settings!.text);
+      HapticFeedback.heavyImpact();
+      if (result != null &&
+          !result.startsWith('Error:') &&
+          !result.startsWith('Fout:')) {
+        widget.settings?.onSummary?.call(result);
+      }
+      if (mounted) {
+        setState(() {
+          summary = result;
+        });
+      }
+    });
   }
 
   @override
@@ -217,8 +237,7 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
       if (mounted) {
         setState(() {
           _messages.add(ChatMessage(
-              text: "Sorry, er is iets misgegaan: ${e.toString()}",
-              isUser: false));
+              text: OpenRouterClient.getFriendlyError(e), isUser: false));
           loadingState = null;
         });
       }
@@ -381,12 +400,7 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                     const EdgeInsets.symmetric(horizontal: 24 + 4, vertical: 8),
                 child: widget.settings!.instantSummery
                     ? FutureBuilder(
-                        future: Future(() async {
-                          summary = await summarizeText(widget.settings!.text);
-                          HapticFeedback.heavyImpact();
-                          widget.settings?.onSummary?.call(summary!);
-                          setState(() {});
-                        }),
+                        future: _summaryFuture,
                         builder: (context, snapshot) {
                           return ShimmeringTextPlaceholder(
                             lineCount: 3,
@@ -405,7 +419,11 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                             summary =
                                 await summarizeText(widget.settings!.text);
                             HapticFeedback.heavyImpact();
-                            widget.settings?.onSummary?.call(summary!);
+                            if (summary != null &&
+                                !summary!.startsWith('Error:') &&
+                                !summary!.startsWith('Fout:')) {
+                              widget.settings?.onSummary?.call(summary!);
+                            }
                             setState(() {});
                           },
                           child: (isLoading, onTap) => FilledButton(
@@ -455,7 +473,11 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                           future: () async {
                             summary = await summarizeText(widget.settings!.text,
                                 bronnen: widget.settings!.bronnen);
-                            widget.settings!.onSummary?.call(summary!);
+                            if (summary != null &&
+                                !summary!.startsWith('Error:') &&
+                                !summary!.startsWith('Fout:')) {
+                              widget.settings!.onSummary?.call(summary!);
+                            }
                             setState(() {});
                           },
                           child: (isLoading, onTap) => IconButton(

@@ -1,3 +1,4 @@
+import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
@@ -209,6 +210,10 @@ class _GradesListScreenState extends State<GradesListScreen> {
           schoolyear: schoolyear,
           onDone: () => refresh(true),
         ),
+        ArchivedGradesWarning(
+          schoolyear: schoolyear,
+          onDone: () => refresh(true),
+        ),
 
         // Padding(
         //   key: const HeaderKey(),
@@ -337,6 +342,61 @@ class ExpandedStats extends StatelessWidget {
                   .values,
             ]),
       ],
+    );
+  }
+}
+
+class ArchivedGradesWarning extends StatefulWidget {
+  const ArchivedGradesWarning({
+    super.key,
+    required this.schoolyear,
+    this.onDone,
+  });
+
+  final Schoolyear schoolyear;
+  final void Function()? onDone;
+
+  @override
+  State<ArchivedGradesWarning> createState() => _ArchivedGradesWarningState();
+}
+
+class _ArchivedGradesWarningState extends State<ArchivedGradesWarning> {
+  int archivedCount = 0;
+
+  Future<void> checkArchived() async {
+    archivedCount =
+        await widget.schoolyear.grades.filter().isArchivedEqualTo(true).count();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: checkArchived(),
+      builder: (context, snapshot) {
+        if (archivedCount == 0) return const SizedBox();
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+          child: ListTile(
+            leading: const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(Icons.archive),
+            ),
+            title: const Text("Verborgen cijfers gearchiveerd"),
+            subtitle: Text(
+                "Er zijn $archivedCount gearchiveerde cijfers die door de school tijdelijk zijn verborgen."),
+            trailing: Switch(
+              value: appSettings.showArchivedGrades,
+              onChanged: (value) {
+                appSettings
+                  ..showArchivedGrades = value
+                  ..save();
+                setState(() {});
+                widget.onDone?.call();
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

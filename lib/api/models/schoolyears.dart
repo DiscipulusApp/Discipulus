@@ -93,11 +93,34 @@ class Schoolyear {
     List<Grade> newGrades = List<Grade>.from(
         res["Items"].map((x) => Grade.fromMap(x)..schoolyear.value = this));
 
-    await isar.grades.removeChecker(
-      localUUIDs: grades.filter().uuidProperty().findAll(),
-      newUUIDs: Future.value([for (Grade grade in newGrades) grade.uuid]),
-      findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
-    );
+    // Get active local grades for this schoolyear
+    List<Grade> localActiveGrades =
+        await grades.filter().isArchivedEqualTo(false).findAll();
+    Set<int> newUUIDs = {for (Grade grade in newGrades) grade.uuid};
+
+    // Identify grades to delete
+    List<Grade> gradesToDelete =
+        localActiveGrades.where((g) => !newUUIDs.contains(g.uuid)).toList();
+
+    // Large-scale deletion threshold: >= 5 grades, or >= 20% of active grades
+    bool isLargeScale = gradesToDelete.length >= 5 ||
+        (localActiveGrades.isNotEmpty &&
+            (gradesToDelete.length / localActiveGrades.length) >= 0.2);
+
+    if (isLargeScale) {
+      // Archive them by marking isArchived = true
+      isar.writeTxnSync(() {
+        isar.grades.putAllSync(
+            gradesToDelete.map((g) => g..isArchived = true).toList());
+      });
+    } else if (gradesToDelete.isNotEmpty) {
+      // Permanent deletion of minor edits / corrections
+      await isar.grades.removeChecker(
+        localUUIDs: Future.value(gradesToDelete.map((g) => g.uuid)),
+        newUUIDs: Future.value([]),
+        findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
+      );
+    }
 
     // Add all grades from Magister to the internal database
     grades.addAll(newGrades);
@@ -123,6 +146,7 @@ class Schoolyear {
           ..weight = currentGrade?.weight
           ..description = currentGrade?.description
           ..testDate = currentGrade?.testDate
+          ..isArchived = false
           ..wasRevealed = wasRevealed;
       }).toList());
       isar.gradePeriods.putAllSync(newGrades

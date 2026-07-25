@@ -32,9 +32,6 @@ struct NavigatorWidget: Widget {
             .systemMedium,
             .systemLarge,
             .systemExtraLarge,
-            .accessoryCircular,
-            .accessoryInline,
-            .accessoryRectangular
         ]
         #elseif os(watchOS)
         return [

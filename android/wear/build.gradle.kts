@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -16,8 +18,36 @@ android {
         versionName = "1.0"
     }
 
+    val keystorePropertiesFile: File = rootProject.file("local.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(keystorePropertiesFile.inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            if (System.getenv("CI") == "true") { // CI=true is exported by Codemagic
+                storeFile = file(System.getenv("CM_KEYSTORE_PATH"))
+                storePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CM_KEY_ALIAS")
+                keyPassword = System.getenv("CM_KEY_PASSWORD")
+            } else {
+                if (keystoreProperties.containsKey("storeFile") &&
+                    keystoreProperties.containsKey("storePassword") &&
+                    keystoreProperties.containsKey("keyAlias") &&
+                    keystoreProperties.containsKey("keyPassword")
+                ) {
+                    storeFile = file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                }
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig = if (System.getenv("CI") == "true") signingConfigs.getByName("release") else signingConfigs.getByName("debug")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -25,6 +55,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

@@ -4,7 +4,7 @@ import 'package:discipulus/models/settings.dart';
 
 class AISettings {
   static AIModel model =
-      AIModel(name: "google/gemini-2.0-flash-lite:free", friendlyName: "Gemini 2.0 Flash Lite");
+      AIModel(name: "meta-llama/llama-3.3-70b-instruct:free", friendlyName: "Llama 3.3 70B Free");
   static String? get openRouterApiKey => appSettings.openRouterAPIKey;
 }
 

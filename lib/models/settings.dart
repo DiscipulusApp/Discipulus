@@ -12,11 +12,21 @@ import 'package:discipulus/models/account.dart';
 
 part 'settings.g.dart';
 
+Settings? _cachedSettings;
+
 Settings get appSettings {
+  if (_cachedSettings != null) return _cachedSettings!;
   if (isar.settings.countSync() == 0) {
     isar.writeTxnSync(() => isar.settings.putSync(Settings()));
   }
-  return isar.settings.where().findFirstSync()!;
+  final settings = isar.settings.where().findFirstSync()!;
+  if (settings.openRouterModel == "google/gemini-2.0-flash-lite:free" ||
+      settings.openRouterModel == "google/gemma-3-27b-it:free") {
+    settings.openRouterModel = "meta-llama/llama-3.3-70b-instruct:free";
+    isar.writeTxnSync(() => isar.settings.putSync(settings));
+  }
+  _cachedSettings = settings;
+  return settings;
 }
 
 @collection
@@ -76,6 +86,7 @@ class Settings {
   bool coloredsufficientFromLine = true;
   bool showCalcCardsInGlobalAverageList = false;
   bool zoomLineGraph = true;
+  bool showArchivedGrades = false;
   @enumerated
   SubjectSortType subjectSortType = SubjectSortType.highestAverage;
   @ignore
@@ -89,7 +100,7 @@ class Settings {
   static List<MessageFilter> activeMessageFilters = [];
 
   String? openRouterAPIKey;
-  String openRouterModel = "google/gemini-2.0-flash-lite:free";
+  String openRouterModel = "meta-llama/llama-3.3-70b-instruct:free";
   bool useLocalAI = false;
 
   DateTime? dndTurnedOnTime;
@@ -100,7 +111,10 @@ class Settings {
   /// Variable-Ratio
   bool disableGradeReveal = false;
 
-  void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
+  void save() {
+    _cachedSettings = this;
+    isar.writeTxnSync(() => isar.settings.putSync(this));
+  }
 }
 
 enum ThemeBrightness { system, dark, light }

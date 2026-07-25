@@ -3,7 +3,8 @@ import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
-import 'package:collection/collection.dart'; // For groupBy and sorting
+import 'package:collection/collection.dart';
+import 'package:isar/isar.dart'; // For groupBy and sorting
 
 // Represents the essential info needed for a cell in the grid
 class GradeInfo {
@@ -194,7 +195,10 @@ class _GradesMagisterViewState extends State<GradesMagisterView> {
       // final Map<String, dynamic> parsedJson = jsonDecode(widget.jsonData);
       // final List<dynamic> items = parsedJson['Items'];
 
-      List<Grade> grades = widget.schoolyear.grades.toList();
+      List<Grade> grades = widget.schoolyear.grades
+          .filter()
+          .isArchivedEqualTo(false)
+          .findAllSync();
 
       // Using Sets ensures uniqueness based on overridden == and hashCode
       final Set<SubjectDefinition> uniqueSubjects = {};

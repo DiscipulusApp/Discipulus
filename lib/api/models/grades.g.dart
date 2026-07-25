@@ -63,53 +63,58 @@ const GradeSchema = CollectionSchema(
       name: r'inhalen',
       type: IsarType.bool,
     ),
-    r'isEnabled': PropertySchema(
+    r'isArchived': PropertySchema(
       id: 9,
+      name: r'isArchived',
+      type: IsarType.bool,
+    ),
+    r'isEnabled': PropertySchema(
+      id: 10,
       name: r'isEnabled',
       type: IsarType.bool,
     ),
     r'isVoldoende': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'isVoldoende',
       type: IsarType.bool,
     ),
     r'subjectUUID': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'subjectUUID',
       type: IsarType.long,
     ),
     r'teltMee': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'teltMee',
       type: IsarType.bool,
     ),
     r'testDate': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'testDate',
       type: IsarType.dateTime,
     ),
     r'vakOntheffing': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'vakOntheffing',
       type: IsarType.bool,
     ),
     r'vakVrijstelling': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'vakVrijstelling',
       type: IsarType.bool,
     ),
     r'vrijstelling': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'vrijstelling',
       type: IsarType.bool,
     ),
     r'wasRevealed': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'wasRevealed',
       type: IsarType.bool,
     ),
     r'weight': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'weight',
       type: IsarType.double,
     )
@@ -204,16 +209,17 @@ void _gradeSerialize(
   writer.writeLong(offsets[6], object.id);
   writer.writeString(offsets[7], object.ingevoerdDoor);
   writer.writeBool(offsets[8], object.inhalen);
-  writer.writeBool(offsets[9], object.isEnabled);
-  writer.writeBool(offsets[10], object.isVoldoende);
-  writer.writeLong(offsets[11], object.subjectUUID);
-  writer.writeBool(offsets[12], object.teltMee);
-  writer.writeDateTime(offsets[13], object.testDate);
-  writer.writeBool(offsets[14], object.vakOntheffing);
-  writer.writeBool(offsets[15], object.vakVrijstelling);
-  writer.writeBool(offsets[16], object.vrijstelling);
-  writer.writeBool(offsets[17], object.wasRevealed);
-  writer.writeDouble(offsets[18], object.weight);
+  writer.writeBool(offsets[9], object.isArchived);
+  writer.writeBool(offsets[10], object.isEnabled);
+  writer.writeBool(offsets[11], object.isVoldoende);
+  writer.writeLong(offsets[12], object.subjectUUID);
+  writer.writeBool(offsets[13], object.teltMee);
+  writer.writeDateTime(offsets[14], object.testDate);
+  writer.writeBool(offsets[15], object.vakOntheffing);
+  writer.writeBool(offsets[16], object.vakVrijstelling);
+  writer.writeBool(offsets[17], object.vrijstelling);
+  writer.writeBool(offsets[18], object.wasRevealed);
+  writer.writeDouble(offsets[19], object.weight);
 }
 
 Grade _gradeDeserialize(
@@ -236,17 +242,18 @@ Grade _gradeDeserialize(
     id: reader.readLong(offsets[6]),
     ingevoerdDoor: reader.readStringOrNull(offsets[7]),
     inhalen: reader.readBoolOrNull(offsets[8]) ?? false,
-    isVoldoende: reader.readBoolOrNull(offsets[10]) ?? true,
-    teltMee: reader.readBoolOrNull(offsets[12]) ?? true,
-    vakOntheffing: reader.readBoolOrNull(offsets[14]) ?? false,
-    vakVrijstelling: reader.readBoolOrNull(offsets[15]) ?? false,
-    vrijstelling: reader.readBoolOrNull(offsets[16]) ?? false,
-    weight: reader.readDoubleOrNull(offsets[18]),
+    isVoldoende: reader.readBoolOrNull(offsets[11]) ?? true,
+    teltMee: reader.readBoolOrNull(offsets[13]) ?? true,
+    vakOntheffing: reader.readBoolOrNull(offsets[15]) ?? false,
+    vakVrijstelling: reader.readBoolOrNull(offsets[16]) ?? false,
+    vrijstelling: reader.readBoolOrNull(offsets[17]) ?? false,
+    weight: reader.readDoubleOrNull(offsets[19]),
   );
   object.description = reader.readStringOrNull(offsets[4]);
-  object.isEnabled = reader.readBool(offsets[9]);
-  object.testDate = reader.readDateTimeOrNull(offsets[13]);
-  object.wasRevealed = reader.readBool(offsets[17]);
+  object.isArchived = reader.readBool(offsets[9]);
+  object.isEnabled = reader.readBool(offsets[10]);
+  object.testDate = reader.readDateTimeOrNull(offsets[14]);
+  object.wasRevealed = reader.readBool(offsets[18]);
   return object;
 }
 
@@ -283,22 +290,24 @@ P _gradeDeserializeProp<P>(
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readBoolOrNull(offset) ?? true) as P;
+      return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readLongOrNull(offset)) as P;
-    case 12:
       return (reader.readBoolOrNull(offset) ?? true) as P;
+    case 12:
+      return (reader.readLongOrNull(offset)) as P;
     case 13:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? true) as P;
     case 14:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 15:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 16:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 17:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 18:
+      return (reader.readBool(offset)) as P;
+    case 19:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1165,6 +1174,16 @@ extension GradeQueryFilter on QueryBuilder<Grade, Grade, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterFilterCondition> isArchivedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isArchived',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterFilterCondition> isEnabledEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -1651,6 +1670,18 @@ extension GradeQuerySortBy on QueryBuilder<Grade, Grade, QSortBy> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterSortBy> sortByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Grade, Grade, QAfterSortBy> sortByIsArchivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.desc);
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterSortBy> sortByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isEnabled', Sort.asc);
@@ -1870,6 +1901,18 @@ extension GradeQuerySortThenBy on QueryBuilder<Grade, Grade, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QAfterSortBy> thenByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Grade, Grade, QAfterSortBy> thenByIsArchivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isArchived', Sort.desc);
+    });
+  }
+
   QueryBuilder<Grade, Grade, QAfterSortBy> thenByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isEnabled', Sort.asc);
@@ -2057,6 +2100,12 @@ extension GradeQueryWhereDistinct on QueryBuilder<Grade, Grade, QDistinct> {
     });
   }
 
+  QueryBuilder<Grade, Grade, QDistinct> distinctByIsArchived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isArchived');
+    });
+  }
+
   QueryBuilder<Grade, Grade, QDistinct> distinctByIsEnabled() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isEnabled');
@@ -2177,6 +2226,12 @@ extension GradeQueryProperty on QueryBuilder<Grade, Grade, QQueryProperty> {
   QueryBuilder<Grade, bool, QQueryOperations> inhalenProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'inhalen');
+    });
+  }
+
+  QueryBuilder<Grade, bool, QQueryOperations> isArchivedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isArchived');
     });
   }
 

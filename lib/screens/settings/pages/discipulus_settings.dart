@@ -217,7 +217,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
                     ),
                       onChanged: (value) => appSettings
                         ..openRouterModel = value.nullOnEmpty ??
-                            "google/gemma-3-27b-it:free"
+                            "meta-llama/llama-3.3-70b-instruct:free"
                         ..save(),
                   ),
                   const Text(
@@ -229,10 +229,10 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        "google/gemma-3-27b-it:free",
                         "meta-llama/llama-3.3-70b-instruct:free",
-                        "mistralai/mistral-small-3.1-24b-instruct:free",
+                        "google/gemma-4-31b-it:free",
                         "qwen/qwen3-coder:free",
+                        "google/gemini-3.5-flash",
                       ]
                           .map((model) => Padding(
                                 padding: const EdgeInsets.only(right: 8),

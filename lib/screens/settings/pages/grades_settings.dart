@@ -158,6 +158,20 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
             });
           },
         ),
+        SwitchListTile(
+          value: appSettings.showArchivedGrades,
+          secondary: const Icon(Icons.archive_outlined),
+          title: const Text("Gearchiveerde cijfers tonen"),
+          subtitle: const Text(
+              "Toon gearchiveerde cijfers in de app en gebruik ze in gemiddelden"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..showArchivedGrades = value
+                ..save();
+            });
+          },
+        ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.download_rounded),

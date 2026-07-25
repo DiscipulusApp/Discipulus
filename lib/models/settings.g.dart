@@ -130,60 +130,65 @@ const SettingsSchema = CollectionSchema(
       name: r'shortBronTitle',
       type: IsarType.bool,
     ),
-    r'showAutoCancelledEvents': PropertySchema(
+    r'showArchivedGrades': PropertySchema(
       id: 22,
+      name: r'showArchivedGrades',
+      type: IsarType.bool,
+    ),
+    r'showAutoCancelledEvents': PropertySchema(
+      id: 23,
       name: r'showAutoCancelledEvents',
       type: IsarType.bool,
     ),
     r'showBronExtension': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'showBronExtension',
       type: IsarType.bool,
     ),
     r'showCalcCardsInGlobalAverageList': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'showCalcCardsInGlobalAverageList',
       type: IsarType.bool,
     ),
     r'showEmptySpaceBetweenLessons': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'showEmptySpaceBetweenLessons',
       type: IsarType.bool,
     ),
     r'subjectSortType': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'subjectSortType',
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
     r'themeVariant': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'themeVariant',
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'useHandoff': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useLocalAI': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'useLocalAI',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 32,
+      id: 33,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -261,17 +266,18 @@ void _settingsSerialize(
   writer.writeBool(offsets[19], object.saveVirtualFiles);
   writer.writeBool(offsets[20], object.sendCrashInfo);
   writer.writeBool(offsets[21], object.shortBronTitle);
-  writer.writeBool(offsets[22], object.showAutoCancelledEvents);
-  writer.writeBool(offsets[23], object.showBronExtension);
-  writer.writeBool(offsets[24], object.showCalcCardsInGlobalAverageList);
-  writer.writeBool(offsets[25], object.showEmptySpaceBetweenLessons);
-  writer.writeByte(offsets[26], object.subjectSortType.index);
-  writer.writeByte(offsets[27], object.themeVariant.index);
-  writer.writeBool(offsets[28], object.useHandoff);
-  writer.writeBool(offsets[29], object.useLocalAI);
-  writer.writeBool(offsets[30], object.useMaterialYou);
-  writer.writeBool(offsets[31], object.workWeek);
-  writer.writeBool(offsets[32], object.zoomLineGraph);
+  writer.writeBool(offsets[22], object.showArchivedGrades);
+  writer.writeBool(offsets[23], object.showAutoCancelledEvents);
+  writer.writeBool(offsets[24], object.showBronExtension);
+  writer.writeBool(offsets[25], object.showCalcCardsInGlobalAverageList);
+  writer.writeBool(offsets[26], object.showEmptySpaceBetweenLessons);
+  writer.writeByte(offsets[27], object.subjectSortType.index);
+  writer.writeByte(offsets[28], object.themeVariant.index);
+  writer.writeBool(offsets[29], object.useHandoff);
+  writer.writeBool(offsets[30], object.useLocalAI);
+  writer.writeBool(offsets[31], object.useMaterialYou);
+  writer.writeBool(offsets[32], object.workWeek);
+  writer.writeBool(offsets[33], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -318,21 +324,22 @@ Settings _settingsDeserialize(
   object.saveVirtualFiles = reader.readBool(offsets[19]);
   object.sendCrashInfo = reader.readBool(offsets[20]);
   object.shortBronTitle = reader.readBool(offsets[21]);
-  object.showAutoCancelledEvents = reader.readBool(offsets[22]);
-  object.showBronExtension = reader.readBool(offsets[23]);
-  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[24]);
-  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[25]);
+  object.showArchivedGrades = reader.readBool(offsets[22]);
+  object.showAutoCancelledEvents = reader.readBool(offsets[23]);
+  object.showBronExtension = reader.readBool(offsets[24]);
+  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[25]);
+  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[26]);
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
-          reader.readByteOrNull(offsets[26])] ??
+          reader.readByteOrNull(offsets[27])] ??
       SubjectSortType.alphabetical;
   object.themeVariant =
-      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[27])] ??
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[28])] ??
           ThemeVariant.system;
-  object.useHandoff = reader.readBool(offsets[28]);
-  object.useLocalAI = reader.readBool(offsets[29]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[30]);
-  object.workWeek = reader.readBool(offsets[31]);
-  object.zoomLineGraph = reader.readBool(offsets[32]);
+  object.useHandoff = reader.readBool(offsets[29]);
+  object.useLocalAI = reader.readBool(offsets[30]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[31]);
+  object.workWeek = reader.readBool(offsets[32]);
+  object.zoomLineGraph = reader.readBool(offsets[33]);
   return object;
 }
 
@@ -409,22 +416,24 @@ P _settingsDeserializeProp<P>(
     case 25:
       return (reader.readBool(offset)) as P;
     case 26:
+      return (reader.readBool(offset)) as P;
+    case 27:
       return (_SettingssubjectSortTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
-    case 27:
+    case 28:
       return (_SettingsthemeVariantValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeVariant.system) as P;
-    case 28:
-      return (reader.readBool(offset)) as P;
     case 29:
       return (reader.readBool(offset)) as P;
     case 30:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 31:
       return (reader.readBool(offset)) as P;
+    case 31:
+      return (reader.readBoolOrNull(offset)) as P;
     case 32:
+      return (reader.readBool(offset)) as P;
+    case 33:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1726,6 +1735,16 @@ extension SettingsQueryFilter
   }
 
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      showArchivedGradesEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'showArchivedGrades',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
       showAutoCancelledEventsEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2207,6 +2226,19 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByShowArchivedGrades() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showArchivedGrades', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByShowArchivedGradesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showArchivedGrades', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy>
       sortByShowAutoCancelledEvents() {
     return QueryBuilder.apply(this, (query) {
@@ -2609,6 +2641,19 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByShowArchivedGrades() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showArchivedGrades', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByShowArchivedGradesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'showArchivedGrades', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy>
       thenByShowAutoCancelledEvents() {
     return QueryBuilder.apply(this, (query) {
@@ -2884,6 +2929,12 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct> distinctByShowArchivedGrades() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'showArchivedGrades');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct>
       distinctByShowAutoCancelledEvents() {
     return QueryBuilder.apply(this, (query) {
@@ -3100,6 +3151,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool, QQueryOperations> shortBronTitleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'shortBronTitle');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations> showArchivedGradesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'showArchivedGrades');
     });
   }
 

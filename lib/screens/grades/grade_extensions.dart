@@ -178,8 +178,10 @@ extension GradeListExtension on Iterable<Grade> {
       useable.where((Grade grade) => grade.grade != -1).toList();
 
   /// Removes grade-types that are not used, such as averages
-  List<Grade> get useable => where(
-          (Grade grade) => grade.cijferKolom.kolomSoort == 1 && grade.isEnabled)
+  List<Grade> get useable => where((Grade grade) =>
+          grade.cijferKolom.kolomSoort == 1 &&
+          grade.isEnabled &&
+          (!grade.isArchived || appSettings.showArchivedGrades))
       .toList();
 
   /// Gets the average for list of grades, whilst keeping the weights in mind.
@@ -240,12 +242,17 @@ extension GradeQueryEntensionBeforeFilterCondition
             (q) => q.cijferStrMatches("10*"),
           ));
 
-  /// Filters non-grade grades, such as averages and removes disabled grades by default.
-  QueryBuilder<Grade, Grade, QAfterFilterCondition> useable(
-          {bool showDisabled = false}) =>
+  /// Filters non-grade grades, such as averages and removes disabled/archived grades by default.
+  QueryBuilder<Grade, Grade, QAfterFilterCondition> useable({
+    bool showDisabled = false,
+    bool showArchived = false,
+  }) =>
       optional(
         !showDisabled,
         (q) => q.isEnabledEqualTo(true),
+      ).and().optional(
+        !showArchived && !appSettings.showArchivedGrades,
+        (q) => q.isArchivedEqualTo(false),
       ).and().cijferKolom((q) => q.kolomSoortEqualTo(1));
 
   QueryBuilder<Grade, Grade, QAfterFilterCondition> get numericalGrades =>

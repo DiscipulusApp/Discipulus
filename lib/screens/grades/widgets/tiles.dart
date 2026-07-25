@@ -74,13 +74,14 @@ class GradeTile extends StatelessWidget {
       if (appSettings.enabledGradeBadgeTypes.contains(GradeBadgeTypes.pta) &&
           grade.cijferKolom.isPtaKolom == true)
         const Badge(label: Text("PTA")),
+      if (grade.isArchived) const Badge(label: Text("Gearchiveerd")),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: grade.isEnabled ? 1 : .5,
+      opacity: (grade.isEnabled && !grade.isArchived) ? 1 : .5,
       child: ListTile(
         onTap: () => showScrollableModalBottomSheet(
           context: context,

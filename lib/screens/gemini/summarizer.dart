@@ -71,7 +71,7 @@ Future<String?> summarizeText(
       return 'Error: ${response.statusMessage}';
     }
   } catch (e) {
-    return 'Error: $e';
+    return OpenRouterClient.getFriendlyError(e);
   }
 }
 

@@ -140,6 +140,85 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   .deleteFirst());
             }),
         ListTile(
+            leading: const Icon(Icons.archive),
+            title: const Text("Archive last grade"),
+            trailing: const Icon(Icons.archive_outlined),
+            onTap: () async {
+              var schoolyear = await activeProfile.schoolyears
+                  .filter()
+                  .sortByEindeDesc()
+                  .findFirst();
+              if (schoolyear != null) {
+                var lastGrade = await schoolyear.grades
+                    .filter()
+                    .useable()
+                    .sortByDatumIngevoerdDesc()
+                    .findFirst();
+                if (lastGrade != null) {
+                  // Preload all Isar links in object hierarchy outside transaction
+                  // to prevent nested loadSync() during serialization inside writeTxn.
+                  lastGrade.uuid;
+                  lastGrade.subjectUUID;
+                  await isar.writeTxn(() async {
+                    lastGrade.isArchived = true;
+                    await isar.grades.put(lastGrade);
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          "Grade ${lastGrade.cijferStr} (ID: ${lastGrade.id}) archived"),
+                    ));
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("No unarchived grades found"),
+                    ));
+                  }
+                }
+              }
+            }),
+        ListTile(
+            leading: const Icon(Icons.unarchive),
+            title: const Text("Restore all archived grades"),
+            trailing: const Icon(Icons.unarchive_outlined),
+            onTap: () async {
+              var schoolyear = await activeProfile.schoolyears
+                  .filter()
+                  .sortByEindeDesc()
+                  .findFirst();
+              if (schoolyear != null) {
+                var archivedGrades = await schoolyear.grades
+                    .filter()
+                    .isArchivedEqualTo(true)
+                    .findAll();
+                if (archivedGrades.isNotEmpty) {
+                  for (var g in archivedGrades) {
+                    g.uuid;
+                    g.subjectUUID;
+                  }
+                  await isar.writeTxn(() async {
+                    for (var g in archivedGrades) {
+                      g.isArchived = false;
+                    }
+                    await isar.grades.putAll(archivedGrades);
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          "Restored ${archivedGrades.length} archived grades"),
+                    ));
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("No archived grades found"),
+                    ));
+                  }
+                }
+              }
+            }),
+        ListTile(
           title: const Text("Run background event"),
           onTap: () => BackgroundRefresh.quickRefresh(
             enableNotifcations: true,

@@ -43,6 +43,7 @@ class Grade {
   DateTime? testDate;
   bool isEnabled = true;
   bool wasRevealed = true;
+  bool isArchived = false;
 
   Grade({
     required this.id,
