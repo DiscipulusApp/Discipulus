@@ -119,6 +119,12 @@ Ik waardeer elke bijdrage aan Discipulus enorm. Hier zijn een paar dingen om in 
 
 - **Bekend Probleem**: Push-notificaties werken momenteel niet optimaal vanwege beperkingen met de Magister-API. De huidige notificaties zijn gebaseerd op achtergrondverwerking, wat minder efficiënt is. Als je een oplossing kunt vinden om push-notificaties te integreren, dan zou dat geweldig zijn! 🚀
 
+## AI policy
+
+Discipulus is grotendeels zonder gebruik van AI geschreven, maar dit was meer omdat dit destijds gewoon kort gezegd nog niet goed genoeg was om te gebruiken. Aanpassingen maken of code toevoegen met AI en dan een PR maken is wat mij betreft hartstikke welkom **zolang je maar weet wat de aanpassingen van de LLM inhouden en je zelf de code en de werking controleert**. Het is ook belangrijk dat de code nog wel dezelfde structuur aanhoudt zoals die er nu gebruikt wordt (b.v.b [`ScaffoldSkeleton({`](lib/widgets/global/scaffold_skeleton.dart), alles in [`extentions.dart`](lib/utils/extensions.dart), dingen in [lib/widgets/global](lib/widgets/global), etc.), er is namelijk een kans dat een LLM zijn eigen plan gaat trekken en dit niet gebruikt.
+
+Laat een LLM je een goed beginnetje geven, je helpen met problemen en je laten adviseren, maar zorg ervoor dat *jij* de alwetende verteller blijft.
+
 ## Bedankjes
 
 Discipulus is geïnspireerd door en met dank aan de geweldige projecten [Gemairo](https://github.com/gemairo/app) en [Argo](https://github.com/Argo-Client/App).
