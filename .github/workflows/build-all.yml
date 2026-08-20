@@ -1,0 +1,391 @@
+name: Multi-Platform Build & Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: false
+        default: '1.0.0'
+      build_number:
+        description: 'Build number (e.g., 1)'
+        required: false
+        default: '1'
+
+env:
+  APP_NAME: discipulus
+  APP_ID: dev.harrydekat.discipulus
+
+jobs:
+  version:
+    name: Prepare Versioning
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_vars.outputs.version }}
+      build_number: ${{ steps.get_vars.outputs.build_number }}
+    steps:
+      - name: Set Variables
+        id: get_vars
+        run: |
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          echo "build_number=${{ github.event.inputs.build_number }}" >> $GITHUB_OUTPUT
+
+  build-apple:
+    name: Apple Platforms (iOS, macOS, watchOS)
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Decode Apple Secrets
+        shell: bash
+        env:
+          SECRETS_B64: ${{ secrets.BUILD_SECRETS_BASE64 }}
+        run: |
+          if [ -n "$SECRETS_B64" ]; then
+            python3 -c '
+          import os, base64, json, tarfile, io
+
+          raw = base64.b64decode(os.environ.get("SECRETS_B64", ""))
+          profiles_dir = os.path.expanduser("~/Library/MobileDevice/Provisioning Profiles")
+          os.makedirs(profiles_dir, exist_ok=True)
+
+          # Try tar.gz archive
+          try:
+              with tarfile.open(fileobj=io.BytesIO(raw), mode="r:*") as tar:
+                  for member in tar.getmembers():
+                      if member.name.endswith(".mobileprovision") or member.name.endswith(".provisionprofile"):
+                          tar.extract(member, path=profiles_dir)
+                      elif member.name.endswith(".p12") or member.name == "cert.p12":
+                          tar.extract(member, path=".")
+                          if member.name != "cert.p12":
+                              os.rename(member.name, "cert.p12")
+                      elif member.name in ["cert_pass.txt", "password.txt"]:
+                          tar.extract(member, path=".")
+          except Exception as te:
+              # Fallback to JSON format
+              try:
+                  data = json.loads(raw.decode("utf-8"))
+                  apple = data.get("apple", {})
+                  if "certificate_base64" in apple and apple["certificate_base64"]:
+                      with open("cert.p12", "wb") as cf:
+                          cf.write(base64.b64decode(apple["certificate_base64"]))
+                  if "certificate_password" in apple:
+                      with open("cert_pass.txt", "w") as pf:
+                          pf.write(apple["certificate_password"])
+                  if "provisioning_profile_base64" in apple:
+                      with open(os.path.join(profiles_dir, "profile.mobileprovision"), "wb") as pf:
+                          pf.write(base64.b64decode(apple["provisioning_profile_base64"]))
+                  if "provisioning_profiles" in apple:
+                      profiles = apple["provisioning_profiles"]
+                      if isinstance(profiles, dict):
+                          for name, b64 in profiles.items():
+                              ext = ".provisionprofile" if name.endswith(".provisionprofile") else ".mobileprovision"
+                              fname = name if name.endswith(".mobileprovision") or name.endswith(".provisionprofile") else f"{name}{ext}"
+                              with open(os.path.join(profiles_dir, fname), "wb") as pf:
+                                  pf.write(base64.b64decode(b64))
+                      elif isinstance(profiles, list):
+                          for idx, b64 in enumerate(profiles):
+                              with open(os.path.join(profiles_dir, f"profile_{idx}.mobileprovision"), "wb") as pf:
+                                  pf.write(base64.b64decode(b64))
+              except Exception as je:
+                  print(f"Warning parsing Apple secrets: {te} / {je}")
+          '
+          fi
+
+      - name: Install Certificates
+        shell: bash
+        run: |
+          if [ -f cert.p12 ]; then
+            CERT_PASS=""
+            if [ -f cert_pass.txt ]; then
+              CERT_PASS=$(cat cert_pass.txt)
+              rm -f cert_pass.txt
+            fi
+            security create-keychain -p "" build.keychain
+            security import cert.p12 -k build.keychain -P "$CERT_PASS" -A
+            security list-keychains -s build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p "" build.keychain
+            rm -f cert.p12
+          fi
+
+      - name: Disable SPM & Pub Get
+        run: |
+          flutter config --no-enable-swift-package-manager
+          flutter pub get
+
+      - name: Build iOS IPA
+        run: |
+          if flutter build ipa --release --export-method=app-store --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
+            echo "IPA build succeeded."
+          else
+            echo "IPA export failed, fallback to unsigned iOS build..."
+            flutter build ios --release --no-codesign --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+            cd build/ios/iphoneos
+            mkdir -p Payload
+            ln -sf Runner.app Payload/Runner.app
+            zip -r ../../../${{ env.APP_NAME }}_ios_unsigned.ipa Payload
+            cd ../../..
+          fi
+
+      - name: Build macOS App
+        run: |
+          if flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
+            echo "Standard macOS build succeeded."
+          else
+            echo "Standard macOS build failed, building with ad-hoc code signing..."
+            cd macos
+            xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release \
+              CODE_SIGN_IDENTITY="-" \
+              CODE_SIGN_STYLE="Manual" \
+              PROVISIONING_PROFILE_SPECIFIER="" \
+              DEVELOPMENT_TEAM="" \
+              build
+            cd ..
+          fi
+          if [ -d "build/macos/Build/Products/Release" ]; then
+            cd build/macos/Build/Products/Release
+            zip -r ../../../../../${{ env.APP_NAME }}_macos.zip *.app
+            cd "$GITHUB_WORKSPACE"
+          fi
+
+      - name: Upload Apple Artifacts (iOS includes embedded watchOS)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-builds
+          path: |
+            build/ios/ipa/*.ipa
+            *.ipa
+            ${{ env.APP_NAME }}_macos.zip
+
+  build-android-linux:
+    name: Android, Wear OS & Linux
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Linux Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev flatpak flatpak-builder
+
+      - name: Decode Android Secrets
+        shell: bash
+        env:
+          SECRETS_B64: ${{ secrets.BUILD_SECRETS_BASE64 }}
+        run: |
+          if [ -n "$SECRETS_B64" ]; then
+            python3 -c '
+          import os, base64, json, tarfile, io
+
+          raw = base64.b64decode(os.environ.get("SECRETS_B64", ""))
+          os.makedirs("android/app", exist_ok=True)
+          env_lines = []
+
+          # Try tar.gz archive
+          try:
+              with tarfile.open(fileobj=io.BytesIO(raw), mode="r:*") as tar:
+                  for member in tar.getmembers():
+                      if member.name.endswith(".jks"):
+                          tar.extract(member, path="android/app")
+                          extracted_file = os.path.join("android/app", member.name)
+                          target_file = "android/app/keystore.jks"
+                          if extracted_file != target_file:
+                              os.rename(extracted_file, target_file)
+                          env_lines.append("CM_KEYSTORE_PATH=keystore.jks")
+                      elif member.name == "password.txt":
+                          tar.extract(member, path=".")
+                          alias = "discipulus"
+                          password = ""
+                          with open("password.txt") as pf:
+                              for line in pf:
+                                  if line.startswith("Password:"):
+                                      password = line.split(":", 1)[1].strip()
+                                  elif line.startswith("Alias:"):
+                                      alias = line.split(":", 1)[1].strip()
+                          if password:
+                              env_lines.extend([
+                                  f"CM_KEYSTORE_PASSWORD={password}",
+                                  f"CM_KEY_ALIAS={alias}",
+                                  f"CM_KEY_PASSWORD={password}"
+                              ])
+                          if os.path.exists("password.txt"):
+                              os.remove("password.txt")
+          except Exception as te:
+              # Fallback to JSON format
+              try:
+                  data = json.loads(raw.decode("utf-8"))
+                  android = data.get("android", {})
+                  if "keystore_base64" in android and android["keystore_base64"]:
+                      with open("android/app/keystore.jks", "wb") as kf:
+                          kf.write(base64.b64decode(android["keystore_base64"]))
+                      env_lines.append("CM_KEYSTORE_PATH=keystore.jks")
+                  if "keystore_password" in android:
+                      kp = android["keystore_password"]
+                      env_lines.append(f"CM_KEYSTORE_PASSWORD={kp}")
+                  if "key_alias" in android:
+                      ka = android["key_alias"]
+                      env_lines.append(f"CM_KEY_ALIAS={ka}")
+                  if "key_password" in android:
+                      ap = android["key_password"]
+                      env_lines.append(f"CM_KEY_PASSWORD={ap}")
+              except Exception as je:
+                  print(f"Warning parsing Android secrets: {te} / {je}")
+
+          if env_lines:
+              with open(os.environ["GITHUB_ENV"], "a") as ef:
+                  ef.write("\n".join(env_lines) + "\n")
+          '
+          fi
+
+      - name: Flutter Pub Get & Enable Linux
+        run: |
+          flutter config --enable-linux-desktop
+          flutter pub get
+
+      - name: Build Android (APK & App Bundle)
+        run: |
+          flutter build apk --release --split-per-abi --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          flutter build appbundle --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Build Wear OS APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew :wear:assembleRelease || ./gradlew assembleRelease || true
+          cd ..
+
+      - name: Build Linux Desktop
+        run: |
+          flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          cd build/linux/x64/release
+          tar -czvf ../../../../${{ env.APP_NAME }}_linux.tar.gz bundle
+          cd ../../../..
+
+      - name: Create Linux Flatpak
+        run: |
+          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
+          flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08 || true
+          echo '{
+            "app-id": "${{ env.APP_ID }}",
+            "runtime": "org.freedesktop.Platform",
+            "runtime-version": "22.08",
+            "sdk": "org.freedesktop.Sdk",
+            "command": "${{ env.APP_NAME }}",
+            "modules": [
+              {
+                "name": "${{ env.APP_NAME }}",
+                "buildsystem": "simple",
+                "build-commands": [
+                  "cp -r . /app/${{ env.APP_NAME }}",
+                  "chmod +x /app/${{ env.APP_NAME }}/${{ env.APP_NAME }}"
+                ],
+                "sources": [
+                  {
+                    "type": "dir",
+                    "path": "build/linux/x64/release/bundle"
+                  }
+                ]
+              }
+            ]
+          }' > ${{ env.APP_ID }}.json
+          flatpak-builder --repo=repo --force-clean build-dir ${{ env.APP_ID }}.json || true
+          flatpak build-bundle repo ${{ env.APP_NAME }}_linux.flatpak ${{ env.APP_ID }} || true
+
+      - name: Upload Android, Wear OS & Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-linux-builds
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+            android/wear/build/outputs/apk/release/*.apk
+            ${{ env.APP_NAME }}_linux.tar.gz
+            *.flatpak
+
+  build-windows:
+    name: Windows (.exe & ZIP)
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Flutter Enable Windows & Pub Get
+        run: |
+          flutter config --enable-windows-desktop
+          flutter pub get
+
+      - name: Build Windows
+        run: |
+          flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Create Windows ZIP
+        shell: powershell
+        run: |
+          Compress-Archive -Path build\windows\runner\Release\* -DestinationPath ${{ env.APP_NAME }}_windows.zip
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: |
+            ${{ env.APP_NAME }}_windows.zip
+            build/windows/runner/Release/*.exe
+
+  create-release:
+    name: Create GitHub Release
+    needs: [version, build-apple, build-android-linux, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: Release ${{ needs.version.outputs.version }} (Build ${{ needs.version.outputs.build_number }})
+          files: |
+            artifacts/apple-builds/**/*
+            artifacts/android-linux-builds/**/*
+            artifacts/windows-builds/**/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

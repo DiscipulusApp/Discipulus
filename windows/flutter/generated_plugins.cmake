@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  audioplayers_windows
   connectivity_plus
   desktop_webview_window
   dynamic_color
@@ -15,10 +16,12 @@ list(APPEND FLUTTER_PLUGIN_LIST
   share_plus
   super_native_extensions
   url_launcher_windows
+  video_player_win
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_local_notifications_windows
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

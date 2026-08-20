@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets & Signing
+secrets.json
+build_secrets_base64.txt
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+*.provisionprofile
+key.properties

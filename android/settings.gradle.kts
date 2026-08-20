@@ -23,3 +23,6 @@ plugins {
 }
 
 include(":app")
+if (file("wear/build.gradle.kts").exists() || file("wear/build.gradle").exists()) {
+    include(":wear")
+}
