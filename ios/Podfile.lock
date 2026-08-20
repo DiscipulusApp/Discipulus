@@ -3,6 +3,9 @@ PODS:
     - Flutter
   - app_tracking_transparency (0.0.1):
     - Flutter
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - connectivity_plus (0.0.1):
     - Flutter
   - device_info_plus (0.0.1):
@@ -78,10 +81,9 @@ PODS:
     - Flutter
   - open_file_ios (1.0.3):
     - Flutter
-  - path_provider_foundation (0.0.1):
+  - package_info_plus (0.4.5):
     - Flutter
-    - FlutterMacOS
-  - permission_handler_apple (9.3.0):
+  - permission_handler_apple (9.4.8):
     - Flutter
   - SDWebImage (5.20.0):
     - SDWebImage/Core (= 5.20.0)
@@ -101,6 +103,9 @@ PODS:
   - SwiftyGif (5.4.5)
   - url_launcher_ios (0.0.1):
     - Flutter
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - watch_connectivity (0.0.1):
     - Flutter
   - webview_flutter_wkwebview (0.0.1):
@@ -112,6 +117,7 @@ PODS:
 DEPENDENCIES:
   - app_links (from `.symlinks/plugins/app_links/ios`)
   - app_tracking_transparency (from `.symlinks/plugins/app_tracking_transparency/ios`)
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
@@ -129,13 +135,14 @@ DEPENDENCIES:
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
   - open_file_ios (from `.symlinks/plugins/open_file_ios/ios`)
-  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - share_handler_ios (from `.symlinks/plugins/share_handler_ios/ios`)
   - share_handler_ios_models (from `.symlinks/plugins/share_handler_ios/ios/Models`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - super_native_extensions (from `.symlinks/plugins/super_native_extensions/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - watch_connectivity (from `.symlinks/plugins/watch_connectivity/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
   - workmanager (from `.symlinks/plugins/workmanager/ios`)
@@ -154,6 +161,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/app_links/ios"
   app_tracking_transparency:
     :path: ".symlinks/plugins/app_tracking_transparency/ios"
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/darwin"
   connectivity_plus:
     :path: ".symlinks/plugins/connectivity_plus/ios"
   device_info_plus:
@@ -188,8 +197,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/network_info_plus/ios"
   open_file_ios:
     :path: ".symlinks/plugins/open_file_ios/ios"
-  path_provider_foundation:
-    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   share_handler_ios:
@@ -202,6 +211,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/super_native_extensions/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
   watch_connectivity:
     :path: ".symlinks/plugins/watch_connectivity/ios"
   webview_flutter_wkwebview:
@@ -212,12 +223,13 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   app_links: a754cbec3c255bd4bbb4d236ecc06f28cd9a7ce8
   app_tracking_transparency: 3d84f147f67ca82d3c15355c36b1fa6b66ca7c92
+  audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_apple_handoff: 084712ce2386f42a5c51d50daf8837cbbe80b568
   flutter_apple_spotlight: 938e3294e47ba04b79cb4afecf633e25520f6521
   flutter_local_ai: f0d8ec87c8a56478ac06d72962633c5235c7b911
@@ -232,9 +244,9 @@ SPEC CHECKSUMS:
   isar_flutter_libs: 9fc2cfb928c539e1b76c481ba5d143d556d94920
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   network_info_plus: cf61925ab5205dce05a4f0895989afdb6aade5fc
-  open_file_ios: 46184d802ee7959203f6392abcfa0dd49fdb5be0
-  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
-  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  open_file_ios: c1143c28b4c65f721cdd58d9fba2f7a1c55206cd
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  permission_handler_apple: 92d754bbaa7361d436db2d6c3c1c2a0fdcec462e
   SDWebImage: 73c6079366fea25fa4bb9640d5fb58f0893facd8
   share_handler_ios: e2244e990f826b2c8eaa291ac3831569438ba0fb
   share_handler_ios_models: fc638c9b4330dc7f082586c92aee9dfa0b87b871
@@ -242,10 +254,11 @@ SPEC CHECKSUMS:
   super_native_extensions: b763c02dc3a8fd078389f410bf15149179020cb4
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
   watch_connectivity: 208552a93286b3307a5359212a6bcaa44c4deaec
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
   workmanager: 01be2de7f184bd15de93a1812936a2b7f42ef07e
 
-PODFILE CHECKSUM: 85254dcf0a96b1fc25082e1ef8ff5b6beee2650d
+PODFILE CHECKSUM: b43115f7638cf5edd995655c8945e05f87145c1b
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

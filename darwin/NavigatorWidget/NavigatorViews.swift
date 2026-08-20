@@ -20,12 +20,14 @@ struct NavigatorWidgetEntryView : View {
             SystemExtraLargeView(entry: entry)
         #endif
 
+        #if os(iOS) || os(watchOS)
         case .accessoryInline:
             AccessoryInlineView(entry: entry)
         case .accessoryCircular:
             AccessoryCircularView(entry: entry)
         case .accessoryRectangular:
             AccessoryRectangularView(entry: entry)
+        #endif
 
         @unknown default:
             Text("Unsupported widget size")

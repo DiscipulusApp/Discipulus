@@ -41,6 +41,18 @@ struct eventTile: View {
             
             
         }
-        .frame(maxHeight: event.startHourIndicator == event.endHourIndicator ? 35 : 70).id(event.id).transition(.push(from: .trailing))
+        .frame(maxHeight: event.startHourIndicator == event.endHourIndicator ? 35 : 70)
+        .id(event.id)
+        .modifier(PushTransitionModifier())
+    }
+}
+
+struct PushTransitionModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, macOS 13.0, watchOS 9.0, *) {
+            content.transition(.push(from: .trailing))
+        } else {
+            content.transition(.opacity)
+        }
     }
 }

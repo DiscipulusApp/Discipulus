@@ -1,13 +1,16 @@
 PODS:
   - app_links (6.4.1):
     - FlutterMacOS
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - connectivity_plus (0.0.1):
     - FlutterMacOS
   - desktop_webview_window (0.0.1):
     - FlutterMacOS
   - device_info_plus (0.0.1):
     - FlutterMacOS
-  - dynamic_color (0.0.2):
+  - dynamic_color (0.0.3):
     - FlutterMacOS
   - file_picker (0.0.1):
     - FlutterMacOS
@@ -39,8 +42,7 @@ PODS:
     - FlutterMacOS
   - open_file_mac (1.0.3):
     - FlutterMacOS
-  - path_provider_foundation (0.0.1):
-    - Flutter
+  - package_info_plus (0.0.1):
     - FlutterMacOS
   - share_plus (0.0.1):
     - FlutterMacOS
@@ -48,12 +50,16 @@ PODS:
     - FlutterMacOS
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
 
 DEPENDENCIES:
   - app_links (from `Flutter/ephemeral/.symlinks/plugins/app_links/macos`)
+  - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin`)
   - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
   - desktop_webview_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
@@ -71,15 +77,18 @@ DEPENDENCIES:
   - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin`)
   - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
   - open_file_mac (from `Flutter/ephemeral/.symlinks/plugins/open_file_mac/macos`)
-  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - super_native_extensions (from `Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - video_player_avfoundation (from `Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin`)
   - webview_flutter_wkwebview (from `Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 EXTERNAL SOURCES:
   app_links:
     :path: Flutter/ephemeral/.symlinks/plugins/app_links/macos
+  audioplayers_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin
   connectivity_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
   desktop_webview_window:
@@ -114,42 +123,46 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos
   open_file_mac:
     :path: Flutter/ephemeral/.symlinks/plugins/open_file_mac/macos
-  path_provider_foundation:
-    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  package_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   super_native_extensions:
     :path: Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  video_player_avfoundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
   webview_flutter_wkwebview:
     :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
 
 SPEC CHECKSUMS:
   app_links: 05a6ec2341985eb05e9f97dc63f5837c39895c3f
+  audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
   desktop_webview_window: 7e37af677d6d19294cb433d9b1d878ef78dffa4d
   device_info_plus: 4fb280989f669696856f8b129e4a5e3cd6c48f76
-  dynamic_color: cb7c2a300ee67ed3bd96c3e852df3af0300bf610
+  dynamic_color: 4f4c0d2861eb7ff36a2a5e8e2d441e1b6c681ddf
   file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
   file_selector_macos: 9e9e068e90ebee155097d00e89ae91edb2374db7
   flutter_apple_handoff: 084712ce2386f42a5c51d50daf8837cbbe80b568
   flutter_apple_spotlight: 938e3294e47ba04b79cb4afecf633e25520f6521
   flutter_local_ai: f0d8ec87c8a56478ac06d72962633c5235c7b911
   flutter_local_notifications: 1fc7ffb10a83d6a2eeeeddb152d43f1944b0aad0
-  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
   home_widget: 834f4b097ec5bf675b54621de18db13adde80794
   irondash_engine_context: 893c7d96d20ce361d7e996f39d360c4c2f9869ba
   isar_flutter_libs: a65381780401f81ad6bf3f2e7cd0de5698fb98c4
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   network_info_plus: 21d1cd6a015ccb2fdff06a1fbfa88d54b4e92f61
   open_file_mac: 76f06c8597551249bdb5e8fd8827a98eae0f4585
-  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   super_native_extensions: c2795d6d9aedf4a79fae25cb6160b71b50549189
   url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
-PODFILE CHECKSUM: f0c21717cb7ee9112f915044c74bfceb5b12e02a
+PODFILE CHECKSUM: 6acf97521436d16fc31cd5e1a02000905acdb3ae
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

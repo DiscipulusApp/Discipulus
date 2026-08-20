@@ -26,7 +26,7 @@ struct NavigatorWidget: Widget {
     }
 
     private func supportedFamilies() -> [WidgetFamily] {
-        #if os(iOS) || os(macOS)
+        #if os(iOS)
         return [
             .systemSmall,
             .systemMedium,
@@ -35,6 +35,13 @@ struct NavigatorWidget: Widget {
             .accessoryCircular,
             .accessoryInline,
             .accessoryRectangular
+        ]
+        #elseif os(macOS)
+        return [
+            .systemSmall,
+            .systemMedium,
+            .systemLarge,
+            .systemExtraLarge
         ]
         #elseif os(watchOS)
         return [

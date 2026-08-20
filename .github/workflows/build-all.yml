@@ -64,10 +64,8 @@ jobs:
                   for member in tar.getmembers():
                       if member.name.endswith(".mobileprovision") or member.name.endswith(".provisionprofile"):
                           tar.extract(member, path=profiles_dir)
-                      elif member.name.endswith(".p12") or member.name == "cert.p12":
+                      elif member.name.endswith(".p12"):
                           tar.extract(member, path=".")
-                          if member.name != "cert.p12":
-                              os.rename(member.name, "cert.p12")
                       elif member.name in ["cert_pass.txt", "password.txt"]:
                           tar.extract(member, path=".")
           except Exception as te:
@@ -104,36 +102,112 @@ jobs:
       - name: Install Certificates
         shell: bash
         run: |
-          if [ -f cert.p12 ]; then
-            CERT_PASS=""
-            if [ -f cert_pass.txt ]; then
-              CERT_PASS=$(cat cert_pass.txt)
-              rm -f cert_pass.txt
-            fi
-            security create-keychain -p "" build.keychain
-            security import cert.p12 -k build.keychain -P "$CERT_PASS" -A
-            security list-keychains -s build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "" build.keychain
-            rm -f cert.p12
+          CERT_PASS=""
+          if [ -f cert_pass.txt ]; then
+            CERT_PASS=$(cat cert_pass.txt)
           fi
+          security create-keychain -p "" build.keychain
+          for p12 in *.p12; do
+            if [ -f "$p12" ]; then
+              echo "Importing $p12 into build.keychain..."
+              security import "$p12" -k build.keychain -P "$CERT_PASS" -A
+              security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain || true
+            fi
+          done
+          security list-keychains -d user -s build.keychain $(security list-keychains -d user | sed -e 's/"//g')
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          rm -f *.p12 cert_pass.txt
 
       - name: Disable SPM & Pub Get
         run: |
           flutter config --no-enable-swift-package-manager
           flutter pub get
 
+      - name: Configure iOS Code Signing & ExportOptions
+        shell: bash
+        run: |
+          python3 -c '
+          import os, subprocess, plistlib, re, json
+
+          profiles_dir = os.path.expanduser("~/Library/MobileDevice/Provisioning Profiles")
+          mapping = {}
+
+          if os.path.exists(profiles_dir):
+              for fname in os.listdir(profiles_dir):
+                  if fname.endswith(".mobileprovision"):
+                      fpath = os.path.join(profiles_dir, fname)
+                      res = subprocess.run(["security", "cms", "-D", "-i", fpath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                      if res.returncode == 0:
+                          pl = plistlib.loads(res.stdout)
+                          app_id = pl.get("Entitlements", {}).get("application-identifier", "")
+                          if "." in app_id:
+                              bundle_id = app_id.split(".", 1)[1]
+                              name = pl.get("Name")
+                              # Prefer App Store distribution profiles over development profiles
+                              if bundle_id not in mapping or "ios_app_store" in fname or "Release" in name:
+                                  mapping[bundle_id] = name
+                                  print(f"Mapped {bundle_id} -> {name}")
+
+          is_development = any("Team Provisioning Profile" in name or "Development" in name for name in mapping.values())
+          sign_identity = "Apple Development" if is_development else "Apple Distribution"
+          export_method = "development" if is_development else "app-store"
+          print(f"Signing profile type detected: {export_method} ({sign_identity})")
+
+          # 1. Update project.pbxproj safely using plutil JSON/XML conversion
+          pbx_path = "ios/Runner.xcodeproj/project.pbxproj"
+          if os.path.exists(pbx_path) and mapping:
+              res = subprocess.run(["plutil", "-convert", "json", "-o", "-", pbx_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+              if res.returncode == 0:
+                  data = json.loads(res.stdout)
+                  objects = data.get("objects", {})
+                  count = 0
+                  for key, obj in objects.items():
+                      if isinstance(obj, dict) and obj.get("isa") == "XCBuildConfiguration":
+                          bs = obj.get("buildSettings", {})
+                          bundle_id = bs.get("PRODUCT_BUNDLE_IDENTIFIER")
+                          if bundle_id in mapping:
+                              bs["CODE_SIGN_STYLE"] = "Manual"
+                              bs["CODE_SIGN_IDENTITY"] = sign_identity
+                              bs["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = sign_identity
+                              bs["PROVISIONING_PROFILE_SPECIFIER"] = mapping[bundle_id]
+                              bs["DEVELOPMENT_TEAM"] = "DUGUWCFH8P"
+                              count += 1
+                  with open(pbx_path, "w") as f:
+                      json.dump(data, f)
+                  subprocess.run(["plutil", "-convert", "xml1", pbx_path])
+                  print(f"Successfully configured {count} build configurations in project.pbxproj")
+
+          # 2. Generate ExportOptions.plist
+          export_options = {
+              "method": export_method,
+              "signingStyle": "manual",
+              "teamID": "DUGUWCFH8P",
+          }
+          if mapping:
+              export_options["provisioningProfiles"] = mapping
+
+          os.makedirs("ios", exist_ok=True)
+          with open("ios/ExportOptions.plist", "wb") as f:
+              plistlib.dump(export_options, f)
+
+          print(f"Generated ios/ExportOptions.plist (method: {export_method})")
+          '
+
       - name: Build iOS IPA
         run: |
-          if flutter build ipa --release --export-method=app-store --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
+          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
             echo "IPA build succeeded."
+          elif flutter build ipa --release --export-method=app-store --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
+            echo "IPA build with export-method succeeded."
           else
             echo "IPA export failed, fallback to unsigned iOS build..."
             flutter build ios --release --no-codesign --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
             cd build/ios/iphoneos
             mkdir -p Payload
-            ln -sf Runner.app Payload/Runner.app
-            zip -r ../../../${{ env.APP_NAME }}_ios_unsigned.ipa Payload
+            cp -R Runner.app Payload/
+            zip -qr ../../../${{ env.APP_NAME }}_ios_unsigned.ipa Payload
+            rm -rf Payload
             cd ../../..
           fi
 
@@ -191,7 +265,7 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev flatpak flatpak-builder
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libwebkit2gtk-4.1-dev flatpak flatpak-builder
 
       - name: Decode Android Secrets
         shell: bash
@@ -269,8 +343,8 @@ jobs:
 
       - name: Build Android (APK & App Bundle)
         run: |
-          flutter build apk --release --split-per-abi --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
-          flutter build appbundle --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          flutter build appbundle --release --android-skip-build-dependency-validation --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
 
       - name: Build Wear OS APK
         run: |
@@ -288,8 +362,8 @@ jobs:
 
       - name: Create Linux Flatpak
         run: |
-          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
-          flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08 || true
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
+          sudo flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08 || true
           echo '{
             "app-id": "${{ env.APP_ID }}",
             "runtime": "org.freedesktop.Platform",
@@ -342,6 +416,14 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Prepare Windows Environment
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\AppData\Local", "$env:USERPROFILE\AppData\Roaming" | Out-Null
+          if (Test-Path "$env:USERPROFILE\AppData") {
+            (Get-Item "$env:USERPROFILE\AppData" -Force).Attributes = 'Directory'
+          }
+
       - name: Flutter Enable Windows & Pub Get
         run: |
           flutter config --enable-windows-desktop
@@ -354,7 +436,8 @@ jobs:
       - name: Create Windows ZIP
         shell: powershell
         run: |
-          Compress-Archive -Path build\windows\runner\Release\* -DestinationPath ${{ env.APP_NAME }}_windows.zip
+          $ReleasePath = if (Test-Path "build\windows\x64\runner\Release") { "build\windows\x64\runner\Release\*" } else { "build\windows\runner\Release\*" }
+          Compress-Archive -Path $ReleasePath -DestinationPath ${{ env.APP_NAME }}_windows.zip
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -362,7 +445,7 @@ jobs:
           name: windows-builds
           path: |
             ${{ env.APP_NAME }}_windows.zip
-            build/windows/runner/Release/*.exe
+            build/windows/**/runner/Release/*.exe
 
   create-release:
     name: Create GitHub Release

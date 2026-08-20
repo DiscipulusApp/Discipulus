@@ -9,7 +9,11 @@ struct SystemSmallView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let event = entry.currentEvents.first {
-                eventDetailView(event: event).id(event.id).transition(.push(from: .bottom))
+                if #available(iOS 16.0, macOS 13.0, watchOS 9.0, *) {
+                    eventDetailView(event: event).id(event.id).transition(.push(from: .bottom))
+                } else {
+                    eventDetailView(event: event).id(event.id).transition(.opacity)
+                }
             } else {
                 Text("Geen lessen vandaag")
                     .font(.headline)
