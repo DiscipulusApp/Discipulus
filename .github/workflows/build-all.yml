@@ -56,14 +56,20 @@ jobs:
 
           raw = base64.b64decode(os.environ.get("SECRETS_B64", ""))
           profiles_dir = os.path.expanduser("~/Library/MobileDevice/Provisioning Profiles")
+          xcode_pdir = os.path.expanduser("~/Library/Developer/Xcode/UserData/Provisioning Profiles")
           os.makedirs(profiles_dir, exist_ok=True)
+          os.makedirs(xcode_pdir, exist_ok=True)
 
-          # Try tar.gz archive
+          # Try tar.gz / xz archive
           try:
               with tarfile.open(fileobj=io.BytesIO(raw), mode="r:*") as tar:
                   for member in tar.getmembers():
                       if member.name.endswith(".mobileprovision") or member.name.endswith(".provisionprofile"):
-                          tar.extract(member, path=profiles_dir)
+                          fbytes = tar.extractfile(member).read()
+                          with open(os.path.join(profiles_dir, member.name), "wb") as pf:
+                              pf.write(fbytes)
+                          with open(os.path.join(xcode_pdir, member.name), "wb") as pf:
+                              pf.write(fbytes)
                       elif member.name.endswith(".p12"):
                           tar.extract(member, path=".")
                       elif member.name in ["cert_pass.txt", "password.txt"]:
@@ -106,17 +112,23 @@ jobs:
           if [ -f cert_pass.txt ]; then
             CERT_PASS=$(cat cert_pass.txt)
           fi
-          security create-keychain -p "" build.keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASS="actions"
+
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+
           for p12 in *.p12; do
             if [ -f "$p12" ]; then
-              echo "Importing $p12 into build.keychain..."
-              security import "$p12" -k build.keychain -P "$CERT_PASS" -A
-              security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain || true
+              echo "Importing $p12 into $KEYCHAIN_PATH..."
+              security import "$p12" -k "$KEYCHAIN_PATH" -P "$CERT_PASS" -A -T /usr/bin/codesign -T /usr/bin/security
             fi
           done
-          security list-keychains -d user -s build.keychain $(security list-keychains -d user | sed -e 's/"//g')
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
+
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$KEYCHAIN_PATH"
           rm -f *.p12 cert_pass.txt
 
       - name: Disable SPM & Pub Get
@@ -131,7 +143,8 @@ jobs:
           import os, subprocess, plistlib, re, json
 
           profiles_dir = os.path.expanduser("~/Library/MobileDevice/Provisioning Profiles")
-          mapping = {}
+          store_uuid_mapping = {}
+          dev_uuid_mapping = {}
 
           if os.path.exists(profiles_dir):
               for fname in os.listdir(profiles_dir):
@@ -143,20 +156,22 @@ jobs:
                           app_id = pl.get("Entitlements", {}).get("application-identifier", "")
                           if "." in app_id:
                               bundle_id = app_id.split(".", 1)[1]
-                              name = pl.get("Name")
-                              # Prefer App Store distribution profiles over development profiles
-                              if bundle_id not in mapping or "ios_app_store" in fname or "Release" in name:
-                                  mapping[bundle_id] = name
-                                  print(f"Mapped {bundle_id} -> {name}")
+                              name = pl.get("Name", "")
+                              uuid = pl.get("UUID")
+                              if "Store" in name:
+                                  store_uuid_mapping[bundle_id] = uuid
+                                  print(f"Store Profile: {bundle_id} -> UUID {uuid} ({name})")
+                              else:
+                                  dev_uuid_mapping[bundle_id] = uuid
+                                  print(f"Dev Profile: {bundle_id} -> UUID {uuid} ({name})")
 
-          is_development = any("Team Provisioning Profile" in name or "Development" in name for name in mapping.values())
-          sign_identity = "Apple Development" if is_development else "Apple Distribution"
-          export_method = "development" if is_development else "app-store"
-          print(f"Signing profile type detected: {export_method} ({sign_identity})")
+          active_mapping = store_uuid_mapping if store_uuid_mapping else dev_uuid_mapping
+          export_method = "app-store" if store_uuid_mapping else "development"
+          print(f"Export method configured: {export_method} with {len(active_mapping)} profiles")
 
           # 1. Update project.pbxproj safely using plutil JSON/XML conversion
           pbx_path = "ios/Runner.xcodeproj/project.pbxproj"
-          if os.path.exists(pbx_path) and mapping:
+          if os.path.exists(pbx_path) and active_mapping:
               res = subprocess.run(["plutil", "-convert", "json", "-o", "-", pbx_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
               if res.returncode == 0:
                   data = json.loads(res.stdout)
@@ -166,12 +181,11 @@ jobs:
                       if isinstance(obj, dict) and obj.get("isa") == "XCBuildConfiguration":
                           bs = obj.get("buildSettings", {})
                           bundle_id = bs.get("PRODUCT_BUNDLE_IDENTIFIER")
-                          if bundle_id in mapping:
-                              bs["CODE_SIGN_STYLE"] = "Manual"
-                              bs["CODE_SIGN_IDENTITY"] = sign_identity
-                              bs["CODE_SIGN_IDENTITY[sdk=iphoneos*]"] = sign_identity
-                              bs["PROVISIONING_PROFILE_SPECIFIER"] = mapping[bundle_id]
+                          if bundle_id in active_mapping:
+                              bs["CODE_SIGN_STYLE"] = "Automatic"
                               bs["DEVELOPMENT_TEAM"] = "DUGUWCFH8P"
+                              bs.pop("PROVISIONING_PROFILE", None)
+                              bs.pop("PROVISIONING_PROFILE_SPECIFIER", None)
                               count += 1
                   with open(pbx_path, "w") as f:
                       json.dump(data, f)
@@ -180,12 +194,13 @@ jobs:
 
           # 2. Generate ExportOptions.plist
           export_options = {
+              "destination": "export",
               "method": export_method,
-              "signingStyle": "manual",
+              "signingStyle": "automatic",
               "teamID": "DUGUWCFH8P",
+              "manageAppVersionAndBuildNumber": False,
+              "uploadSymbols": True,
           }
-          if mapping:
-              export_options["provisioningProfiles"] = mapping
 
           os.makedirs("ios", exist_ok=True)
           with open("ios/ExportOptions.plist", "wb") as f:
@@ -198,8 +213,8 @@ jobs:
         run: |
           if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
             echo "IPA build succeeded."
-          elif flutter build ipa --release --export-method=app-store --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}; then
-            echo "IPA build with export-method succeeded."
+          elif [ -d "build/ios/archive/Runner.xcarchive" ] && xcodebuild -exportArchive -archivePath build/ios/archive/Runner.xcarchive -exportPath build/ios/ipa -exportOptionsPlist ios/ExportOptions.plist -allowProvisioningUpdates; then
+            echo "Direct xcodebuild exportArchive succeeded."
           else
             echo "IPA export failed, fallback to unsigned iOS build..."
             flutter build ios --release --no-codesign --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
@@ -350,7 +365,7 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew :wear:assembleRelease || ./gradlew assembleRelease || true
+          ./gradlew :wear:assembleRelease || true
           cd ..
 
       - name: Build Linux Desktop
@@ -370,13 +385,22 @@ jobs:
             "runtime-version": "22.08",
             "sdk": "org.freedesktop.Sdk",
             "command": "${{ env.APP_NAME }}",
+            "finish-args": [
+              "--share=network",
+              "--share=ipc",
+              "--socket=fallback-x11",
+              "--socket=wayland",
+              "--device=dri"
+            ],
             "modules": [
               {
                 "name": "${{ env.APP_NAME }}",
                 "buildsystem": "simple",
                 "build-commands": [
-                  "cp -r . /app/${{ env.APP_NAME }}",
-                  "chmod +x /app/${{ env.APP_NAME }}/${{ env.APP_NAME }}"
+                  "mkdir -p /app/bin /app/lib/${{ env.APP_NAME }}",
+                  "cp -r * /app/lib/${{ env.APP_NAME }}/",
+                  "ln -s /app/lib/${{ env.APP_NAME }}/${{ env.APP_NAME }} /app/bin/${{ env.APP_NAME }}",
+                  "chmod +x /app/bin/${{ env.APP_NAME }} /app/lib/${{ env.APP_NAME }}/${{ env.APP_NAME }}"
                 ],
                 "sources": [
                   {
