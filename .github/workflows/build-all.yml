@@ -367,6 +367,8 @@ jobs:
           chmod +x gradlew
           ./gradlew :wear:assembleRelease || true
           cd ..
+          mkdir -p build/wearos
+          find android/wear/build/outputs/apk/release -name "*.apk" -exec cp {} ./${{ env.APP_NAME }}_wearos.apk \; || true
 
       - name: Build Linux Desktop
         run: |
@@ -422,6 +424,7 @@ jobs:
             build/app/outputs/flutter-apk/*.apk
             build/app/outputs/bundle/release/*.aab
             android/wear/build/outputs/apk/release/*.apk
+            ${{ env.APP_NAME }}_wearos.apk
             ${{ env.APP_NAME }}_linux.tar.gz
             *.flatpak
 
