@@ -38,6 +38,7 @@ class WatchService with WidgetsBindingObserver {
     _initialized = true;
 
     _watch.messageStream.listen((message) {
+      if (activeProfileNullable == null) return;
       if (message['command'] == 'get_schedule') {
         _sendSchedule();
       } else if (message['command'] == 'get_grades') {
@@ -56,21 +57,28 @@ class WatchService with WidgetsBindingObserver {
   Future<void> syncAll() => _syncAll();
 
   Future<void> _syncAll() async {
+    final profile = activeProfileNullable;
+    if (profile == null) return;
     await Future.wait([
-      _sendSchedule(),
-      _sendRecentGrades(),
+      _sendSchedule(profile),
+      _sendRecentGrades(profile),
     ]);
   }
 
-  Future<void> _sendSchedule() async {
-    int profileUUID =
-        appSettings.activeProfileUuidWidgets ?? activeProfile.uuid;
+  Future<void> _sendSchedule([Profile? targetProfile]) async {
+    final profile = targetProfile ?? activeProfileNullable;
+    if (profile == null) return;
 
-    List<CalendarEvent> events = await (await isar.profiles
+    int profileUUID =
+        appSettings.activeProfileUuidWidgets ?? profile.uuid;
+
+    final target = await isar.profiles
             .filter()
             .uuidEqualTo(profileUUID)
-            .findFirst())!
-        .calendarEvents
+            .findFirst() ??
+        profile;
+
+    List<CalendarEvent> events = await target.calendarEvents
         .filter()
         .startGreaterThan(DateTime.now().subtract(const Duration(days: 1)))
         .eindeLessThan(DateTime.now().add(const Duration(days: 28)))
@@ -111,8 +119,9 @@ class WatchService with WidgetsBindingObserver {
     _updateSyncTime();
   }
 
-  Future<void> _sendRecentGrades() async {
-    final profile = activeProfile;
+  Future<void> _sendRecentGrades([Profile? targetProfile]) async {
+    final profile = targetProfile ?? activeProfileNullable;
+    if (profile == null) return;
 
     // Fetch all school years
     final schoolyears =
@@ -120,8 +129,7 @@ class WatchService with WidgetsBindingObserver {
 
     final List<Map<String, dynamic>> schoolyearsData = await Future.wait(
       schoolyears.map((sy) async {
-        final averages =
-            activeProfile.schoolyears.firstWhere((e) => e.id == sy.id).subjects;
+        final averages = sy.subjects;
         final grades = await sy.grades
             .filter()
             .useable()

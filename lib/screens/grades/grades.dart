@@ -137,6 +137,14 @@ class _GradesListScreenState extends State<GradesListScreen> {
           searchAnchor()
         ],
       ),
+      emptyBuilder: () {
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("Er zijn geen cijfers gevonden"),
+          ),
+        );
+      },
       extraSlivers: [
         if (gradesList == null)
           const SliverToBoxAdapter(
@@ -206,6 +214,7 @@ class _GradesListScreenState extends State<GradesListScreen> {
         ),
         // If the user had not fetched all the weights, display a warning
         NoWeightsWarning(
+          key: const HeaderKey(),
           schoolyear: schoolyear,
           onDone: () => refresh(true),
         ),

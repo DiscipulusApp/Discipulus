@@ -33,9 +33,17 @@ class Settings {
   bool drawerOnBack = true;
   bool drawerOpenOnRight = false;
   @ignore
-  double get sufficientFrom => activeProfile.settings.sufficientFrom.isNaN
-      ? 5.5
-      : activeProfile.settings.sufficientFrom;
+  double get sufficientFrom {
+    try {
+      final profile = activeProfileNullable;
+      if (profile != null) {
+        return profile.settings.sufficientFrom.isNaN
+            ? 5.5
+            : profile.settings.sufficientFrom;
+      }
+    } catch (_) {}
+    return 5.5;
+  }
 
   bool sendCrashInfo = true;
   bool useHandoff = true;

@@ -37,7 +37,8 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (Platform.isIOS && _bannerAd == null && !activeProfile.isUnderage) {
+    final profile = activeProfileNullable;
+    if (Platform.isIOS && _bannerAd == null && (profile == null || !profile.isUnderage)) {
       _loadAd();
     }
   }
@@ -89,7 +90,8 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isIOS || _bannerAd == null || !_isLoaded || activeProfile.isUnderage) {
+    final profile = activeProfileNullable;
+    if (!Platform.isIOS || _bannerAd == null || !_isLoaded || (profile != null && profile.isUnderage)) {
       return const SizedBox.shrink();
     }
 
@@ -98,7 +100,9 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
         color: Theme.of(context).colorScheme.surface,
         width: _bannerAd!.size.width.toDouble(),
         height: _bannerAd!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd!),
+        child: ExcludeSemantics(
+          child: AdWidget(ad: _bannerAd!),
+        ),
       ),
     );
   }

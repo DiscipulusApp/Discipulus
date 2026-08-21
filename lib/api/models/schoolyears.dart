@@ -100,6 +100,7 @@ class Schoolyear {
     );
 
     // Add all grades from Magister to the internal database
+    grades.clear();
     grades.addAll(newGrades);
 
     // Save the internal database

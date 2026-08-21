@@ -55,7 +55,7 @@ extension MessageExtension on List<Bericht> {
       CoreSpotlight.instance.deleteAll(
           identifier: removalMarkedUUIDs.map((e) => "messsage_$e").toList());
       // Remove all the messages that are marked for removal
-      isar.writeTxnSync(() async {
+      isar.writeTxnSync(() {
         isar.berichts
             .filter()
             .anyOf(removalMarkedUUIDs, (q, uuid) => q.uuidEqualTo(uuid))
@@ -124,11 +124,11 @@ extension MessageExtension on List<Bericht> {
         }
 
         // Remove messages from database.
-        isar.writeTxnSync(() async {
+        isar.writeTxnSync(() {
           isar.berichts.filter().anyOf(
             [for (Bericht message in messages) message.uuid],
             (q, uuid) => q.uuidEqualTo(uuid),
-          ).deleteFirstSync();
+          ).deleteAllSync();
         });
       } else {
         // Move messages in the API. We cannot move concepts, but these are

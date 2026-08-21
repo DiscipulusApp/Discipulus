@@ -100,7 +100,7 @@ class _RefreshableCustomScrollViewState
         if (widget.appBar != null)
           DefaultTextStyle(
             maxLines: 2,
-            style: const TextStyle(overflow: TextOverflow.ellipsis),
+            style: const TextStyle(overflow: TextOverflow.ellipsis, ),
             child: ValueListenableBuilder(
               valueListenable: isRefreshing,
               builder: (context, value, child) {

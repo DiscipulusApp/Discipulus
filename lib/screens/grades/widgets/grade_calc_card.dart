@@ -10,7 +10,8 @@ class GradeCalculationCard extends StatefulWidget {
   const GradeCalculationCard({
     super.key,
     this.toNewAverage = false,
-    required this.grades,
+    this.grades,
+    this.initialGrade,
     this.weight,
     this.ignoredGradeUUID,
     this.onResult,
@@ -18,7 +19,8 @@ class GradeCalculationCard extends StatefulWidget {
 
   final bool toNewAverage;
   final int? ignoredGradeUUID;
-  final QueryBuilder<Grade, Grade, QAfterFilterCondition> grades;
+  final QueryBuilder<Grade, Grade, QAfterFilterCondition>? grades;
+  final double? initialGrade;
   final double? weight;
   final void Function(double? grade, double? average, double? weight)? onResult;
 
@@ -45,8 +47,32 @@ class _GradeCalculationCardState extends State<GradeCalculationCard> {
         double.tryParse(weightController.text.replaceAll(',', '.'));
 
     if (gradeValue != null && weightValue != null && weightValue != 0) {
+      if (widget.grades == null) {
+        const double baseAverage = 6.4;
+        const double baseTotalWeight = 8.0;
+        if (widget.toNewAverage) {
+          final newAverage = ((baseAverage * baseTotalWeight) +
+                  (gradeValue * weightValue)) /
+              (baseTotalWeight + weightValue);
+          widget.onResult
+              ?.call(gradeValue, newAverage, weightValue == 0 ? 1 : weightValue);
+          return Result(
+            value: newAverage,
+            change: newAverage - baseAverage,
+          );
+        } else {
+          final newGrade = ((gradeValue * (baseTotalWeight + weightValue)) -
+                  (baseAverage * baseTotalWeight)) /
+              weightValue;
+          widget.onResult?.call(newGrade, gradeValue, weightValue);
+          return Result(
+            value: newGrade,
+            change: gradeValue - baseAverage,
+          );
+        }
+      }
       if (widget.toNewAverage) {
-        var newAverage = await widget.grades.newAverageFromGrade(
+        var newAverage = await widget.grades!.newAverageFromGrade(
             [DummyGrade(grade: gradeValue, weight: weightValue)],
             ignoredGradeUUID: widget.ignoredGradeUUID);
         widget.onResult
@@ -54,20 +80,20 @@ class _GradeCalculationCardState extends State<GradeCalculationCard> {
         return Result(
           value: newAverage,
           change: newAverage -
-              widget.grades
+              widget.grades!
                   .optional(widget.ignoredGradeUUID != null,
                       (q) => q.not().idEqualTo(widget.ignoredGradeUUID!))
                   .findAllSync()
                   .average,
         ); //TODO: Remove ignoredGrades
       } else {
-        var newGrade = await widget.grades.newGradeFromAverage(
+        var newGrade = await widget.grades!.newGradeFromAverage(
             gradeValue, weightValue,
             ignoredGradeUUID: widget.ignoredGradeUUID);
         Result result = Result(
           value: newGrade,
           change: gradeValue -
-              widget.grades
+              widget.grades!
                   .optional(widget.ignoredGradeUUID != null,
                       (q) => q.not().idEqualTo(widget.ignoredGradeUUID!))
                   .findAllSync()
@@ -93,7 +119,9 @@ class _GradeCalculationCardState extends State<GradeCalculationCard> {
   void initState() {
     key = ValueKey(widget.toNewAverage);
     super.initState();
-    gradeController = TextEditingController();
+    gradeController = TextEditingController(
+      text: widget.initialGrade?.displayNumber(),
+    );
     weightController = TextEditingController(
       text: widget.weight?.displayNumber(),
     );

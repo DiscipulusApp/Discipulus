@@ -4,9 +4,9 @@ import 'package:isar/isar.dart';
 import 'dart:math';
 
 class SufficientGradesCard extends StatefulWidget {
-  const SufficientGradesCard({super.key, required this.grades});
+  const SufficientGradesCard({super.key, this.grades});
 
-  final QueryBuilder<Grade, Grade, QAfterFilterCondition> grades;
+  final QueryBuilder<Grade, Grade, QAfterFilterCondition>? grades;
 
   @override
   State<SufficientGradesCard> createState() => _SufficientGradesCardState();
@@ -41,9 +41,9 @@ class _SufficientGradesCardState extends State<SufficientGradesCard> {
   // --- End Configuration ---
 
   _FutureResult _cachedResult = _FutureResult(
-    sufficient: 0,
-    insufficient: 0,
-    total: 0,
+    sufficient: 19,
+    insufficient: 3,
+    total: 22,
   );
 
   @override
@@ -51,9 +51,17 @@ class _SufficientGradesCardState extends State<SufficientGradesCard> {
     return FutureBuilder<_FutureResult>(
       initialData: _cachedResult,
       future: Future(() async {
-        final allGrades = await widget.grades.count();
+        if (widget.grades == null) {
+          _cachedResult = _FutureResult(
+            sufficient: 19,
+            insufficient: 3,
+            total: 22,
+          );
+          return _cachedResult;
+        }
+        final allGrades = await widget.grades!.count();
         final sufficientGrades =
-            await widget.grades.isVoldoendeEqualTo(true).count();
+            await widget.grades!.isVoldoendeEqualTo(true).count();
 
         int total = allGrades;
         int sufficient = sufficientGrades;

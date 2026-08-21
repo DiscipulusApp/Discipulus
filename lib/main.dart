@@ -48,6 +48,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:dnd_manager/dnd_manager.dart';
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
+import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/account_migration.dart';
@@ -345,6 +346,9 @@ class MainAppState extends State<MainApp> {
             if (appSettings.activeProfileUuid == null &&
                 isar.profiles.countSync() == 0) {
               // No profile was found, so we will show the introduction screen
+              if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+                return const ExpressiveIntroductionScreen();
+              }
               return const VerticalIntroductionScreen();
             } else {
               // An account was found, so we will show the starting view that the

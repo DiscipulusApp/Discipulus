@@ -5,6 +5,24 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 
+/// Gets the current active account or null if no account exists
+Profile? get activeProfileNullable {
+  try {
+    if (appSettings.activeProfileUuid != null) {
+      Profile? profile =
+          isar.profiles.getSync(appSettings.activeProfileUuid ?? 0) ??
+              isar.profiles.filter().not().accountIsNull().findFirstSync();
+      if (profile != null) return profile;
+    }
+    List<Profile> profiles =
+        isar.profiles.filter().not().accountIsNull().findAllSync();
+    if (profiles.isNotEmpty) {
+      return profiles.first;
+    }
+  } catch (_) {}
+  return null;
+}
+
 /// Gets the current active account
 Profile get activeProfile {
   if (appSettings.activeProfileUuid != null) {

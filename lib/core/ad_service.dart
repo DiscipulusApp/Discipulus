@@ -9,17 +9,10 @@ class AdService {
   /// Initializes the AdMob SDK and handles the Consent Management Platform (CMP)
   /// flow via the User Messaging Platform (UMP) SDK on iOS.
   static Future<void> initialize() async {
-    // If the active profile is underage, we do not initialize ads.
-    // This also prevents UMP consent forms from showing up for children.
-    try {
-      if (activeProfile.isUnderage) {
-        return;
-      }
-    } catch (e) {
-      // In case activeProfile is not available yet (e.g. during first-time setup or migration)
-      // we might want to check the birthdate of any profile if available, but for now
-      // we proceed to show the consent form to be safe, or wait.
-      // If we can't determine age, we should probably be conservative.
+    // If no account exists yet (during onboarding) or if underage, do not initialize ads.
+    final profile = activeProfileNullable;
+    if (profile == null || profile.isUnderage) {
+      return;
     }
 
     if (Platform.isIOS) {

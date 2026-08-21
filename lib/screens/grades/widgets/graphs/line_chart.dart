@@ -165,6 +165,18 @@ class _GradesLineChartState extends State<GradesLineChart> {
   }
 
   @override
+  void didUpdateWidget(covariant GradesLineChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.highlightGrade != widget.highlightGrade ||
+        oldWidget.grades != widget.grades ||
+        oldWidget.showAverage != widget.showAverage) {
+      getData().then((_) {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
   void dispose() {
     hoveredGrade.dispose();
     _lastLineBarSpot.dispose();

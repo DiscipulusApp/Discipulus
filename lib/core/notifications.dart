@@ -175,7 +175,22 @@ class NotificationController {
       return (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
                   IOSFlutterLocalNotificationsPlugin>()!
-              .requestPermissions()) ??
+              .requestPermissions(
+                alert: true,
+                badge: true,
+                sound: true,
+              )) ??
+          false;
+    } else if (Platform.isMacOS) {
+      // Request macOS
+      return (await flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                  MacOSFlutterLocalNotificationsPlugin>()!
+              .requestPermissions(
+                alert: true,
+                badge: true,
+                sound: true,
+              )) ??
           false;
     } else {
       // Other is not supported

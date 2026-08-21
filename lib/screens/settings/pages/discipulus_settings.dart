@@ -6,7 +6,9 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/account_extension.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
+import 'package:flutter/foundation.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
@@ -321,8 +323,10 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
                         if (!context.mounted) return;
                         Navigator.popUntil(context, (route) => route.isFirst);
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
-                          builder: (context) =>
-                              const VerticalIntroductionScreen(),
+                          builder: (context) => (!kIsWeb &&
+                                  (Platform.isAndroid || Platform.isIOS))
+                              ? const ExpressiveIntroductionScreen()
+                              : const VerticalIntroductionScreen(),
                         ));
                       }
                       if (context.mounted) setState(() {});

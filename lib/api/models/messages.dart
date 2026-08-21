@@ -269,7 +269,7 @@ class Bericht with SpotlightSearchElementMixin {
         ]);
       }
     }
-    isar.writeTxnSync(() async {
+    isar.writeTxnSync(() {
       isar.berichts.filter().uuidEqualTo(uuid).deleteFirstSync();
     });
   }

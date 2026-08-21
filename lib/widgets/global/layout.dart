@@ -572,7 +572,8 @@ class LayoutState extends State<Layout>
           .filter()
           .wasRevealedEqualTo(false)
           .useable()
-          .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
+          .schoolyear(
+              (q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
           .findAll();
 
       if (unrevealedGrades.isNotEmpty) {
@@ -650,7 +651,11 @@ class BigDrawerBase extends StatelessWidget {
                         horizontal: 28, vertical: 16),
                     child: Text(
                       "Discipulus",
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                              ),
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -108,13 +108,17 @@ class BackgroundRefresh {
 
   /// Updates the native widgets for the activeProfile.
   static Future<void> updateWidgets() async {
+    final profile = activeProfileNullable;
+    if (profile == null) return;
     int profileUUID =
-        appSettings.activeProfileUuidWidgets ?? activeProfile.uuid;
+        appSettings.activeProfileUuidWidgets ?? profile.uuid;
     if ((Platform.isIOS || Platform.isMacOS)) {
-      List<CalendarEvent> events = await (await isar.profiles
-              .filter()
-              .uuidEqualTo(profileUUID)
-              .findFirst())!
+      final targetProfile = await isar.profiles
+          .filter()
+          .uuidEqualTo(profileUUID)
+          .findFirst();
+      if (targetProfile == null) return;
+      List<CalendarEvent> events = await targetProfile
           .calendarEvents
           .filter()
           .startGreaterThan(DateTime.now().subtract(const Duration(days: 1)))

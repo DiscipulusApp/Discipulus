@@ -380,10 +380,10 @@ class Profile {
       findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
     );
 
-    isar.writeTxnSync(() async {
-      events.map(
-        (e) => e..subject.saveSync(),
-      );
+    isar.writeTxnSync(() {
+      for (var e in events) {
+        e.subject.saveSync();
+      }
       isar.calendarEvents.putAllSync(events);
     });
     return events;
@@ -411,8 +411,6 @@ class Profile {
       ].nonNulls);
     }
 
-    assignments.addAll(newAssignments);
-
     await isar.assignments.removeChecker(
       localUUIDs: assignments
           .filter()
@@ -422,20 +420,36 @@ class Profile {
       newUUIDs: Future.value(
           [for (Assignment assignment in newAssignments) assignment.uuid]),
       findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
-      beforeRemoval: (deathRow) {
+      beforeRemoval: (deathRow) async {
         for (Assignment assignment in deathRow) {
-          isar.writeTxnSync(() {
-            isar.brons.filter().anyOf(
-              [for (Bron bron in assignment.bronnen) bron.uuid],
-              (q, uuid) => q.uuidEqualTo(uuid),
-            ).deleteAllSync();
+          List<Bron> bronsToDelete = await isar.brons
+              .filter()
+              .anyOf(
+                [for (Bron bron in assignment.bronnen) bron.uuid],
+                (q, uuid) => q.uuidEqualTo(uuid),
+              )
+              .findAll();
+          for (var bron in bronsToDelete) {
+            bron.remove();
+          }
+          await isar.writeTxn(() async {
+            await isar.brons
+                .filter()
+                .anyOf(
+                  [for (Bron bron in bronsToDelete) bron.uuid],
+                  (q, uuid) => q.uuidEqualTo(uuid),
+                )
+                .deleteAll();
           });
         }
       },
     );
 
+    assignments.clear();
+    assignments.addAll(newAssignments);
     isar.writeTxnSync(() {
       isar.assignments.putAllSync(newAssignments);
+      assignments.saveSync();
     });
     return assignments.toList();
   }
@@ -446,27 +460,31 @@ class Profile {
     List<Activity> newActivities =
         await account.value!.api.person(id).activiteiten;
 
-    activities.addAll(newActivities.map((e) => e..profile.value = this));
-
     await isar.activitys.removeChecker(
       localUUIDs: activities.filter().uuidProperty().findAll(),
       newUUIDs: Future.value(
           [for (Activity activity in newActivities) activity.uuid]),
       findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
-      beforeRemoval: (deathRow) {
+      beforeRemoval: (deathRow) async {
         for (Activity activity in deathRow) {
-          isar.writeTxnSync(() {
-            isar.activityElements.filter().anyOf(
-              [for (ActivityElement elm in activity.elements) elm.uuid],
-              (q, uuid) => q.uuidEqualTo(uuid),
-            ).deleteAllSync();
+          await isar.writeTxn(() async {
+            await isar.activityElements
+                .filter()
+                .anyOf(
+                  [for (ActivityElement elm in activity.elements) elm.uuid],
+                  (q, uuid) => q.uuidEqualTo(uuid),
+                )
+                .deleteAll();
           });
         }
       },
     );
 
+    activities.clear();
+    activities.addAll(newActivities.map((e) => e..profile.value = this));
     isar.writeTxnSync(() {
       isar.activitys.putAllSync(newActivities);
+      activities.saveSync();
     });
     return await activities.filter().findAll();
   }
@@ -524,21 +542,47 @@ class Profile {
             }
           }
 
-          // Remove onderdelen
-          isar.writeTxnSync(() {
-            isar.studiewijzerOnderdeels.filter().anyOf(
-              [
-                for (StudiewijzerOnderdeel stOn in studiewijzer.onderdelen)
-                  stOn.uuid
-              ],
-              (q, uuid) => q.uuidEqualTo(uuid),
-            ).deleteAllSync();
+          // Remove onderdelen and their bronnen
+          List<StudiewijzerOnderdeel> onderdelen = await isar
+              .studiewijzerOnderdeels
+              .filter()
+              .studiewijzer((q) => q.uuidEqualTo(studiewijzer.uuid))
+              .findAll();
+
+          for (var onderdeel in onderdelen) {
+            List<Bron> bronsToDelete = await isar.brons
+                .filter()
+                .anyOf(
+                  [for (var b in onderdeel.bronnen) b.uuid],
+                  (q, uuid) => q.uuidEqualTo(uuid),
+                )
+                .findAll();
+            for (var bron in bronsToDelete) {
+              bron.remove();
+            }
+          }
+
+          await isar.writeTxn(() async {
+            for (var onderdeel in onderdelen) {
+              await isar.brons
+                  .filter()
+                  .anyOf(
+                    [for (var b in onderdeel.bronnen) b.uuid],
+                    (q, uuid) => q.uuidEqualTo(uuid),
+                  )
+                  .deleteAll();
+            }
+            await isar.studiewijzerOnderdeels
+                .filter()
+                .studiewijzer((q) => q.uuidEqualTo(studiewijzer.uuid))
+                .deleteAll();
           });
         }
       },
     );
 
-    // Write changes to the datebase
+    // Write changes to the database
+    studiewijzers.clear();
     studiewijzers.addAll(newStudiewijzers);
     isar.writeTxnSync(() {
       isar.studiewijzers.putAllSync(newStudiewijzers);
@@ -549,14 +593,14 @@ class Profile {
   /// Contains the external bronnen.
   final externalBronnen = IsarLinks<ExternalBronSource>();
   Future<void> fetchExternalBronnen() async {
-    // Get studiewijzers if the right permissions are present
+    // Get external bronnen if the right permissions are present
     List<ExternalBronSource> newExternalBronnen =
         (await account.value!.api.person(id).getBronSources)
             .map((e) => e..profile.value = this)
             .toList();
 
     await isar.externalBronSources.removeChecker(
-      localUUIDs: studiewijzers.filter().uuidProperty().findAll(),
+      localUUIDs: externalBronnen.filter().uuidProperty().findAll(),
       newUUIDs: Future.value([
         for (ExternalBronSource externalBron in newExternalBronnen)
           externalBron.uuid
@@ -564,7 +608,8 @@ class Profile {
       findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
     );
 
-    // Write changes to the datebase
+    // Write changes to the database
+    externalBronnen.clear();
     externalBronnen.addAll(newExternalBronnen);
     isar.writeTxnSync(() {
       isar.externalBronSources.putAllSync(newExternalBronnen);
@@ -610,7 +655,7 @@ class Profile {
       findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
       beforeRemoval: (deathRow) {
         for (MessagesFolder folder in deathRow) {
-          isar.writeTxnSync(() async {
+          isar.writeTxnSync(() {
             isar.berichts.filter().anyOf(
               [for (Bericht message in folder.berichten) message.uuid],
               (q, uuid) => q.uuidEqualTo(uuid),
