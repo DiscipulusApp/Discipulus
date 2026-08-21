@@ -43,7 +43,6 @@ class _ExpressiveIntroductionScreenState
     return Platform.isIOS || Platform.isMacOS;
   }
 
-
   final ValueNotifier<HighlightGrade?> _highlightGrade =
       ValueNotifier<HighlightGrade?>(null);
 
@@ -179,7 +178,10 @@ class _ExpressiveIntroductionScreenState
                     const SizedBox(height: 8),
                     // Header Area
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 12.0,
+                      ),
                       child: Column(
                         children: [
                           Text(
@@ -893,4 +895,3 @@ class _ExpressiveIntroductionScreenState
     );
   }
 }
-

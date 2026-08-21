@@ -75,7 +75,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                     const SizedBox(height: 8),
                     // Header Title
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
                       child: Text(
                         "Klaar voor de start",
                         style: textTheme.displaySmall?.copyWith(
