@@ -51,20 +51,19 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-#    unless target.name == 'Sentry'
-#        target.build_configurations.each do |config|
-#          config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'No'
-#        end
-#      end
   end
-#
-#  awesome_pod_file = File.expand_path(File.join('plugins', 'awesome_notifications', 'ios', 'Scripts', 'AwesomePodFile'), '.symlinks')
-#  require awesome_pod_file
-#  update_awesome_pod_build_settings(installer)
-#
-#  installer.pods_project.build_configuration_list.build_configurations.each do |configuration|
-#      configuration.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'YES'
-#  end
+
+  # Include Generated.xcconfig in Pods-ShareExtension configs so build number & version are available
+  ['debug', 'release', 'profile'].each do |config|
+    xcconfig_path = File.join(installer.sandbox.target_support_files_dir('Pods-ShareExtension'), "Pods-ShareExtension.#{config}.xcconfig")
+    if File.exist?(xcconfig_path)
+      content = File.read(xcconfig_path)
+      include_str = %Q{#include? "${PODS_ROOT}/../Flutter/Generated.xcconfig"\n}
+      unless content.include?(include_str)
+        File.write(xcconfig_path, "#{include_str}#{content}")
+      end
+    end
+  end
 end
 
 #awesome_pod_file = File.expand_path(File.join('plugins', 'awesome_notifications', 'ios', 'Scripts', 'AwesomePodFile'), '.symlinks')

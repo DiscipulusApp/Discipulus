@@ -29,6 +29,16 @@ subprojects {
                 if (namespace == null) {
                     namespace = project.group.toString()
                 }
+                defaultConfig {
+                    externalNativeBuild {
+                        cmake {
+                            arguments.add("-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384")
+                        }
+                        ndkBuild {
+                            arguments.add("APP_LDFLAGS+=-Wl,-z,max-page-size=16384")
+                        }
+                    }
+                }
             }
         } else if (project.plugins.hasPlugin("com.android.library")) {
             val androidExtension = project.extensions.getByName("android") as LibraryExtension
@@ -37,6 +47,16 @@ subprojects {
                 buildToolsVersion("36.0.0")
                 if (namespace == null) {
                     namespace = project.group.toString()
+                }
+                defaultConfig {
+                    externalNativeBuild {
+                        cmake {
+                            arguments.add("-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384")
+                        }
+                        ndkBuild {
+                            arguments.add("APP_LDFLAGS+=-Wl,-z,max-page-size=16384")
+                        }
+                    }
                 }
             }
         }

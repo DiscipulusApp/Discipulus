@@ -41,7 +41,8 @@ Future<void> initIsar([disableInspector = false]) async {
     if (Platform.isLinux && Abi.current() == Abi.linuxArm64) {
       final isarFile = File('${storageDir!.path}/libisar.so');
       try {
-        final byteData = await rootBundle.load('assets/isar/libisar.so');
+        final byteData =
+            await rootBundle.load('assets/isar/libisar_linux_arm64.so');
         final bytes = byteData.buffer.asUint8List(
           byteData.offsetInBytes,
           byteData.lengthInBytes,

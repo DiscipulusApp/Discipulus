@@ -4,12 +4,18 @@
 <dict>
 	<key>AppGroupId</key>
 	<string>group.DUGUWCFH8P.dev.harrydekat.discipulus</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.2.0</string>
 	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<string>23</string>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
 		<dict>
+			<key>IntentsSupported</key>
+			<array>
+				<string>INSendMessageIntent</string>
+			</array>
 			<key>NSExtensionActivationRule</key>
 			<string>SUBQUERY (
                             extensionItems,
@@ -18,17 +24,13 @@
                                 $extensionItem.attachments,
                                 $attachment,
                                 (
-                                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.file-url&quot;
-                                    || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.image&quot;
-                                    || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.movie&quot;
+                                    ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"
+                                    || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image"
+                                    || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie"
                                 )
                             ).@count &gt; 0
                         ).@count &gt; 0
             </string>
-			<key>IntentsSupported</key>
-			<array>
-				<string>INSendMessageIntent</string>
-			</array>
 			<key>PHSupportedMediaTypes</key>
 			<array>
 				<string>Video</string>
