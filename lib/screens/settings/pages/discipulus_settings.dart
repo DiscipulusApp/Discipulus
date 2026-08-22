@@ -70,18 +70,34 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
               });
               await MainApp.of(context).updateTheme();
             },
-            segments: [
-              ...ThemeBrightness.values.map(
-                (e) => ButtonSegment(
-                  value: e,
-                  label: Text(
-                    e.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  icon: e.icon,
+            segments: const [
+              ButtonSegment(
+                value: ThemeBrightness.system,
+                label: Text(
+                  "Systeem",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              )
+                icon: Icon(Icons.brightness_auto_outlined),
+              ),
+              ButtonSegment(
+                value: ThemeBrightness.light,
+                label: Text(
+                  "Licht",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                icon: Icon(Icons.light_mode_outlined),
+              ),
+              ButtonSegment(
+                value: ThemeBrightness.dark,
+                label: Text(
+                  "Donker",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                icon: Icon(Icons.dark_mode_outlined),
+              ),
             ],
             selected: {appSettings.brightness},
           ),
@@ -363,15 +379,17 @@ class ThemeVariantWidget extends StatefulWidget {
 
 class _ThemeVariantWidgetState extends State<ThemeVariantWidget> {
   Map<ThemeVariant, ColorScheme?> schemes = {};
-  late Color? accentColor;
-  late Color seedColor =
-      (appSettings.useMaterialYou ?? true) && accentColor != null
-          ? accentColor!
-          : Color(appSettings.activeMaterialYouColorInt);
 
   Future<void> setSchemes() async {
-    accentColor = await DynamicColorPlugin.getAccentColor();
+    Color? accentColor = await DynamicColorPlugin.getAccentColor();
+    Color seedColor =
+        (appSettings.useMaterialYou ?? true) && accentColor != null
+            ? accentColor
+            : Color(appSettings.activeMaterialYouColorInt);
+
     if (!mounted) return;
+
+    final currentBrightness = Theme.of(context).brightness;
 
     schemes = {
       for (ThemeVariant variant in ThemeVariant.values)
@@ -379,23 +397,29 @@ class _ThemeVariantWidgetState extends State<ThemeVariantWidget> {
             ? ColorScheme.fromSeed(
                 seedColor: seedColor,
                 dynamicSchemeVariant: variant.variant!,
-                brightness: Theme.of(context).brightness,
+                brightness: currentBrightness,
               )
             : accentColor != seedColor && accentColor != null
                 ? ColorScheme.fromSeed(
-                    seedColor: accentColor!,
-                    brightness: Theme.of(context).brightness,
+                    seedColor: accentColor,
+                    brightness: currentBrightness,
                   )
                 : null,
     };
 
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   @override
   void initState() {
-    setSchemes();
     super.initState();
+    setSchemes();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setSchemes();
   }
 
   @override
@@ -563,7 +587,7 @@ class _PersonalColorSettingState extends State<PersonalColorSetting> {
             if (hasDynamicColoring)
               IconButton(
                 icon: const Icon(Icons.star_outline_rounded),
-                isSelected: appSettings.useMaterialYou,
+                isSelected: appSettings.useMaterialYou ?? true,
                 selectedIcon: const Icon(Icons.star_rounded),
                 onPressed: () async {
                   setState(() => appSettings

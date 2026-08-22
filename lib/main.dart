@@ -167,73 +167,26 @@ class MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        //
-        // God knows why, but the dynamic_color package has gone haywire in
-        // the latest version of flutter (3.22), so for now a workaround has to
-        // be used to get the correct coloring
-        //
-
-        List<Color> extractAdditionalColours(ColorScheme scheme) => [
-              scheme.surface,
-              scheme.surfaceDim,
-              scheme.surfaceBright,
-              scheme.surfaceContainerLowest,
-              scheme.surfaceContainerLow,
-              scheme.surfaceContainer,
-              scheme.surfaceContainerHigh,
-              scheme.surfaceContainerHighest,
-            ];
-
-        ColorScheme insertAdditionalColours(
-                ColorScheme scheme, List<Color> additionalColours) =>
-            scheme.copyWith(
-              surface: additionalColours[0],
-              surfaceDim: additionalColours[1],
-              surfaceBright: additionalColours[2],
-              surfaceContainerLowest: additionalColours[3],
-              surfaceContainerLow: additionalColours[4],
-              surfaceContainer: additionalColours[5],
-              surfaceContainerHigh: additionalColours[6],
-              surfaceContainerHighest: additionalColours[7],
-            );
-
-        (ColorScheme light, ColorScheme dark) generateDynamicColourSchemes(
-            ColorScheme lightDynamic, ColorScheme darkDynamic) {
-          var lightBase = ColorScheme.fromSeed(
-            seedColor: lightDynamic.primary,
-            dynamicSchemeVariant: appSettings.themeVariant.variant ??
-                DynamicSchemeVariant.tonalSpot,
-          );
-          var darkBase = ColorScheme.fromSeed(
-            seedColor: darkDynamic.primary,
-            brightness: Brightness.dark,
-            dynamicSchemeVariant: appSettings.themeVariant.variant ??
-                DynamicSchemeVariant.tonalSpot,
-          );
-
-          var lightAdditionalColours = extractAdditionalColours(lightBase);
-          var darkAdditionalColours = extractAdditionalColours(darkBase);
-
-          var lightScheme =
-              insertAdditionalColours(lightBase, lightAdditionalColours);
-          var darkScheme =
-              insertAdditionalColours(darkBase, darkAdditionalColours);
-
-          return (lightScheme.harmonized(), darkScheme.harmonized());
-        }
-
         ColorScheme lightColorScheme;
         ColorScheme darkColorScheme;
         if (lightDynamic != null &&
             darkDynamic != null &&
             (appSettings.useMaterialYou ?? true)) {
           // Using Material You colors set by Android S+ devices
-          appSettings
-            ..useMaterialYou = true
-            ..save();
-          (lightColorScheme, darkColorScheme) = Platform.isAndroid
-              ? generateDynamicColourSchemes(lightDynamic, darkDynamic)
-              : (lightDynamic, darkDynamic);
+          if (appSettings.themeVariant.variant != null) {
+            lightColorScheme = ColorScheme.fromSeed(
+              seedColor: lightDynamic.primary,
+              dynamicSchemeVariant: appSettings.themeVariant.variant!,
+            ).harmonized();
+            darkColorScheme = ColorScheme.fromSeed(
+              seedColor: lightDynamic.primary,
+              brightness: Brightness.dark,
+              dynamicSchemeVariant: appSettings.themeVariant.variant!,
+            ).harmonized();
+          } else {
+            lightColorScheme = lightDynamic.harmonized();
+            darkColorScheme = darkDynamic.harmonized();
+          }
         } else {
           Color seedColor =
               (appSettings.useMaterialYou ?? true) && accentColor != null
