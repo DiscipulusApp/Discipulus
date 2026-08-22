@@ -58,9 +58,9 @@ post_install do |installer|
     xcconfig_path = File.join(installer.sandbox.target_support_files_dir('Pods-ShareExtension'), "Pods-ShareExtension.#{config}.xcconfig")
     if File.exist?(xcconfig_path)
       content = File.read(xcconfig_path)
-      include_str = %Q{#include? "${PODS_ROOT}/../Flutter/Generated.xcconfig"\n}
+      include_str = %Q{#include? "../../../Flutter/Generated.xcconfig"\n}
       unless content.include?(include_str)
-        File.write(xcconfig_path, "#{include_str}#{content}")
+        File.write(xcconfig_path, "#{include_str}#{content.gsub(/#include\?.*Generated\.xcconfig.*\n/, '')}")
       end
     end
   end
