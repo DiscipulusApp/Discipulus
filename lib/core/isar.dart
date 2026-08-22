@@ -38,6 +38,31 @@ Future<void> initIsar([disableInspector = false]) async {
       print("Isar was initiated on path \"${storageDir?.path}\"");
     }
 
+    if (Platform.isLinux && Abi.current() == Abi.linuxArm64) {
+      final isarFile = File('${storageDir!.path}/libisar.so');
+      try {
+        final byteData = await rootBundle.load('assets/isar/libisar.so');
+        final bytes = byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        );
+        if (!await isarFile.exists() ||
+            (await isarFile.length()) != bytes.length) {
+          await isarFile.writeAsBytes(bytes, flush: true);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Failed to extract libisar.so from assets: $e");
+        }
+      }
+
+      await Isar.initializeIsarCore(
+        libraries: {
+          Abi.linuxArm64: isarFile.path,
+        },
+      );
+    }
+
     isar = await Isar.open(
       schemas,
       directory: storageDir!.path,
