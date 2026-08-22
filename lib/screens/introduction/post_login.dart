@@ -12,6 +12,7 @@ import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/layout.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class PostLoginScreen extends StatefulWidget {
@@ -24,7 +25,7 @@ class PostLoginScreen extends StatefulWidget {
 class _PostLoginScreenState extends State<PostLoginScreen> {
   late final PageController _pageController;
   int _currentPage = 0;
-  static const int _totalPages = 4;
+  static const int _totalPages = 5;
 
   bool get _isDesktop {
     if (kIsWeb) return true;
@@ -108,6 +109,8 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                             case 2:
                               return _buildAiCard();
                             case 3:
+                              return _buildCommunityCard();
+                            case 4:
                             default:
                               return _buildFinalActionCard();
                           }
@@ -611,8 +614,195 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
       ],
     );
   }
+  /// Card 4: Community & GitHub Open Source
+  Widget _buildCommunityCard() {
+    final colorScheme = Theme.of(context).colorScheme;
 
-  /// Card 4: Final Action Step
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(38),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withAlpha(70),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withAlpha(12),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(38),
+          child: Column(
+            children: [
+              // Top Showcase Area (Community link cards)
+              Expanded(
+                flex: 6,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+                  child: Column(
+                    children: [
+                      _buildCommunityLinkCard(
+                        icon: Icons.discord_rounded,
+                        title: "Praat mee op Discord",
+                        subtitle: "Stel vragen, deel suggesties en klets mee",
+                        url: "https://discord.gg/3VA54yr4Vv",
+                        color: const Color(0xFF5865F2),
+                      ),
+                      _buildCommunityLinkCard(
+                        icon: Icons.code_rounded,
+                        title: "Discipulus op GitHub",
+                        subtitle: "100% open-source. Geef een ster ⭐ of help mee",
+                        url: "https://github.com/DiscipulusApp/Discipulus",
+                        color: colorScheme.primary,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              // Bottom Information Container
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Doe mee & Denk mee",
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: colorScheme.onPrimaryContainer,
+                                    letterSpacing: -0.3,
+                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Discipulus groeit dankzij feedback van gebruikers. Word lid van de community of draag bij via GitHub!",
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onPrimaryContainer
+                                        .withAlpha(230),
+                                    height: 1.2,
+                                  ),
+                          textAlign: TextAlign.center,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommunityLinkCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String url,
+    required Color color,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withAlpha(50),
+              width: 1,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => launchUrl(
+                Uri.parse(url),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 20, color: color),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.open_in_new_rounded,
+                        size: 18,
+                        color: colorScheme.onSurfaceVariant.withAlpha(150),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Card 5: Final Action Step
   Widget _buildFinalActionCard() {
     final colorScheme = Theme.of(context).colorScheme;
 
