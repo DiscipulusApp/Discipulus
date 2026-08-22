@@ -224,52 +224,24 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             ListTile(
               leading: const Icon(Icons.model_training),
               title: const Text("OpenRouter Model"),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      filled: true,
-                      hintText: appSettings.openRouterModel,
-                    ),
-                      onChanged: (value) => appSettings
-                        ..openRouterModel = value.nullOnEmpty ??
-                            "google/gemma-3-27b-it:free"
-                        ..save(),
-                  ),
-                  const Text(
-                    "Aanbevolen modellen:",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        "google/gemma-3-27b-it:free",
-                        "meta-llama/llama-3.3-70b-instruct:free",
-                        "mistralai/mistral-small-3.1-24b-instruct:free",
-                        "qwen/qwen3-coder:free",
-                      ]
-                          .map((model) => Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: ActionChip(
-                                  label: Text(model.split('/').last),
-                                  onPressed: () {
-                                    setState(() {
-                                      appSettings
-                                        ..openRouterModel = model
-                                        ..save();
-                                    });
-                                  },
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ),
-                ],
+              subtitle: TextField(
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  filled: true,
+                  hintText: appSettings.openRouterModel,
+                ),
+                onChanged: (value) => appSettings
+                  ..openRouterModel = value.nullOnEmpty ??
+                      "google/gemini-2.0-flash-lite:free"
+                  ..save(),
               ),
+            ),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.open_in_browser),
+              title: const Text("Bekijk gratis modellen op openrouter.ai"),
+              onTap: () => launchUrl(
+                  Uri.parse("https://openrouter.ai/models?max_price=0")),
             ),
           ],
         ),

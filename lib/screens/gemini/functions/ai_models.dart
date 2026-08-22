@@ -158,9 +158,14 @@ extension AIContentExtension on AIContent {
   set extra(Map<String, dynamic>? value) => _extras[this] = value;
 
   Map<String, dynamic> toOpenRouterJson() {
-    final base = {
+    final hasData = parts.any((p) => p is! AITextPart);
+    final dynamic content = hasData
+        ? parts.map((p) => p.toJson()).toList()
+        : parts.whereType<AITextPart>().map((p) => p.text).join("\n");
+
+    final base = <String, dynamic>{
       "role": role == "model" ? "assistant" : (role == "tool" ? "tool" : role),
-      "content": parts.whereType<AITextPart>().map((p) => p.text).join("\n"),
+      "content": content,
     };
     if (extra != null) {
       if (extra!.containsKey("tool_calls")) {

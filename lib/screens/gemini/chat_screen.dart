@@ -450,7 +450,7 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (widget.settings!.bronnen.isNotEmpty)
+                      if (widget.settings?.bronnen.isNotEmpty ?? false)
                         LoadingButton(
                           future: () async {
                             summary = await summarizeText(widget.settings!.text,
@@ -459,11 +459,47 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                             setState(() {});
                           },
                           child: (isLoading, onTap) => IconButton(
+                            tooltip: "Samenvatten met bijlagen",
                             onPressed: isLoading ? null : onTap,
-                            icon: const Icon(Icons.upload_file),
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      strokeCap: StrokeCap.round,
+                                    ),
+                                  )
+                                : const Icon(Icons.upload_file),
+                          ),
+                        ),
+                      if (widget.settings != null)
+                        LoadingButton(
+                          future: () async {
+                            summary = await summarizeText(
+                              widget.settings!.text,
+                              bronnen: widget.settings!.bronnen,
+                            );
+                            widget.settings!.onSummary?.call(summary!);
+                            setState(() {});
+                          },
+                          child: (isLoading, onTap) => IconButton(
+                            tooltip: "Opnieuw samenvatten",
+                            onPressed: isLoading ? null : onTap,
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      strokeCap: StrokeCap.round,
+                                    ),
+                                  )
+                                : const Icon(Icons.refresh),
                           ),
                         ),
                       IconButton(
+                        tooltip: "Kopiëren",
                         onPressed: () async {
                           await Clipboard.setData(
                               ClipboardData(text: summary!.withoutHTML!));

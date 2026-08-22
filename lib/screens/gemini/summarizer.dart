@@ -66,7 +66,10 @@ Future<String?> summarizeText(
     final response = await OpenRouterClient.sendMessage(messages: messages);
 
     if (response.statusCode == 200) {
-      return response.data['choices'][0]['message']['content'];
+      final data = response.data is Map
+          ? response.data
+          : jsonDecode(response.data.toString());
+      return data['choices'][0]['message']['content'];
     } else {
       return 'Error: ${response.statusMessage}';
     }

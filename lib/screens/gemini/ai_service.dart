@@ -66,7 +66,9 @@ class AIService {
     );
 
     if (response.statusCode == 200) {
-      final data = response.data;
+      final data = response.data is Map
+          ? response.data
+          : jsonDecode(response.data.toString());
       final message = data['choices'][0]['message'];
 
       if (message['tool_calls'] != null) {
