@@ -1,14 +1,18 @@
 import 'package:discipulus/api/models/grades.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/csv_export.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:discipulus/widgets/global/tiles.dart';
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 
 class GradesSettingsPage extends StatefulWidget {
   const GradesSettingsPage({super.key});
@@ -160,6 +164,23 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
         ),
         const Divider(),
         ListTile(
+          leading: const Icon(Icons.inventory_2_outlined),
+          title: const Text("Gearchiveerde cijfers"),
+          subtitle: Text(
+            "${isar.grades.filter().isArchivedEqualTo(true).countSync()} gearchiveerde cijfers bewaard",
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ArchivedGradesSettingsPage(),
+              ),
+            );
+            setState(() {});
+          },
+        ),
+        ListTile(
           leading: const Icon(Icons.download_rounded),
           title: const Text("Exporteer naar CSV"),
           subtitle: const Text("Exporteer al je cijfers naar een CSV bestand"),
@@ -179,7 +200,280 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
         ),
       ],
     );
+  }
+}
 
+class ArchivedGradesSettingsPage extends StatefulWidget {
+  const ArchivedGradesSettingsPage({super.key});
+
+  @override
+  State<ArchivedGradesSettingsPage> createState() =>
+      _ArchivedGradesSettingsPageState();
+}
+
+class _ArchivedGradesSettingsPageState
+    extends State<ArchivedGradesSettingsPage> {
+  List<Grade> _getArchivedGrades() {
+    return isar.grades
+        .filter()
+        .isArchivedEqualTo(true)
+        .sortByDatumIngevoerdDesc()
+        .findAllSync();
+  }
+
+  void _toggleAll(bool enable, List<Grade> archivedGrades) {
+    isar.writeTxnSync(() {
+      for (var grade in archivedGrades) {
+        grade.isEnabled = enable;
+        isar.grades.putSync(grade);
+      }
+    });
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enable
+              ? "Alle gearchiveerde cijfers ingeschakeld"
+              : "Alle gearchiveerde cijfers uitgeschakeld",
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _deleteAll(List<Grade> archivedGrades) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Alle gearchiveerde cijfers wissen?"),
+        content: const Text(
+          "Weet je zeker dat je alle bewaarde gearchiveerde cijfers definitief wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuleren"),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Alles wissen"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      isar.writeTxnSync(() {
+        for (var grade in archivedGrades) {
+          isar.grades.deleteSync(grade.uuid);
+        }
+      });
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Alle gearchiveerde cijfers gewist"),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteSingle(Grade grade) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Cijfer wissen?"),
+        content: Text(
+          "Weet je zeker dat je dit cijfer (${grade.cijferStr} voor ${grade.subject.value?.naam ?? 'vak'}) definitief wilt verwijderen?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuleren"),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Wissen"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      isar.writeTxnSync(() {
+        isar.grades.deleteSync(grade.uuid);
+      });
+      setState(() {});
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Cijfer gewist"),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final archivedGrades = _getArchivedGrades();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ScaffoldSkeleton(
+      appBar: (isRefreshing, trailingRefreshButton, leading) =>
+          SliverAppBar.large(
+        leading: leading,
+        title: const Text("Gearchiveerde cijfers"),
+        actions: [
+          if (archivedGrades.isNotEmpty)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: (value) {
+                if (value == 'enable_all') {
+                  _toggleAll(true, archivedGrades);
+                } else if (value == 'disable_all') {
+                  _toggleAll(false, archivedGrades);
+                } else if (value == 'delete_all') {
+                  _deleteAll(archivedGrades);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'enable_all',
+                  child: Text("Alles inschakelen"),
+                ),
+                const PopupMenuItem(
+                  value: 'disable_all',
+                  child: Text("Alles uitschakelen"),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'delete_all',
+                  child: Text(
+                    "Alles definitief wissen",
+                    style: TextStyle(color: colorScheme.error),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+      children: [
+        if (archivedGrades.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: colorScheme.tertiary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Geen gearchiveerde cijfers",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Wanneer een school cijfers tijdelijk verwijdert (bijv. tijdens een toetsweek), worden ze hier automatisch bewaard.",
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              "Deze cijfers zijn niet meer aanwezig in Magister, maar bewaard om gemiddelden en berekeningen accuraat te houden.",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: CustomCard(
+              child: Column(
+                children: [
+                  for (int i = 0; i < archivedGrades.length; i++) ...[
+                    ListTile(
+                      leading: GradeAvatar(
+                        heroTag: archivedGrades[i].id,
+                        gradeString: archivedGrades[i].cijferStr,
+                        badge: archivedGrades[i].weight != null
+                            ? "${archivedGrades[i].weight!.displayNumber()}x"
+                            : null,
+                      ),
+                      title: Text(
+                        archivedGrades[i].subject.value?.naam.capitalized ??
+                            "Vak",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        [
+                          if (archivedGrades[i].description?.isNotEmpty == true)
+                            archivedGrades[i].description!,
+                          if (archivedGrades[i].datumIngevoerd != null)
+                            archivedGrades[i].datumIngevoerd!.formattedDate,
+                        ].join(" • "),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Switch(
+                            value: archivedGrades[i].isEnabled,
+                            onChanged: (val) {
+                              isar.writeTxnSync(() {
+                                archivedGrades[i].isEnabled = val;
+                                isar.grades.putSync(archivedGrades[i]);
+                              });
+                              setState(() {});
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              color: colorScheme.error,
+                            ),
+                            tooltip: "Wis cijfer",
+                            onPressed: () => _deleteSingle(archivedGrades[i]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (i < archivedGrades.length - 1)
+                      const Divider(height: 1),
+                  ]
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ]
+      ],
+    );
   }
 }
 

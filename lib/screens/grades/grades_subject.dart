@@ -5,6 +5,7 @@ import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/grades.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/barchart_schoolyears.dart';
 import 'package:discipulus/screens/grades/widgets/no_weights_warning.dart';
+import 'package:discipulus/screens/grades/widgets/archived_grades_warning.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/chips/chip_filter.dart';
@@ -178,6 +179,11 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
           schoolyear: subject.schoolyear.value!,
           subject: subject,
           onDone: () => refresh(false),
+        ),
+        ArchivedGradesWarning(
+          schoolyear: subject.schoolyear.value!,
+          subject: subject,
+          onChanged: () => refresh(true),
         ),
         if (tests.isNotEmpty)
           CustomCard(

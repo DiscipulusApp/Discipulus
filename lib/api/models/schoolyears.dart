@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:discipulus/api/models/permissions.dart';
 import 'package:discipulus/api/models/personal.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
-import 'package:discipulus/utils/isar_cleaner.dart';
 import 'package:isar/isar.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/subjects.dart';
@@ -104,47 +103,58 @@ class Schoolyear {
     List<Grade> newGrades = List<Grade>.from(
         res["Items"].map((x) => Grade.fromMap(x)..schoolyear.value = this));
 
-    await isar.grades.removeChecker(
-      localUUIDs: grades.filter().uuidProperty().findAll(),
-      newUUIDs: Future.value([for (Grade grade in newGrades) grade.uuid]),
-      findUUIDs: (q, uuid) => q.uuidEqualTo(uuid),
-    );
+    // Get current locally saved grades for this schoolyear
+    List<Grade> existingGrades = await grades.filter().findAll();
+    Map<int, Grade> existingGradesMap = {
+      for (Grade g in existingGrades) g.uuid: g
+    };
+    Set<int> newUUIDs = newGrades.map((e) => e.uuid).toSet();
 
-    // Add all grades from Magister to the internal database
-    grades.clear();
-    grades.addAll(newGrades);
+    // Prepare list of missing grades to be archived
+    List<Grade> missingGrades =
+        existingGrades.where((g) => !newUUIDs.contains(g.uuid)).map((g) {
+      return g..isArchived = true;
+    }).toList();
+
+    // Prepare updated/new grades (unarchived)
+    List<Grade> processedNewGrades = newGrades.map((e) {
+      Grade? currentGrade = existingGradesMap[e.uuid];
+      bool wasRevealed = true;
+      if (existingGrades.isNotEmpty) {
+        wasRevealed = currentGrade?.wasRevealed ?? false;
+      }
+      return e
+        ..isArchived = false
+        ..isEnabled = currentGrade?.isEnabled ?? true
+        ..period.value?.schoolyear.value = this
+        ..subject.value?.schoolyear.value = this
+        ..period.value?.grades.add(e)
+        ..subject.value?.grades.add(e)
+        ..subject
+            .value
+            ?.periods
+            .addAll([if (e.period.value != null) e.period.value!])
+        ..weight = currentGrade?.weight
+        ..description = currentGrade?.description
+        ..testDate = currentGrade?.testDate
+        ..wasRevealed = wasRevealed;
+    }).toList();
+
+    List<Grade> allGrades = [...processedNewGrades, ...missingGrades];
 
     // Save the internal database
-    int existingGradesCount = await grades.filter().count();
     isar.writeTxnSync(() {
-      isar.grades.putAllSync(newGrades.map((e) {
-        Grade? currentGrade = isar.grades.getSync(e.uuid);
-        bool wasRevealed = true;
-        if (existingGradesCount > 0) {
-          wasRevealed = currentGrade?.wasRevealed ?? false;
-        }
-        return e
-          ..period.value?.schoolyear.value = this
-          ..subject.value?.schoolyear.value = this
-          ..period.value?.grades.add(e)
-          ..subject.value?.grades.add(e)
-          ..subject
-              .value
-              ?.periods
-              .addAll([if (e.period.value != null) e.period.value!])
-          ..weight = currentGrade?.weight
-          ..description = currentGrade?.description
-          ..testDate = currentGrade?.testDate
-          ..wasRevealed = wasRevealed;
-      }).toList());
-      isar.gradePeriods.putAllSync(newGrades
+      isar.grades.putAllSync(allGrades);
+      isar.gradePeriods.putAllSync(allGrades
           .where((g) => g.period.value != null)
           .map((e) => e.period.value!)
           .toList());
-      isar.subjects.putAllSync(newGrades
+      isar.subjects.putAllSync(allGrades
           .where((g) => g.subject.value != null)
           .map((e) => e.subject.value!)
           .toList());
+      grades.clear();
+      grades.addAll(allGrades);
       grades.saveSync();
       periods.saveSync();
       subjects.saveSync();
@@ -154,9 +164,19 @@ class Schoolyear {
     // depending on how many new grades without weights there are.
     //
     // Currently, if there are 15 grades or less without a weight, the weights are automatically fetched.
-    if (await grades.filter().useable().weightIsNull().count() <= 15) {
-      List<Grade> gradesWithoutWeight =
-          await grades.filter().useable().weightIsNull().findAll();
+    if (await grades
+            .filter()
+            .useable()
+            .isArchivedEqualTo(false)
+            .weightIsNull()
+            .count() <=
+        15) {
+      List<Grade> gradesWithoutWeight = await grades
+          .filter()
+          .useable()
+          .isArchivedEqualTo(false)
+          .weightIsNull()
+          .findAll();
       await Future.wait(
           [for (Grade grade in gradesWithoutWeight) grade.fill()]);
     }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:discipulus/screens/grades/widgets/grade_calc_card.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/sufficient_grades_card.dart';
+import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/screens/introduction/expressive_components.dart';
 import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/screens/settings/pages/login_with_discipulus.dart';
@@ -25,13 +26,13 @@ class _ExpressiveIntroductionScreenState
     extends State<ExpressiveIntroductionScreen> {
   late final PageController _pageController;
   int _currentPage = 0;
-  static const int _totalPages = 4;
+  static const int _totalPages = 5;
   bool _agreeToMagisterTOS = false;
   bool _agreeToDiscipulusTOS = false;
 
   bool get _allTOSAccepted => _agreeToMagisterTOS && _agreeToDiscipulusTOS;
 
-  int get _accessiblePages => _allTOSAccepted ? _totalPages : 3;
+  int get _accessiblePages => _allTOSAccepted ? _totalPages : 4;
 
   bool get _isDesktop {
     if (kIsWeb) return true;
@@ -60,11 +61,11 @@ class _ExpressiveIntroductionScreenState
   }
 
   void _onBothTOSAccepted() {
-    if (_currentPage == 2) {
+    if (_currentPage == 3) {
       Future.delayed(const Duration(milliseconds: 350), () {
         if (mounted && _allTOSAccepted && _pageController.hasClients) {
           _pageController.animateToPage(
-            3,
+            4,
             duration: Durations.long1,
             curve: Easing.emphasizedDecelerate,
           );
@@ -214,10 +215,12 @@ class _ExpressiveIntroductionScreenState
                             case 0:
                               return _buildGradesCard();
                             case 1:
-                              return _buildPlatformFeatureCard();
+                              return _buildArchivedGradesCard();
                             case 2:
-                              return _buildTermsOfServiceCard();
+                              return _buildPlatformFeatureCard();
                             case 3:
+                              return _buildTermsOfServiceCard();
+                            case 4:
                             default:
                               return _buildFinalActionCard();
                           }
@@ -310,13 +313,168 @@ class _ExpressiveIntroductionScreenState
       ),
       title: "Cijfers & Gemiddelden",
       description:
-          "Bereken direct welk cijfer je nodig hebt voor je volgende toets en houd al je gemiddelden en grafieken realtime bij.",
+          "Bereken direct welk cijfer je nodig hebt voor je volgende toets en houd al je gemiddelden en grafieken bij",
       bottomColor: colorScheme.secondaryContainer,
       onBottomColor: colorScheme.onSecondaryContainer,
     );
   }
 
-  /// Card 2: Platform Feature Card (Navigator Widget for Apple, Auto-DND for Android)
+  /// Card 2: Gearchiveerde Cijfers (Toetsweken zonder zorgen)
+  Widget _buildArchivedGradesCard() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return _buildExpressiveSplitCard(
+      previewChild: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Warning preview card
+              CustomCard(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 3),
+                surfaceTintColor: colorScheme.tertiary,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          color: colorScheme.tertiary,
+                          size: 20,
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "3 cijfers gearchiveerd",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              "Verborgen door school (toetsweek)",
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton.tonal(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: const Size(0, 28),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          "Alles uitschakelen",
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Sample archived grade 1
+              CustomCard(
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                elevation: 0,
+                child: Opacity(
+                  opacity: 0.65,
+                  child: ListTile(
+                    dense: true,
+                    leading: const GradeAvatar(
+                      gradeString: "7.8",
+                      badge: "2x",
+                    ),
+                    title: const Text(
+                      "Wiskunde B",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    subtitle: const Text(
+                      "Hoofdstuk 4: Goniometrie",
+                      style: TextStyle(fontSize: 11),
+                      maxLines: 1,
+                    ),
+                    trailing: Badge(
+                      backgroundColor: colorScheme.tertiaryContainer,
+                      textColor: colorScheme.onTertiaryContainer,
+                      label: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 10),
+                          SizedBox(width: 3),
+                          Text("Gearchiveerd", style: TextStyle(fontSize: 9)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Sample archived grade 2
+              CustomCard(
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                elevation: 0,
+                child: Opacity(
+                  opacity: 0.65,
+                  child: ListTile(
+                    dense: true,
+                    leading: const GradeAvatar(
+                      gradeString: "6.4",
+                      badge: "1x",
+                    ),
+                    title: const Text(
+                      "Nederlands",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    subtitle: const Text(
+                      "Literatuur: Verwerkingsopdracht",
+                      style: TextStyle(fontSize: 11),
+                      maxLines: 1,
+                    ),
+                    trailing: Badge(
+                      backgroundColor: colorScheme.tertiaryContainer,
+                      textColor: colorScheme.onTertiaryContainer,
+                      label: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 10),
+                          SizedBox(width: 3),
+                          Text("Gearchiveerd", style: TextStyle(fontSize: 9)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      title: "Cijfers eruit tijdens toetsweken?",
+      description:
+          "Discipulus bewaart ze automatisch als gearchiveerde cijfers :)",
+      bottomColor: colorScheme.tertiaryContainer,
+      onBottomColor: colorScheme.onTertiaryContainer,
+    );
+  }
+
+  /// Card 3: Platform Feature Card (Navigator Widget for Apple, Auto-DND for Android)
   Widget _buildPlatformFeatureCard() {
     if (_isApple) {
       return _buildNavigatorWidgetCard();
@@ -343,7 +501,7 @@ class _ExpressiveIntroductionScreenState
       ),
       title: "Navigator Widget",
       description:
-          "Bekijk je rooster, lokalen en wijzigingen direct live op je toegangsscherm of beginscherm.",
+          "Weet direct waar je moet zijn zonder überhaupt je telefoon te openen",
       bottomColor: colorScheme.primaryContainer,
       onBottomColor: colorScheme.onPrimaryContainer,
     );
@@ -445,7 +603,7 @@ class _ExpressiveIntroductionScreenState
       ),
       title: "Automatische 'Niet Storen'",
       description:
-          "Discipulus zet je telefoon automatisch op stil tijdens lessen en schakelt het geluid weer in zodra je vrij bent.",
+          "Discipulus zet je telefoon automatisch op stil (als je dat wilt) tijdens lessen en schakelt het geluid weer in zodra je vrij bent.",
       bottomColor: colorScheme.tertiary,
       onBottomColor: colorScheme.onTertiary,
     );
@@ -873,7 +1031,7 @@ class _ExpressiveIntroductionScreenState
             )
           else
             IconButton.filledTonal(
-              onPressed: (_currentPage == 2 && !_allTOSAccepted)
+              onPressed: (_currentPage == 3 && !_allTOSAccepted)
                   ? () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

@@ -8,6 +8,7 @@ import 'package:discipulus/widgets/global/filter.dart';
 import 'package:discipulus/screens/grades/widgets/grade_calc_card.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/no_weights_warning.dart';
+import 'package:discipulus/screens/grades/widgets/archived_grades_warning.dart';
 import 'package:discipulus/widgets/global/chips/chips.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -217,6 +218,11 @@ class _GradesListScreenState extends State<GradesListScreen> {
           key: const HeaderKey(),
           schoolyear: schoolyear,
           onDone: () => refresh(true),
+        ),
+        ArchivedGradesWarning(
+          key: ValueKey("archived_${schoolyear.uuid}"),
+          schoolyear: schoolyear,
+          onChanged: () => refresh(true),
         ),
 
         // Padding(

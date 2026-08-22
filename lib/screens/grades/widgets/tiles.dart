@@ -70,6 +70,20 @@ class GradeTile extends StatelessWidget {
       if (appSettings.enabledGradeBadgeTypes.contains(GradeBadgeTypes.date) &&
           grade.datumIngevoerd != null)
         Badge(label: Text(grade.datumIngevoerd!.formattedDate)),
+      // Archive indicator
+      if (grade.isArchived)
+        Builder(
+          builder: (context) => Badge(
+            backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+            textColor: Theme.of(context).colorScheme.onTertiaryContainer,
+            label: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.inventory_2_outlined, size: 12),
+              ],
+            ),
+          ),
+        ),
       // PTA indicator
       if (appSettings.enabledGradeBadgeTypes.contains(GradeBadgeTypes.pta) &&
           grade.cijferKolom.isPtaKolom == true)
@@ -79,8 +93,13 @@ class GradeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double opacity = !grade.isEnabled
+        ? 0.4
+        : grade.isArchived
+            ? 0.65
+            : 1.0;
     return Opacity(
-      opacity: grade.isEnabled ? 1 : .5,
+      opacity: opacity,
       child: ListTile(
         onTap: () => showScrollableModalBottomSheet(
           context: context,
@@ -101,7 +120,10 @@ class GradeTile extends StatelessWidget {
         ),
         subtitle: (grade.cijferKolom.kolomSoort == 1 || isAverage)
             ? Text(
-                grade.description ?? grade.ingevoerdDoor ?? grade.docent ?? "",
+                grade.description ??
+                    grade.ingevoerdDoor ??
+                    grade.docent ??
+                    (grade.isArchived ? "Gearchiveerd cijfer" : ""),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               )

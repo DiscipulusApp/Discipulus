@@ -103,6 +103,20 @@ class _GradeInformationState extends State<GradeInformation> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (widget.showTile) AbsorbPointer(child: GradeTile(grade: widget.grade)),
       ...[
+        if (widget.grade.isArchived)
+          CustomCard(
+            elevation: 0,
+            child: ListTile(
+              leading: Icon(
+                Icons.inventory_2_outlined,
+                color: Theme.of(context).colorScheme.tertiary,
+              ),
+              title: const Text("Gearchiveerd cijfer"),
+              subtitle: const Text(
+                "Dit cijfer is niet meer aanwezig in Magister en is automatisch bewaard. Als dit cijfer per ongeluk of terecht is verwijderd door je school, kun je het hieronder definitief wissen.",
+              ),
+            ),
+          ),
         Row(
           children: [
             ListTile(
@@ -298,6 +312,61 @@ class _GradeInformationState extends State<GradeInformation> {
                             isar.writeTxnSync(() => isar.grades
                                 .putSync(widget.grade..isEnabled = value));
                           })),
+                if (widget.grade.isArchived) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    title: Text(
+                      "Gearchiveerd cijfer definitief wissen",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      "Wis dit cijfer permanent als het terecht is verwijderd door je school",
+                    ),
+                    onTap: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Cijfer definitief wissen?"),
+                          content: Text(
+                            "Weet je zeker dat je dit cijfer (${widget.grade.cijferStr} voor ${widget.grade.subject.value?.naam ?? 'vak'}) definitief wilt verwijderen?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Annuleren"),
+                            ),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.error,
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onError,
+                              ),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Wissen"),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true && mounted) {
+                        isar.writeTxnSync(() {
+                          isar.grades.deleteSync(widget.grade.uuid);
+                          widget.grade.schoolyear.value?.grades.saveSync();
+                        });
+                        if (widget.setStateTop != null) {
+                          widget.setStateTop!(() {});
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ],
               ],
             )),
       ].map((e) => Padding(

@@ -43,6 +43,7 @@ class Grade {
   DateTime? testDate;
   bool isEnabled = true;
   bool wasRevealed = true;
+  bool isArchived = false;
 
   Grade({
     required this.id,
@@ -60,6 +61,7 @@ class Grade {
     this.docent,
     this.vakOntheffing = false,
     this.vakVrijstelling = false,
+    this.isArchived = false,
   });
 
   factory Grade.fromJson(String str) => Grade.fromMap(json.decode(str));
@@ -82,7 +84,8 @@ class Grade {
       cijferKolomIdEloOpdracht: json["CijferKolomIdEloOpdracht"] ?? -1,
       docent: json["Docent"] ?? json["Docentcode"],
       vakOntheffing: json["VakOntheffing"] ?? false,
-      vakVrijstelling: json["VakVrijstelling"] ?? false)
+      vakVrijstelling: json["VakVrijstelling"] ?? false,
+      isArchived: json["isArchived"] ?? json["IsArchived"] ?? false)
     ..period.value = json["CijferPeriode"] == null
         ? null
         : GradePeriod.fromMap(json["CijferPeriode"])
@@ -103,7 +106,10 @@ class Grade {
             "personen/${schoolyear.value!.profile.value!.id}/aanmeldingen/${schoolyear.value!.id}/cijfers/extracijferkolominfo/$cijferKolomId"))
         .data;
 
-    description = res["Omschrijving"];
+    description =  res["WerkInformatieOmschrijving"] != null &&
+            res["WerkInformatieOmschrijving"] != ""
+        ? res["WerkInformatieOmschrijving"]
+        : res["KolomOmschrijving"];
     weight = (res["Weging"] as num?)?.toDouble() ?? weight;
     testDate = res["InvoerDatum"] == null
         ? (res["WerkinformatieDatumIngevoerd"] == null
@@ -138,6 +144,7 @@ class Grade {
         "Docent": docent,
         "VakOntheffing": vakOntheffing,
         "VakVrijstelling": vakVrijstelling,
+        "isArchived": isArchived,
         "CijferPeriode": period.value?.toMap(),
         "Vak": subject.value?.toMap(),
       };

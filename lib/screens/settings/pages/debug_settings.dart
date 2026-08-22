@@ -447,12 +447,21 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   title: const Text("Verwijder meest recente cijfer"),
                   subtitle: const Text("Handig voor het testen van notificaties"),
                   onTap: () async {
-                    var schoolyear = await activeProfile.schoolyears
+                    var schoolyears = await activeProfile.schoolyears
                         .filter()
                         .sortByEindeDesc()
-                        .findFirst();
-                    if (schoolyear != null) {
-                      await isar.writeTxn(() async => await schoolyear.grades
+                        .findAll();
+                    Schoolyear? targetSchoolyear;
+                    for (var sy in schoolyears) {
+                      if (await sy.grades.filter().useable().count() > 0) {
+                        targetSchoolyear = sy;
+                        break;
+                      }
+                    }
+                    targetSchoolyear ??= schoolyears.firstOrNull;
+
+                    if (targetSchoolyear != null) {
+                      await isar.writeTxn(() async => await targetSchoolyear!.grades
                           .filter()
                           .useable()
                           .sortByDatumIngevoerdDesc()
@@ -461,6 +470,107 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text("Laatste cijfer verwijderd"),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text("Simuleer toetsweek (archiveer cijfers)"),
+                  subtitle: const Text(
+                    "Markeert de 3 meest recente cijfers als gearchiveerd",
+                  ),
+                  onTap: () async {
+                    var schoolyears = await activeProfile.schoolyears
+                        .filter()
+                        .sortByEindeDesc()
+                        .findAll();
+                    Schoolyear? targetSchoolyear;
+                    for (var sy in schoolyears) {
+                      if (await sy.grades
+                              .filter()
+                              .isArchivedEqualTo(false)
+                              .count() >
+                          0) {
+                        targetSchoolyear = sy;
+                        break;
+                      }
+                    }
+                    targetSchoolyear ??= schoolyears.firstOrNull;
+
+                    if (targetSchoolyear != null) {
+                      var recentGrades = await targetSchoolyear.grades
+                          .filter()
+                          .isArchivedEqualTo(false)
+                          .sortByDatumIngevoerdDesc()
+                          .limit(3)
+                          .findAll();
+                      if (recentGrades.isNotEmpty) {
+                        isar.writeTxnSync(() {
+                          for (var g in recentGrades) {
+                            g.isArchived = true;
+                            isar.grades.putSync(g);
+                          }
+                        });
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "${recentGrades.length} cijfers gemarkeerd als gearchiveerd (${targetSchoolyear.groep.code})",
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      } else {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Geen actieve cijfers gevonden om te archiveren",
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.unarchive_outlined),
+                  title: const Text("Herstel alle gearchiveerde cijfers"),
+                  subtitle: const Text(
+                    "Zet de status van alle gearchiveerde cijfers terug naar actief",
+                  ),
+                  onTap: () async {
+                    var archived = await isar.grades
+                        .filter()
+                        .isArchivedEqualTo(true)
+                        .findAll();
+                    if (archived.isNotEmpty) {
+                      isar.writeTxnSync(() {
+                        for (var g in archived) {
+                          g.isArchived = false;
+                          isar.grades.putSync(g);
+                        }
+                      });
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "${archived.length} gearchiveerde cijfers hersteld naar actief",
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    } else {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Geen gearchiveerde cijfers gevonden"),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );

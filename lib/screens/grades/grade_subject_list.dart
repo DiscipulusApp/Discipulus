@@ -4,6 +4,7 @@ import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/barchart_averages.dart';
 import 'package:discipulus/screens/grades/widgets/no_weights_warning.dart';
+import 'package:discipulus/screens/grades/widgets/archived_grades_warning.dart';
 import 'package:discipulus/screens/grades/widgets/subject_averages_card.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -101,6 +102,10 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
         NoWeightsWarning(
           schoolyear: schoolyear,
           onDone: () => _refresh(true),
+        ),
+        ArchivedGradesWarning(
+          schoolyear: schoolyear,
+          onChanged: () => _refresh(true),
         ),
         FilterChipList(
           key: const HeaderKey(),

@@ -150,6 +150,9 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
           children: [
             // Notification Banner 1: New Grade (matching _quickRefreshGrades)
             CustomCard(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               margin: const EdgeInsets.symmetric(vertical: 2),
               elevation: 0,
               color: colorScheme.surfaceContainerHigh,
@@ -181,6 +184,9 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
             ),
             // Notification Banner 2: Schedule Change (matching _buildEventNotification)
             CustomCard(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               margin: const EdgeInsets.symmetric(vertical: 2),
               elevation: 0,
               color: colorScheme.surfaceContainerHigh,
@@ -443,7 +449,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "Bespaar tijd met slimme samenvattingen, e-mail generatie en huiswerkhulp via online of lokale AI.",
+                          "Bespaar tijd met slimme samenvattingen of e-mail generaties via online of lokale AI.",
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: colorScheme.onTertiaryContainer
@@ -656,7 +662,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                       _buildCommunityLinkCard(
                         icon: Icons.code_rounded,
                         title: "Discipulus op GitHub",
-                        subtitle: "100% open-source. Geef een ster ⭐ of help mee",
+                        subtitle: "Bekijk de code, meld bugs of draag bij",
                         url: "https://github.com/DiscipulusApp/Discipulus",
                         color: colorScheme.primary,
                       )

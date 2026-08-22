@@ -3,6 +3,7 @@ import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/grades.dart';
+import 'package:discipulus/screens/grades/widgets/archived_grades_warning.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/barchart_rounded_grades.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/gaussian_chart.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
@@ -12,7 +13,6 @@ import 'package:discipulus/screens/grades/widgets/subject_averages_card.dart';
 import 'package:discipulus/screens/grades/widgets/sufficient_grades_card.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/utils/account_manager.dart';
-import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/chips/chip_filter.dart';
 import 'package:discipulus/widgets/global/chips/chip_schoolyear.dart';
@@ -166,6 +166,10 @@ class _GradesStatisticsScreenState extends State<GradesStatisticsScreen> {
         NoWeightsWarning(
           schoolyear: schoolyear,
           onDone: () => refresh(true),
+        ),
+        ArchivedGradesWarning(
+          schoolyear: schoolyear,
+          onChanged: () => refresh(true),
         ),
         Padding(
           key: const HeaderKey(),
