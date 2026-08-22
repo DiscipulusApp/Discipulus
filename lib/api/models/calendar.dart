@@ -169,39 +169,43 @@ class CalendarEvent {
 
   factory CalendarEvent.fromMap(Map<String, dynamic> json, {String? selfUrl}) =>
       CalendarEvent(
-          id: json["Id"],
-          start: DateTime.parse(json["Start"]).toUtc(),
-          einde: DateTime.parse(json["Einde"]).toUtc(),
+          id: json["Id"] ?? 0,
+          start: json["Start"] != null
+              ? DateTime.parse(json["Start"]).toUtc()
+              : DateTime.now().toUtc(),
+          einde: json["Einde"] != null
+              ? DateTime.parse(json["Einde"]).toUtc()
+              : DateTime.now().toUtc(),
           lesuurVan: json["LesuurVan"],
           lesuurTotMet: json["LesuurTotMet"],
-          duurtHeleDag: json["DuurtHeleDag"],
+          duurtHeleDag: json["DuurtHeleDag"] ?? false,
           omschrijving: json["Omschrijving"],
           rawLokatie: json["Lokatie"],
           rawStatus:
               statusValues.map[json["Status"].toString()] ?? Status.unknown,
           type: typeValues.map[json["Type"].toString()] ?? CalendarType.none,
-          subtype: json["Subtype"],
-          isOnlineDeelname: json["IsOnlineDeelname"],
-          weergaveType: json["WeergaveType"],
-          rawInhoud: json["Inhoud"],
+          subtype: json["Subtype"] ?? 1,
+          isOnlineDeelname: json["IsOnlineDeelname"] ?? false,
+          weergaveType: json["WeergaveType"] ?? 1,
+          rawInhoud: json["Inhoud"] ?? "",
           rawInfoType:
               infoTypeValues.map[json["InfoType"].toString()] ?? InfoType.none,
           aantekening: json["Aantekening"],
-          afgerond: json["Afgerond"],
-          herhaalStatus: json["HerhaalStatus"],
-          vakken:
-              List<Vakken>.from(json["Vakken"].map((x) => Vakken.fromMap(x))),
+          afgerond: json["Afgerond"] ?? false,
+          herhaalStatus: json["HerhaalStatus"] ?? 0,
+          vakken: json["Vakken"] == null
+              ? []
+              : List<Vakken>.from(json["Vakken"].map((x) => Vakken.fromMap(x))),
           docenten: json["Docenten"] == null
               ? []
               : List<Docenten>.from(
                   json["Docenten"].map((x) => Docenten.fromMap(x))),
-          lokalen:
-              json["Lokalen"] == null
-                  ? []
-                  : List<Lokalen>.from(
-                      json["Lokalen"].map((x) => Lokalen.fromMap(x))),
-          opdrachtId: json["OpdrachtId"],
-          heeftBijlagen: json["HeeftBijlagen"],
+          lokalen: json["Lokalen"] == null
+              ? []
+              : List<Lokalen>.from(
+                  json["Lokalen"].map((x) => Lokalen.fromMap(x))),
+          opdrachtId: json["OpdrachtId"] ?? 0,
+          heeftBijlagen: json["HeeftBijlagen"] ?? false,
           afwezigheid: json["Afwezigheid"] != null
               ? Absence.fromMap(json["Afwezigheid"])
               : null,
@@ -673,18 +677,24 @@ class Absence {
   factory Absence.fromJson(String str) => Absence.fromMap(json.decode(str));
 
   factory Absence.fromMap(Map<String, dynamic> json) => Absence(
-        id: json["Id"],
-        start: DateTime.parse(json["Start"]).toUtc(),
-        eind: DateTime.parse(json["Eind"]).toUtc(),
-        lesuur: json["Lesuur"],
-        geoorloofd: json["Geoorloofd"],
-        afspraakId: json["AfspraakId"],
-        omschrijving: json["Omschrijving"],
+        id: json["Id"] ?? 0,
+        start: json["Start"] != null
+            ? DateTime.parse(json["Start"]).toUtc()
+            : null,
+        eind: json["Eind"] != null
+            ? DateTime.parse(json["Eind"]).toUtc()
+            : null,
+        lesuur: json["Lesuur"] ?? 0,
+        geoorloofd: json["Geoorloofd"] ?? true,
+        afspraakId: json["AfspraakId"] ?? 0,
+        omschrijving: json["Omschrijving"] ?? "",
         verantwoordingtype:
             absenceValues.map[json["Verantwoordingtype"].toString()] ??
                 AbsenceType.unknown,
-        code: json["Code"],
-        rawAfspraak: CalendarEvent.fromMap(json["Afspraak"]),
+        code: json["Code"] ?? "",
+        rawAfspraak: json["Afspraak"] != null
+            ? CalendarEvent.fromMap(json["Afspraak"])
+            : null,
       );
 
   Map<String, dynamic> toMap() => {

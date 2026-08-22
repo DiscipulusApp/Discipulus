@@ -19,6 +19,7 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/isar_cleaner.dart';
+import 'package:discipulus/utils/login_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_apple_spotlight/flutter_apple_spotlight.dart';
 import 'package:isar/isar.dart';
@@ -90,13 +91,17 @@ class DiscipulusAccount {
 
     if (permissions.hasPermissions(PermissionType.kinderen)) {
       // Parent account
+      LoginLogger.instance.step("Ophalen van gekoppelde kinderen voor ouderaccount");
       await Future.forEach(
         (await api.person(apiAccount.persoon.id).children)
             .where((ch) => ch.zichtbaarVoorOuder),
         (child) async {
+          final childName = child.roepnaam.isNotEmpty
+              ? child.roepnaam
+              : "${child.voorletters ?? ''} ${child.achternaam}".trim();
           return profiles.add(Profile(
             id: child.id,
-            name: child.roepnaam,
+            name: childName.isNotEmpty ? childName : "Kind ${child.id}",
             birthdate: child.geboortedatum,
             magisterBase64ProfilePicture:
                 await api.person(child.id).profilepicture,
@@ -104,10 +109,22 @@ class DiscipulusAccount {
         },
       );
     } else {
+      final String fullName = (apiAccount.persoon.roepnaam != null &&
+              apiAccount.persoon.roepnaam!.trim().isNotEmpty)
+          ? apiAccount.persoon.roepnaam!
+          : [
+              if (apiAccount.persoon.voorletters.trim().isNotEmpty)
+                apiAccount.persoon.voorletters,
+              if (apiAccount.persoon.tussenvoegsel != null &&
+                  apiAccount.persoon.tussenvoegsel!.trim().isNotEmpty)
+                apiAccount.persoon.tussenvoegsel,
+              if (apiAccount.persoon.achternaam.trim().isNotEmpty)
+                apiAccount.persoon.achternaam,
+            ].join(" ").trim();
+
       profiles.add(Profile(
         id: apiAccount.persoon.id,
-        name: apiAccount.persoon.roepnaam ??
-            "${apiAccount.persoon.voorletters} ${apiAccount.persoon.achternaam}",
+        name: fullName.isNotEmpty ? fullName : "Leerling",
         birthdate: apiAccount.persoon.geboortedatum,
         magisterBase64ProfilePicture:
             await api.person(apiAccount.persoon.id).profilepicture,
@@ -132,12 +149,14 @@ class DiscipulusAccount {
     }
 
     // Save value into database
+    LoginLogger.instance.step("Opslaan van profielgegevens in lokale database");
     isar.writeTxnSync(() {
       if (found == null) isar.discipulusAccounts.putSync(this);
       isar.profiles.putAllSync(profiles.toList());
     });
 
     // Set Magister values as local values for caching
+    LoginLogger.instance.step("Ophalen van schooljaren, afspraken en berichten");
     await Future.wait(profiles
         .map((p) => [
               p.getSchoolyears(),
@@ -162,9 +181,11 @@ class DiscipulusAccount {
             ])
         .expand((e) => e));
 
+    LoginLogger.instance.step("Ophalen van cijfers");
     await Future.wait(profiles
         .map((e) => e.schoolyears.map((e) => e.fillGrades()))
         .expand((e) => e));
+    LoginLogger.instance.step("Profiel synchronisatie succesvol afgerond");
   }
 
   @ignore
@@ -191,11 +212,11 @@ class TokenSet {
   });
 
   factory TokenSet.fromJSON(Map<dynamic, dynamic> json) => TokenSet(
-        accessToken: json["access_token"],
-        expiredDate:
-            DateTime.now().add(Duration(seconds: json['expires_in'] ?? 3600)),
-        idToken: json["id_token"],
-        refreshToken: json["refresh_token"],
+        accessToken: json["access_token"]?.toString() ?? "",
+        expiredDate: DateTime.now().add(
+            Duration(seconds: (json['expires_in'] as num?)?.toInt() ?? 3600)),
+        idToken: json["id_token"]?.toString() ?? "",
+        refreshToken: json["refresh_token"]?.toString(),
       );
 
   Map<String, dynamic> toJson() => {

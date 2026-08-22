@@ -93,9 +93,16 @@ class Subject {
   factory Subject.fromJson(String str) => Subject.fromMap(json.decode(str));
 
   factory Subject.fromMap(Map<String, dynamic> json) => Subject(
-        id: json["Id"],
+        id: json["Id"] ?? 0,
         afkorting: json["Afkorting"] ?? "",
         naam: json["Omschrijving"] ?? json["Naam"] ?? "",
         volgnr: json["Volgnr"] ?? 0,
       );
+
+  Map<String, dynamic> toMap() => {
+        "Id": id,
+        "Afkorting": afkorting,
+        "Omschrijving": naam,
+        "Volgnr": volgnr,
+      };
 }

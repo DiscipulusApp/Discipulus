@@ -64,16 +64,21 @@ class Studiewijzer with SpotlightSearchElementMixin {
       Studiewijzer.fromMap(json.decode(str));
 
   factory Studiewijzer.fromMap(Map<String, dynamic> json) => Studiewijzer(
-      id: json["Id"],
-      van: DateTime.parse(json["Van"]).toUtc(),
-      totEnMet: DateTime.parse(json["TotEnMet"]).toUtc(),
-      rawTitel: json["Titel"],
-      isZichtbaar: json["IsZichtbaar"],
-      inLeerlingArchief: json["InLeerlingArchief"],
+      id: json["Id"] ?? 0,
+      van: json["Van"] != null
+          ? DateTime.parse(json["Van"]).toUtc()
+          : DateTime(2000),
+      totEnMet: json["TotEnMet"] != null
+          ? DateTime.parse(json["TotEnMet"]).toUtc()
+          : DateTime(2000),
+      rawTitel: json["Titel"] ?? json["titel"] ?? "",
+      isZichtbaar: json["IsZichtbaar"] ?? false,
+      inLeerlingArchief: json["InLeerlingArchief"] ?? false,
       selfUrl: json["Links"] != null
           ? List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x)))
-              .firstWhere((l) => l.rel == "Self")
-              .href
+              .where((l) => l.rel == "Self")
+              .firstOrNull
+              ?.href
               .replaceAll("/api/", "")
           : null);
 
@@ -230,23 +235,28 @@ class StudiewijzerOnderdeel {
 
   factory StudiewijzerOnderdeel.fromMap(Map<String, dynamic> json) =>
       StudiewijzerOnderdeel(
-        id: json["Id"],
+        id: json["Id"] ?? 0,
         links: json["Links"] == null
             ? []
             : List<BronLink>.from(
                 json["Links"]!.map((x) => BronLink.fromMap(x))),
-        van: json["Van"],
-        totEnMet: json["TotEnMet"],
-        titel: json["Titel"],
-        omschrijvingShort: json["Omschrijving"],
-        isZichtbaar: json["IsZichtbaar"],
-        kleur: json["Kleur"],
-        volgnummer: json["Volgnummer"],
-        selfUrl:
-            List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x)))
-                .firstWhere((l) => l.rel == "Self")
-                .href
-                .replaceAll("/api/", ""),
+        van: json["Van"] != null ? DateTime.parse(json["Van"]).toUtc() : null,
+        totEnMet: json["TotEnMet"] != null
+            ? DateTime.parse(json["TotEnMet"]).toUtc()
+            : null,
+        titel: json["Titel"] ?? json["titel"] ?? "",
+        omschrijvingShort: json["Omschrijving"] ?? "",
+        isZichtbaar: json["IsZichtbaar"] ?? false,
+        kleur: json["Kleur"] ?? 0,
+        volgnummer: json["Volgnummer"] ?? 0,
+        selfUrl: json["Links"] != null
+            ? (List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x)))
+                    .where((l) => l.rel == "Self")
+                    .firstOrNull
+                    ?.href
+                    .replaceAll("/api/", "") ??
+                "")
+            : "",
       );
 
   Future<void> fill() async {

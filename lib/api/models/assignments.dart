@@ -66,31 +66,34 @@ class Assignment with SpotlightSearchElementMixin {
 
   factory Assignment.fromMap(Map<String, dynamic> json, Magister magister) =>
       Assignment(
-        id: json["Id"],
-        links:
-            List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x))),
-        titel: json["Titel"].toString().capitalized,
-        vak: json["Vak"],
-        inleverenVoor: DateTime.parse(json["InleverenVoor"]).toUtc(),
+        id: json["Id"] ?? 0,
+        links: json["Links"] != null
+            ? List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x)))
+            : [],
+        titel: (json["Titel"] ?? "").toString().capitalized,
+        vak: json["Vak"] ?? "",
+        inleverenVoor: json["InleverenVoor"] != null
+            ? DateTime.parse(json["InleverenVoor"]).toUtc()
+            : DateTime(2000),
         ingeleverdOp: json["IngeleverdOp"] == null
             ? null
             : DateTime.parse(json["IngeleverdOp"]).toUtc(),
         statusLaatsteOpdrachtVersie:
             versionValues.map[json["StatusLaatsteOpdrachtVersie"].toString()] ??
                 VersieStatus.geen,
-        laatsteOpdrachtVersienummer: json["LaatsteOpdrachtVersienummer"],
+        laatsteOpdrachtVersienummer: json["LaatsteOpdrachtVersienummer"] ?? 0,
         docenten: json["Docenten"] == null
             ? []
             : List<Docenten>.from(
                 json["Docenten"]!.map((x) => Docenten.fromMap(x))),
-        omschrijving: json["Omschrijving"],
-        beoordeling: json["Beoordeling"],
+        omschrijving: json["Omschrijving"] ?? "",
+        beoordeling: json["Beoordeling"] ?? "",
         beoordeeldOp: json["BeoordeeldOp"] == null
             ? null
             : DateTime.parse(json["BeoordeeldOp"]).toUtc(),
-        opnieuwInleveren: json["OpnieuwInleveren"],
-        afgesloten: json["Afgesloten"],
-        magInleveren: json["MagInleveren"],
+        opnieuwInleveren: json["OpnieuwInleveren"] ?? false,
+        afgesloten: json["Afgesloten"] ?? false,
+        magInleveren: json["MagInleveren"] ?? false,
       );
 
   @ignore
@@ -213,10 +216,11 @@ class AssignmentVersion {
 
   factory AssignmentVersion.fromMap(Map<String, dynamic> json) =>
       AssignmentVersion(
-        id: json["Id"],
-        links:
-            List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x))),
-        omschrijving: json["Omschrijving"],
+        id: json["Id"] ?? 0,
+        links: json["Links"] != null
+            ? List<BronLink>.from(json["Links"].map((x) => BronLink.fromMap(x)))
+            : [],
+        omschrijving: json["Omschrijving"] ?? "",
       );
 
   Future<void> handInVersion({

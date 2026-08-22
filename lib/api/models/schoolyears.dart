@@ -55,16 +55,27 @@ class Schoolyear {
       Schoolyear.fromMap(json.decode(str));
 
   factory Schoolyear.fromMap(Map<String, dynamic> json) => Schoolyear(
-        studie: Groep.fromMap(json["studie"]),
-        groep: Groep.fromMap(json["groep"]),
-        lesperiode: Lesperiode.fromMap(json["lesperiode"]),
-        profielen:
-            List<Groep>.from(json["profielen"].map((x) => Groep.fromMap(x))),
+        studie: json["studie"] != null
+            ? Groep.fromMap(json["studie"])
+            : Groep(),
+        groep: json["groep"] != null
+            ? Groep.fromMap(json["groep"])
+            : Groep(),
+        lesperiode: json["lesperiode"] != null
+            ? Lesperiode.fromMap(json["lesperiode"])
+            : Lesperiode(),
+        profielen: json["profielen"] != null
+            ? List<Groep>.from(json["profielen"].map((x) => Groep.fromMap(x)))
+            : [],
         persoonlijkeMentor: json["persoonlijkeMentor"] == null
             ? null
             : PersoonlijkeMentor.fromMap(json["persoonlijkeMentor"]),
-        begin: DateTime.parse(json["begin"]).toUtc(),
-        einde: DateTime.parse(json["einde"]).toUtc(),
+        begin: json["begin"] != null
+            ? DateTime.parse(json["begin"]).toUtc()
+            : DateTime(2000),
+        einde: json["einde"] != null
+            ? DateTime.parse(json["einde"]).toUtc()
+            : DateTime(2000),
         isZittenBlijver: json["isZittenBlijver"],
         indicatie: json["indicatie"],
         opleidingCode: json["opleidingCode"] == null
@@ -175,9 +186,13 @@ class Groep {
   factory Groep.fromJson(String str) => Groep.fromMap(json.decode(str));
 
   factory Groep.fromMap(Map<String, dynamic> json) => Groep(
-        id: json["id"],
-        code: json["code"],
-        omschrijving: json["omschrijving"],
+        id: json["id"] ?? json["Id"],
+        code: json["code"] ??
+            json["Code"] ??
+            json["omschrijving"] ??
+            json["Omschrijving"] ??
+            "",
+        omschrijving: json["omschrijving"] ?? json["Omschrijving"],
       );
 }
 
@@ -193,7 +208,7 @@ class Lesperiode {
       Lesperiode.fromMap(json.decode(str));
 
   factory Lesperiode.fromMap(Map<String, dynamic> json) => Lesperiode(
-        code: json["code"],
+        code: json["code"] ?? json["Code"] ?? "",
       );
 }
 
@@ -211,8 +226,8 @@ class OpleidingCode {
       OpleidingCode.fromMap(json.decode(str));
 
   factory OpleidingCode.fromMap(Map<String, dynamic> json) => OpleidingCode(
-        code: json["code"],
-        omschrijving: json["omschrijving"],
+        code: json["code"] ?? json["Code"] ?? 0,
+        omschrijving: json["omschrijving"] ?? json["Omschrijving"] ?? "",
       );
 }
 
@@ -233,8 +248,8 @@ class PersoonlijkeMentor {
 
   factory PersoonlijkeMentor.fromMap(Map<String, dynamic> json) =>
       PersoonlijkeMentor(
-        voorletters: json["voorletters"],
-        tussenvoegsel: json["tussenvoegsel"],
-        achternaam: json["achternaam"],
+        voorletters: json["voorletters"] ?? json["Voorletters"] ?? "",
+        tussenvoegsel: json["tussenvoegsel"] ?? json["Tussenvoegsel"],
+        achternaam: json["achternaam"] ?? json["Achternaam"] ?? "",
       );
 }

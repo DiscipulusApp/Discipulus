@@ -108,36 +108,43 @@ class Bron with SpotlightSearchElementMixin {
   factory Bron.fromJson(String str) => Bron.fromMap(json.decode(str));
 
   factory Bron.fromMap(Map<String, dynamic> json) => Bron(
-        id: json["Id"] ?? json["id"],
-        rawNaam: json["Naam"] ?? json["naam"],
-        contentType: json["ContentType"] ?? json["contentType"],
+        id: json["Id"] ?? json["id"] ?? 0,
+        rawNaam: json["Naam"] ?? json["naam"] ?? "",
+        contentType: json["ContentType"] ??
+            json["contentType"] ??
+            "application/octet-stream",
         status: json["Status"] ?? 0,
         datum: ((json["Datum"] ?? json["aangemaaktOp"]) != null)
             ? DateTime.parse(json["Datum"] ?? json["aangemaaktOp"]).toUtc()
             : null,
-        grootte: json["Grootte"] ?? json["grootte"],
+        grootte: json["Grootte"] ?? json["grootte"] ?? 0,
         parentId: json["ParentId"] ?? 0,
         bronSoort: json["BronSoort"] ?? 1,
-        links: List<BronLink>.from(json["links"] != null
+        links: json["links"] != null
             ? [
-                BronLink(
-                    rel: "download", href: json["links"]["download"]["href"])
+                if (json["links"]["download"] != null)
+                  BronLink(
+                      rel: "download",
+                      href: json["links"]["download"]["href"] ?? "")
               ]
-            : (json["Links"]).map((x) => BronLink.fromMap(x))),
+            : (json["Links"] != null
+                ? List<BronLink>.from(
+                    (json["Links"]).map((x) => BronLink.fromMap(x)))
+                : []),
       );
 
   factory Bron.fromOnedriveMap(Map<String, dynamic> json,
           {int? customParentId}) =>
       Bron(
-        id: json["id"].hashCode,
+        id: (json["id"] ?? "").hashCode,
         parentId: customParentId ??
-            (json["bovenliggendeId"] ?? json["mapId"]).hashCode,
-        rawNaam: json["naam"],
+            (json["bovenliggendeId"] ?? json["mapId"] ?? "").hashCode,
+        rawNaam: json["naam"] ?? "",
         contentType: json["contentType"] ?? "folder",
         status: 0,
         datum: null,
         grootte: json["grootte"] ?? 0,
-        bronSoort: json["type"].contains("map") ? 0 : 1,
+        bronSoort: (json["type"]?.toString().contains("map") ?? false) ? 0 : 1,
         links: [
           if (json["links"]?["self"]?["href"] != null)
             BronLink(rel: "self", href: json["links"]["self"]["href"]),
@@ -182,8 +189,11 @@ class BronLink {
   });
 
   factory BronLink.fromMap(Map<String, dynamic> json) => BronLink(
-        rel: json["Rel"] ?? json.keys.first,
-        href: json["Href"] ?? json.values.first["href"],
+        rel: json["Rel"] ?? (json.isNotEmpty ? json.keys.first : ""),
+        href: json["Href"] ??
+            (json.isNotEmpty && json.values.first is Map
+                ? json.values.first["href"]
+                : ""),
       );
 
   factory BronLink.fromMessagesMap(

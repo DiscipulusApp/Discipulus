@@ -65,26 +65,28 @@ class Grade {
   factory Grade.fromJson(String str) => Grade.fromMap(json.decode(str));
 
   factory Grade.fromMap(Map<String, dynamic> json) => Grade(
-      id: json["CijferId"],
+      id: json["CijferId"] ?? json["Id"] ?? 0,
       cijferStr: json["CijferStr"],
-      isVoldoende: json["IsVoldoende"],
+      isVoldoende: json["IsVoldoende"] ?? true,
       ingevoerdDoor: json["IngevoerdDoor"],
       datumIngevoerd: json["DatumIngevoerd"] == null
           ? null
           : DateTime.parse(json["DatumIngevoerd"]).toUtc(),
-      weight: json["Weging"],
-      inhalen: json["Inhalen"],
-      vrijstelling: json["Vrijstelling"],
-      teltMee: json["TeltMee"],
-      cijferKolom: CijferKolom.fromMap(json["CijferKolom"]),
-      cijferKolomIdEloOpdracht: json["CijferKolomIdEloOpdracht"],
-      docent: json["Docent"],
-      vakOntheffing: json["VakOntheffing"],
-      vakVrijstelling: json["VakVrijstelling"])
+      weight: json["Weging"] != null ? (json["Weging"] as num).toDouble() : null,
+      inhalen: json["Inhalen"] ?? false,
+      vrijstelling: json["Vrijstelling"] ?? false,
+      teltMee: json["TeltMee"] ?? true,
+      cijferKolom: json["CijferKolom"] != null
+          ? CijferKolom.fromMap(json["CijferKolom"])
+          : CijferKolom(),
+      cijferKolomIdEloOpdracht: json["CijferKolomIdEloOpdracht"] ?? -1,
+      docent: json["Docent"] ?? json["Docentcode"],
+      vakOntheffing: json["VakOntheffing"] ?? false,
+      vakVrijstelling: json["VakVrijstelling"] ?? false)
     ..period.value = json["CijferPeriode"] == null
         ? null
         : GradePeriod.fromMap(json["CijferPeriode"])
-    ..subject.value = Subject.fromMap(json["Vak"])
+    ..subject.value = json["Vak"] == null ? null : Subject.fromMap(json["Vak"])
     .._preParsedgrade =
         double.tryParse(json["CijferStr"]?.replaceAll(',', '.') ?? "-1") ?? -1;
 
@@ -98,22 +100,47 @@ class Grade {
     }
 
     var res = (await schoolyear.value!.profile.value!.account.value!.api.dio.get(
-            "personen/${schoolyear.value!.profile.value!.id}/aanmeldingen/${schoolyear.value!.id}/cijfers/extracijferkolominfo/${cijferKolom.id}"))
+            "personen/${schoolyear.value!.profile.value!.id}/aanmeldingen/${schoolyear.value!.id}/cijfers/extracijferkolominfo/$cijferKolomId"))
         .data;
 
-    weight = res["Weging"];
-    testDate = res["WerkinformatieDatumIngevoerd"] == null
-        ? null
-        : DateTime.parse(res["WerkinformatieDatumIngevoerd"]);
-    description = res["WerkInformatieOmschrijving"] != null &&
-            res["WerkInformatieOmschrijving"] != ""
-        ? res["WerkInformatieOmschrijving"]
-        : res["KolomOmschrijving"];
+    description = res["Omschrijving"];
+    weight = (res["Weging"] as num?)?.toDouble() ?? weight;
+    testDate = res["InvoerDatum"] == null
+        ? (res["WerkinformatieDatumIngevoerd"] == null
+            ? null
+            : DateTime.parse(res["WerkinformatieDatumIngevoerd"]).toUtc())
+        : DateTime.parse(res["InvoerDatum"]).toUtc();
     isar.writeTxnSync(() {
       schoolyear.value!.grades.saveSync();
       isar.grades.putSync(this);
     });
+    return;
   }
+
+  @ignore
+  int get cijferKolomId => cijferKolom.id;
+
+  @ignore
+  int get idEloOpdracht => cijferKolomIdEloOpdracht;
+
+  Map<String, dynamic> toMap() => {
+        "CijferId": id,
+        "CijferStr": cijferStr,
+        "IsVoldoende": isVoldoende,
+        "IngevoerdDoor": ingevoerdDoor,
+        "DatumIngevoerd": datumIngevoerd?.toIso8601String(),
+        "Weging": weight,
+        "Inhalen": inhalen,
+        "Vrijstelling": vrijstelling,
+        "TeltMee": teltMee,
+        "CijferKolom": cijferKolom.toMap(),
+        "CijferKolomIdEloOpdracht": cijferKolomIdEloOpdracht,
+        "Docent": docent,
+        "VakOntheffing": vakOntheffing,
+        "VakVrijstelling": vakVrijstelling,
+        "CijferPeriode": period.value?.toMap(),
+        "Vak": subject.value?.toMap(),
+      };
 }
 
 class GradeChange {
@@ -161,18 +188,32 @@ class CijferKolom {
       CijferKolom.fromMap(json.decode(str));
 
   factory CijferKolom.fromMap(Map<String, dynamic> json) => CijferKolom(
-        id: json["Id"],
+        id: json["Id"] ?? 0,
         kolomNaam: json["KolomNaam"],
         kolomNummer: json["KolomNummer"],
-        kolomVolgNummer: json["KolomVolgNummer"],
+        kolomVolgNummer: json["KolomVolgNummer"]?.toString() ?? "",
         kolomKop: json["KolomKop"],
         kolomOmschrijving: json["KolomOmschrijving"],
-        kolomSoort: json["KolomSoort"],
-        isHerkansingKolom: json["IsHerkansingKolom"],
-        isDocentKolom: json["IsDocentKolom"],
-        heeftOnderliggendeKolommen: json["HeeftOnderliggendeKolommen"],
-        isPtaKolom: json["IsPTAKolom"],
+        kolomSoort: json["KolomSoort"] ?? 0,
+        isHerkansingKolom: json["IsHerkansingKolom"] ?? false,
+        isDocentKolom: json["IsDocentKolom"] ?? false,
+        heeftOnderliggendeKolommen: json["HeeftOnderliggendeKolommen"] ?? false,
+        isPtaKolom: json["IsPTAKolom"] ?? false,
       );
+
+  Map<String, dynamic> toMap() => {
+        "Id": id,
+        "KolomNaam": kolomNaam,
+        "KolomNummer": kolomNummer,
+        "KolomVolgNummer": kolomVolgNummer,
+        "KolomKop": kolomKop,
+        "KolomOmschrijving": kolomOmschrijving,
+        "KolomSoort": kolomSoort,
+        "IsHerkansingKolom": isHerkansingKolom,
+        "IsDocentKolom": isDocentKolom,
+        "HeeftOnderliggendeKolommen": heeftOnderliggendeKolommen,
+        "IsPTAKolom": isPtaKolom,
+      };
 }
 
 @Collection()
@@ -196,9 +237,9 @@ class GradePeriod {
   GradePeriod({
     this.start,
     this.end,
-    required this.id,
-    required this.naam,
-    required this.volgNummer,
+    this.id = 0,
+    this.naam = "",
+    this.volgNummer = 0,
   });
 
   factory GradePeriod.fromJson(String str) =>
@@ -207,9 +248,9 @@ class GradePeriod {
   String toJson() => json.encode(toMap());
 
   factory GradePeriod.fromMap(Map<String, dynamic> json) => GradePeriod(
-        id: json["Id"],
-        naam: json["Naam"],
-        volgNummer: json["VolgNummer"],
+        id: json["Id"] ?? 0,
+        naam: json["Naam"] ?? json["Omschrijving"] ?? "",
+        volgNummer: json["VolgNummer"] ?? 0,
         start: json["Start"] != null
             ? DateTime.parse(json["Start"]).toUtc()
             : null,
@@ -244,10 +285,10 @@ class Vak {
   String toJson() => json.encode(toMap());
 
   factory Vak.fromMap(Map<String, dynamic> json) => Vak(
-        id: json["Id"],
-        afkorting: json["Afkorting"],
-        omschrijving: json["Omschrijving"],
-        volgnr: json["Volgnr"],
+        id: json["Id"] ?? 0,
+        afkorting: json["Afkorting"] ?? "",
+        omschrijving: json["Omschrijving"] ?? json["Naam"] ?? "",
+        volgnr: json["Volgnr"] ?? 0,
       );
 
   Map<String, dynamic> toMap() => {

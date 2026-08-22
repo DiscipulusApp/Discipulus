@@ -11,6 +11,7 @@ import 'package:discipulus/screens/introduction/post_login.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/utils/login_logger.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -175,12 +176,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   late final ValueNotifier<TokenSet?> tokenSet;
   late Magister magister;
   late final ValueNotifier<String> textState;
+  bool _hasError = false;
+  String? _errorMessage;
+  StackTrace? _stackTrace;
 
   @override
   void initState() {
     super.initState();
     tokenSet = ValueNotifier(null);
     textState = ValueNotifier("");
+    LoginLogger.instance.startSession(widget.dummy ? "Dummy Login" : "Magister Login");
     if (!widget.dummy) {
       WidgetsBinding.instance.addPostFrameCallback((_) => setTokenSet());
     } else {
@@ -196,18 +201,33 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Future<void> setTokenSet() async {
+    setState(() {
+      _hasError = false;
+      _errorMessage = null;
+      _stackTrace = null;
+    });
     tokenSet.value = await showMagisterLoginDialog(context);
     // If the dialog was dismissed and no token was retrieved,
     // return to the previous page.
     if (tokenSet.value == null) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) async => Navigator.of(context).pop());
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+      return;
     }
     await getAccount();
   }
 
   Future<void> getAccount() async {
     try {
+      setState(() {
+        _hasError = false;
+        _errorMessage = null;
+        _stackTrace = null;
+        textState.value = "Gegevens ophalen van Magister...";
+      });
+
+      LoginLogger.instance.step("Bepalen van Magister API endpoint");
       // Get endpoint
       Uri endPoint = widget.dummy
           ? Uri.base
@@ -219,6 +239,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               tokenSet: () => Future.value(tokenSet.value!),
             );
 
+      LoginLogger.instance.step("Ophalen van hoofdaccount & persoonsgegevens");
       // Get account
       ApiAccount account = await magister.account;
       DiscipulusAccount discipulusAccount = DiscipulusAccount(
@@ -231,31 +252,198 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       Future.delayed(
         const Duration(seconds: 5),
         () {
-          if (!textState.value.contains("ERROR: ") && context.mounted) {
-            textState.value = "Nog even wachten, je data wordt opgehaald...";
+          if (!_hasError && mounted) {
+            textState.value = "Nog even geduld, je schoolgegevens worden gesynchroniseerd...";
           }
         },
       );
 
+      LoginLogger.instance.step("Synchroniseren van profiel en data");
       // Fill account
       await discipulusAccount.fill();
 
+      LoginLogger.instance.step("Login succesvol voltooid!");
       // Set active profile and navigate to main screen
       activeProfile = activeProfile;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
         Layout.of(context)?.update();
         Layout.of(context)?.goToPageFromIndex(0);
         Layout.of(context)?.setState(() {});
         PostLoginScreen().push(context);
       });
-    } catch (e) {
-      textState.value = "ERROR: $e";
-      rethrow;
+    } catch (e, s) {
+      LoginLogger.instance.error("Fout bij ophalen/verwerken van account",
+          error: e, stackTrace: s);
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = e.toString();
+          _stackTrace = s;
+          textState.value = "ERROR: $e";
+        });
+      }
     }
+  }
+
+  void _showLogModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (context) {
+        final logText = LoginLogger.instance.getLogText();
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text("Diagnostisch Logboek"),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded),
+                    tooltip: "Kopieer logboek",
+                    onPressed: () => LoginLogger.instance.copyToClipboard(context),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.share_rounded),
+                    tooltip: "Deel logboek",
+                    onPressed: () => LoginLogger.instance.shareLog(context),
+                  ),
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: SelectableText(
+                    logText,
+                    style: const TextStyle(
+                      fontFamily: "monospace",
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_hasError) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.close_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text("Inlogfout"),
+        ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.errorContainer.withAlpha(80),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.error_outline_rounded,
+                      size: 56,
+                      color: colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Inloggen mislukt",
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Er is iets misgegaan tijdens het ophalen van je gegevens van Magister. Je kunt het diagnostisch rapport delen zodat we dit probleem kunnen oplossen.",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withAlpha(80),
+                      ),
+                    ),
+                    child: SelectableText(
+                      _errorMessage ?? "Onbekende fout",
+                      style: TextStyle(
+                        fontFamily: "monospace",
+                        fontSize: 12,
+                        color: colorScheme.error,
+                      ),
+                      maxLines: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => LoginLogger.instance.shareLog(context),
+                        icon: const Icon(Icons.share_rounded),
+                        label: const Text("Deel foutrapport"),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            LoginLogger.instance.copyToClipboard(context),
+                        icon: const Icon(Icons.copy_rounded),
+                        label: const Text("Kopieer logboek"),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _showLogModal(context),
+                        icon: const Icon(Icons.article_outlined),
+                        label: const Text("Bekijk details"),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.tonalIcon(
+                    onPressed: () => setTokenSet(),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text("Opnieuw proberen"),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: useTransparency ? Colors.transparent : null,
       extendBodyBehindAppBar: true,

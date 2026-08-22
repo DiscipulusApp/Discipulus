@@ -37,10 +37,17 @@ class Groep {
   factory Groep.fromJson(String str) => Groep.fromMap(json.decode(str));
 
   factory Groep.fromMap(Map<String, dynamic> json) => Groep(
-        naam: json["Naam"],
-        privileges: List<Permission>.from(
-            json["Privileges"].map((x) => Permission.fromMap(x))),
-        links: json["Links"],
+        naam: json["Naam"] ??
+            json["naam"] ??
+            json["omschrijving"] ??
+            json["Omschrijving"] ??
+            json["code"] ??
+            "",
+        privileges: json["Privileges"] != null
+            ? List<Permission>.from(
+                json["Privileges"].map((x) => Permission.fromMap(x)))
+            : [],
+        links: json["Links"] ?? json["links"],
       );
 }
 
@@ -60,35 +67,37 @@ class ApiPersoon {
 
   ApiPersoon({
     required this.id,
-    required this.roepnaam,
+    this.roepnaam,
     this.tussenvoegsel,
-    required this.achternaam,
-    required this.officieleVoornamen,
-    required this.voorletters,
+    this.achternaam = "",
+    this.officieleVoornamen,
+    this.voorletters = "",
     this.officieleTussenvoegsels,
-    required this.officieleAchternaam,
+    this.officieleAchternaam,
     required this.geboortedatum,
     this.geboorteAchternaam,
     this.geboortenaamTussenvoegsel,
-    required this.gebruikGeboortenaam,
+    this.gebruikGeboortenaam = false,
   });
 
   factory ApiPersoon.fromJson(String str) =>
       ApiPersoon.fromMap(json.decode(str));
 
   factory ApiPersoon.fromMap(Map<String, dynamic> json) => ApiPersoon(
-        id: json["Id"],
+        id: json["Id"] ?? 0,
         roepnaam: json["Roepnaam"],
         tussenvoegsel: json["Tussenvoegsel"],
-        achternaam: json["Achternaam"],
+        achternaam: json["Achternaam"] ?? "",
         officieleVoornamen: json["OfficieleVoornamen"],
-        voorletters: json["Voorletters"],
+        voorletters: json["Voorletters"] ?? "",
         officieleTussenvoegsels: json["OfficieleTussenvoegsels"],
         officieleAchternaam: json["OfficieleAchternaam"],
-        geboortedatum: DateTime.parse(json["Geboortedatum"]).toUtc(),
+        geboortedatum: json["Geboortedatum"] != null
+            ? DateTime.parse(json["Geboortedatum"]).toUtc()
+            : DateTime(2000),
         geboorteAchternaam: json["GeboorteAchternaam"],
         geboortenaamTussenvoegsel: json["GeboortenaamTussenvoegsel"],
-        gebruikGeboortenaam: json["GebruikGeboortenaam"],
+        gebruikGeboortenaam: json["GebruikGeboortenaam"] ?? false,
       );
 }
 
@@ -121,36 +130,38 @@ class ApiChild {
   final bool gebruikGeboortenaam;
 
   ApiChild({
-    required this.stamnummer,
-    required this.zichtbaarVoorOuder,
+    this.stamnummer = 0,
+    this.zichtbaarVoorOuder = true,
     required this.id,
-    required this.roepnaam,
+    this.roepnaam = "",
     this.tussenvoegsel,
-    required this.achternaam,
-    required this.officieleVoornamen,
+    this.achternaam = "",
+    this.officieleVoornamen = "",
     this.voorletters,
     this.officieleTussenvoegsels,
-    required this.officieleAchternaam,
+    this.officieleAchternaam = "",
     required this.geboortedatum,
     this.geboorteAchternaam,
     this.geboortenaamTussenvoegsel,
-    required this.gebruikGeboortenaam,
+    this.gebruikGeboortenaam = false,
   });
 
   factory ApiChild.fromJson(String str) => ApiChild.fromMap(json.decode(str));
 
   factory ApiChild.fromMap(Map<String, dynamic> json) => ApiChild(
-        stamnummer: json["Stamnummer"],
-        zichtbaarVoorOuder: json["ZichtbaarVoorOuder"],
-        id: json["Id"],
-        roepnaam: json["Roepnaam"],
+        stamnummer: json["Stamnummer"] ?? 0,
+        zichtbaarVoorOuder: json["ZichtbaarVoorOuder"] ?? true,
+        id: json["Id"] ?? 0,
+        roepnaam: json["Roepnaam"] ?? "",
         tussenvoegsel: json["Tussenvoegsel"],
-        achternaam: json["Achternaam"],
-        officieleVoornamen: json["OfficieleVoornamen"],
-        voorletters: json["Voorletters"],
+        achternaam: json["Achternaam"] ?? "",
+        officieleVoornamen: json["OfficieleVoornamen"] ?? "",
+        voorletters: json["Voorletters"] ?? "",
         officieleTussenvoegsels: json["OfficieleTussenvoegsels"],
-        officieleAchternaam: json["OfficieleAchternaam"],
-        geboortedatum: DateTime.parse(json["Geboortedatum"]).toUtc(),
+        officieleAchternaam: json["OfficieleAchternaam"] ?? "",
+        geboortedatum: json["Geboortedatum"] != null
+            ? DateTime.parse(json["Geboortedatum"]).toUtc()
+            : DateTime(2000),
         geboorteAchternaam: json["GeboorteAchternaam"],
         geboortenaamTussenvoegsel: json["GeboortenaamTussenvoegsel"],
         gebruikGeboortenaam: json["GebruikGeboortenaam"] ?? false,

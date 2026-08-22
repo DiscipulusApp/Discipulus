@@ -380,12 +380,29 @@ jobs:
       - name: Create Linux Flatpak
         run: |
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
-          sudo flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08 || true
+          sudo flatpak install -y flathub org.gnome.Platform//46 org.gnome.Sdk//46 || true
+
+          # Create desktop integration assets
+          mkdir -p flatpak_assets
+          cp ios/Runner/Assets.xcassets/AppIcon.appiconset/AppIcon~ios-marketing.png flatpak_assets/${{ env.APP_ID }}.png
+          cp icon.svg flatpak_assets/${{ env.APP_ID }}.svg
+          cat << 'EOF' > flatpak_assets/${{ env.APP_ID }}.desktop
+          [Desktop Entry]
+          Version=1.0
+          Type=Application
+          Name=Discipulus
+          Comment=Discipulus Magister Client
+          Exec=discipulus
+          Icon=dev.harrydekat.discipulus
+          Terminal=false
+          Categories=Utility;Education;
+          EOF
+
           echo '{
             "app-id": "${{ env.APP_ID }}",
-            "runtime": "org.freedesktop.Platform",
-            "runtime-version": "22.08",
-            "sdk": "org.freedesktop.Sdk",
+            "runtime": "org.gnome.Platform",
+            "runtime-version": "46",
+            "sdk": "org.gnome.Sdk",
             "command": "${{ env.APP_NAME }}",
             "finish-args": [
               "--share=network",
@@ -399,15 +416,30 @@ jobs:
                 "name": "${{ env.APP_NAME }}",
                 "buildsystem": "simple",
                 "build-commands": [
-                  "mkdir -p /app/bin /app/lib/${{ env.APP_NAME }}",
+                  "mkdir -p /app/bin /app/lib/${{ env.APP_NAME }} /app/share/applications /app/share/icons/hicolor/512x512/apps /app/share/icons/hicolor/scalable/apps",
                   "cp -r * /app/lib/${{ env.APP_NAME }}/",
                   "ln -s /app/lib/${{ env.APP_NAME }}/${{ env.APP_NAME }} /app/bin/${{ env.APP_NAME }}",
-                  "chmod +x /app/bin/${{ env.APP_NAME }} /app/lib/${{ env.APP_NAME }}/${{ env.APP_NAME }}"
+                  "chmod +x /app/bin/${{ env.APP_NAME }} /app/lib/${{ env.APP_NAME }}/${{ env.APP_NAME }}",
+                  "install -D -m 644 ${{ env.APP_ID }}.desktop /app/share/applications/${{ env.APP_ID }}.desktop",
+                  "install -D -m 644 ${{ env.APP_ID }}.png /app/share/icons/hicolor/512x512/apps/${{ env.APP_ID }}.png",
+                  "install -D -m 644 ${{ env.APP_ID }}.svg /app/share/icons/hicolor/scalable/apps/${{ env.APP_ID }}.svg"
                 ],
                 "sources": [
                   {
                     "type": "dir",
                     "path": "build/linux/x64/release/bundle"
+                  },
+                  {
+                    "type": "file",
+                    "path": "flatpak_assets/${{ env.APP_ID }}.desktop"
+                  },
+                  {
+                    "type": "file",
+                    "path": "flatpak_assets/${{ env.APP_ID }}.png"
+                  },
+                  {
+                    "type": "file",
+                    "path": "flatpak_assets/${{ env.APP_ID }}.svg"
                   }
                 ]
               }

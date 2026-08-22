@@ -70,17 +70,18 @@ class Bericht with SpotlightSearchElementMixin {
   factory Bericht.fromJson(String str) => Bericht.fromMap(json.decode(str));
 
   factory Bericht.fromMap(Map<String, dynamic> json) => Bericht(
-        id: json["id"],
+        id: json["id"] ?? json["Id"] ?? 0,
         rawOnderwerp: json["onderwerp"],
         mapId: json["mapId"] ?? -1, // Concepts do not have a mapId
         afzender: json["afzender"] != null
             ? Afzender.fromMap(json["afzender"])
             : null,
-        heeftPrioriteit: json["heeftPrioriteit"],
-        heeftBijlagen: json["heeftBijlagen"],
+        heeftPrioriteit: json["heeftPrioriteit"] ?? false,
+        heeftBijlagen: json["heeftBijlagen"] ?? false,
         isGelezen: json["isGelezen"] ?? true, // Concepts are always read
-        verzondenOp: DateTime.parse(
-                json["laatsteWijzigingDatumTijd"] ?? json["verzondenOp"])
+        verzondenOp: DateTime.parse(json["laatsteWijzigingDatumTijd"] ??
+                json["verzondenOp"] ??
+                DateTime.now().toIso8601String())
             .toUtc(),
         doorgestuurdOp: json["doorgestuurdOp"] != null
             ? DateTime.parse(json["doorgestuurdOp"])
@@ -88,7 +89,9 @@ class Bericht with SpotlightSearchElementMixin {
         beantwoordOp: json["beantwoordOp"] != null
             ? DateTime.parse(json["beantwoordOp"])
             : null,
-        links: ItemLinks.fromMap(json["links"]),
+        links: json["links"] != null
+            ? ItemLinks.fromMap(json["links"])
+            : ItemLinks(),
         inhoud: json["inhoud"],
       );
 
@@ -368,8 +371,8 @@ class Afzender {
   factory Afzender.fromJson(String str) => Afzender.fromMap(json.decode(str));
 
   factory Afzender.fromMap(Map<String, dynamic> json) => Afzender(
-        id: json["id"],
-        naam: json["naam"],
+        id: json["id"] ?? json["Id"] ?? 0,
+        naam: json["naam"] ?? json["Naam"] ?? "",
       );
 }
 
@@ -411,10 +414,10 @@ class Ontvanger {
   factory Ontvanger.fromJson(String str) => Ontvanger.fromMap(json.decode(str));
 
   factory Ontvanger.fromMap(Map<String, dynamic> json) => Ontvanger(
-        id: json["id"],
-        weergavenaam: json["weergavenaam"],
-        type: json["type"],
-        mailGroep: json["mailGroep"],
+        id: json["id"] ?? json["Id"] ?? 0,
+        weergavenaam: json["weergavenaam"] ?? json["Weergavenaam"] ?? "",
+        type: json["type"] ?? json["Type"] ?? "",
+        mailGroep: json["mailGroep"] ?? json["MailGroep"],
       );
 }
 
@@ -445,8 +448,8 @@ class UploadedAttachment {
 
   factory UploadedAttachment.fromMap(Map<String, dynamic> json) =>
       UploadedAttachment(
-        id: json["id"],
-        naam: json["naam"],
+        id: json["id"] ?? json["Id"] ?? 0,
+        naam: json["naam"] ?? json["Naam"] ?? "",
       );
 
   Map<String, dynamic> toMap() => {"id": id, "naam": naam, "type": type};
@@ -478,11 +481,11 @@ class MessagesFolder {
       MessagesFolder.fromMap(json.decode(str));
 
   factory MessagesFolder.fromMap(Map<String, dynamic> json) => MessagesFolder(
-      aantalOngelezen: json["aantalOngelezen"],
-      id: json["id"],
-      bovenliggendeId: json["bovenliggendeId"],
-      naam: json["naam"],
-      berichtenLink: json["links"]["berichten"]["href"]);
+      aantalOngelezen: json["aantalOngelezen"] ?? 0,
+      id: json["id"] ?? 0,
+      bovenliggendeId: json["bovenliggendeId"] ?? 0,
+      naam: json["naam"] ?? "",
+      berichtenLink: json["links"]?["berichten"]?["href"] ?? "");
 
   CancelToken _cancelToken = CancelToken();
 
@@ -664,14 +667,14 @@ class Contact {
   String toJson() => json.encode(toMap());
 
   factory Contact.fromMap(Map<String, dynamic> json) => Contact(
-        id: json["id"],
-        voorletters: json["voorletters"],
-        roepnaam: json["roepnaam"],
-        tussenvoegsel: json["tussenvoegsel"],
-        achternaam: json["achternaam"],
-        code: json["code"],
-        klas: json["klas"],
-        type: json["type"]!,
+        id: json["id"] ?? json["Id"] ?? 0,
+        voorletters: json["voorletters"] ?? json["Voorletters"] ?? "",
+        roepnaam: json["roepnaam"] ?? json["Roepnaam"],
+        tussenvoegsel: json["tussenvoegsel"] ?? json["Tussenvoegsel"],
+        achternaam: json["achternaam"] ?? json["Achternaam"] ?? "",
+        code: json["code"] ?? json["Code"],
+        klas: json["klas"] ?? json["Klas"],
+        type: json["type"]?.toString() ?? "",
       );
 
   Map<String, dynamic> toMap() => {

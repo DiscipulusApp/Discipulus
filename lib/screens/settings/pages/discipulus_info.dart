@@ -49,6 +49,16 @@ class _InfoSettingsPageState extends State<InfoSettingsPage> {
           onTap: () => const DiagnosticCheckPage().push(context),
         ),
         ListTile(
+          leading: const Icon(Icons.forum_rounded),
+          title: const Text("Discord"),
+          subtitle: const Text("Praat mee in de community server"),
+          trailing: const Icon(Icons.open_in_browser),
+          onTap: () => launchUrl(
+            Uri.parse("https://discord.gg/3VA54yr4Vv"),
+            mode: LaunchMode.externalApplication,
+          ),
+        ),
+        ListTile(
           leading: const Icon(Icons.device_hub_rounded),
           title: const Text("Github"),
           subtitle: const Text("Alle broncode voor Discipulus"),

@@ -48,14 +48,14 @@ class ProfileAddress {
   });
 
   factory ProfileAddress.fromMap(Map<String, dynamic> json) => ProfileAddress(
-        straat: json["straat"],
-        huisnummer: json["huisnummer"],
+        straat: json["straat"] ?? "",
+        huisnummer: json["huisnummer"] ?? "",
         toevoeging: json["toevoeging"],
-        postcode: json["postcode"],
-        plaats: json["plaats"],
-        land: json["land"],
-        type: json["type"],
-        isGeheim: json["isGeheim"],
+        postcode: json["postcode"] ?? "",
+        plaats: json["plaats"] ?? "",
+        land: json["land"] ?? "",
+        type: json["type"] ?? "",
+        isGeheim: json["isGeheim"] ?? false,
       );
 
   Map<String, dynamic> toMap() => {
@@ -78,17 +78,17 @@ class ProfileCareer {
   String? profielen;
 
   ProfileCareer({
-    required this.studie,
-    required this.klas,
-    required this.stamNr,
-    required this.examenNr,
-    required this.profielen,
+    this.studie = "",
+    this.klas,
+    this.stamNr = "",
+    this.examenNr,
+    this.profielen,
   });
 
   factory ProfileCareer.fromMap(Map<String, dynamic> json) => ProfileCareer(
-        studie: json["Studie"],
+        studie: json["Studie"] ?? "",
         klas: json["Klas"],
-        stamNr: json["StamNr"],
+        stamNr: json["StamNr"] ?? "",
         examenNr: json["ExamenNr"],
         profielen: json["Profielen"],
       );
@@ -108,16 +108,16 @@ class ProfileAuthorization {
   int meerderJarigeLeeftijd;
 
   ProfileAuthorization({
-    required this.oudersMogenGegevensZien,
-    required this.magInzageOudersInstellen,
-    required this.meerderJarigeLeeftijd,
+    this.oudersMogenGegevensZien = false,
+    this.magInzageOudersInstellen = false,
+    this.meerderJarigeLeeftijd = 18,
   });
 
   factory ProfileAuthorization.fromMap(Map<String, dynamic> json) =>
       ProfileAuthorization(
-        oudersMogenGegevensZien: json["oudersMogenGegevensZien"],
-        magInzageOudersInstellen: json["magInzageOudersInstellen"],
-        meerderJarigeLeeftijd: json["meerderJarigeLeeftijd"],
+        oudersMogenGegevensZien: json["oudersMogenGegevensZien"] ?? false,
+        magInzageOudersInstellen: json["magInzageOudersInstellen"] ?? false,
+        meerderJarigeLeeftijd: json["meerderJarigeLeeftijd"] ?? 18,
       );
 
   Map<String, dynamic> toMap() => {
@@ -132,14 +132,16 @@ class ProfileiCalendar {
   DateTime lastModified;
 
   ProfileiCalendar({
-    required this.href,
+    this.href = "",
     required this.lastModified,
   });
 
   factory ProfileiCalendar.fromMap(Map<String, dynamic> json) =>
       ProfileiCalendar(
-        href: json["href"],
-        lastModified: DateTime.parse(json["lastModified"]),
+        href: json["href"] ?? "",
+        lastModified: json["lastModified"] != null
+            ? DateTime.parse(json["lastModified"])
+            : DateTime.now(),
       );
 
   Map<String, dynamic> toMap() => {
@@ -158,23 +160,25 @@ class ProfileAnswer {
   bool toestemming;
 
   ProfileAnswer({
-    required this.vraagId,
-    required this.code,
-    required this.omschrijving,
-    required this.uitleg,
-    required this.volgnummer,
+    this.vraagId = 0,
+    this.code = "",
+    this.omschrijving = "",
+    this.uitleg = "",
+    this.volgnummer = 0,
     required this.datumAangepast,
-    required this.toestemming,
+    this.toestemming = false,
   });
 
   factory ProfileAnswer.fromMap(Map<String, dynamic> json) => ProfileAnswer(
-        vraagId: json["vraagId"],
-        code: json["code"],
-        omschrijving: json["omschrijving"],
-        uitleg: json["uitleg"],
-        volgnummer: json["volgnummer"],
-        datumAangepast: DateTime.parse(json["datumAangepast"]),
-        toestemming: json["toestemming"],
+        vraagId: json["vraagId"] ?? 0,
+        code: json["code"] ?? "",
+        omschrijving: json["omschrijving"] ?? "",
+        uitleg: json["uitleg"] ?? "",
+        volgnummer: json["volgnummer"] ?? 0,
+        datumAangepast: json["datumAangepast"] != null
+            ? DateTime.parse(json["datumAangepast"])
+            : DateTime.now(),
+        toestemming: json["toestemming"] ?? false,
       );
 
   Map<String, dynamic> toMap() => {
@@ -199,25 +203,27 @@ class ProfileMentor {
   String naam;
 
   ProfileMentor({
-    required this.type,
-    required this.id,
-    required this.voorletters,
-    required this.roepnaam,
-    required this.tussenvoegsel,
-    required this.achternaam,
-    required this.volgnummer,
-    required this.naam,
+    this.type = const [],
+    this.id = 0,
+    this.voorletters = "",
+    this.roepnaam,
+    this.tussenvoegsel,
+    this.achternaam = "",
+    this.volgnummer = 0,
+    this.naam = "",
   });
 
   factory ProfileMentor.fromMap(Map<String, dynamic> json) => ProfileMentor(
-        type: List<String>.from(json["type"].map((x) => x)),
-        id: json["id"],
-        voorletters: json["voorletters"],
+        type: json["type"] != null
+            ? List<String>.from(json["type"].map((x) => x.toString()))
+            : [],
+        id: json["id"] ?? 0,
+        voorletters: json["voorletters"] ?? "",
         roepnaam: json["roepnaam"],
         tussenvoegsel: json["tussenvoegsel"],
-        achternaam: json["achternaam"],
-        volgnummer: json["volgnummer"],
-        naam: json["naam"],
+        achternaam: json["achternaam"] ?? "",
+        volgnummer: json["volgnummer"] ?? 0,
+        naam: json["naam"] ?? "",
       );
 
   Map<String, dynamic> toMap() => {
