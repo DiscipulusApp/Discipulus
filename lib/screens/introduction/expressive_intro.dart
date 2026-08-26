@@ -110,7 +110,6 @@ class _ExpressiveIntroductionScreenState
                       },
                     ),
                   ),
-                if (!kReleaseMode)
                   CustomCard(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
