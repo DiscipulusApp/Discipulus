@@ -9,8 +9,8 @@ class Leermiddel extends MagisterBase {
   final String titel;
   final String? uitgeverij;
   final int status;
-  final DateTime start;
-  final DateTime eind;
+  final DateTime? start;
+  final DateTime? eind;
   final String? ean;
   final String? previewImageUrl;
   final Vak? vak;
@@ -42,8 +42,8 @@ class Leermiddel extends MagisterBase {
         titel: json["Titel"],
         uitgeverij: json["Uitgeverij"],
         status: json["Status"],
-        start: DateTime.parse(json["Start"]).toUtc(),
-        eind: DateTime.parse(json["Eind"]).toUtc(),
+        start: json["Start"] != null ? DateTime.parse(json["Start"]).toUtc() : null,
+        eind: json["Eind"] != null ? DateTime.parse(json["Eind"]).toUtc() : null,
         ean: json["EAN"],
         previewImageUrl: json["PreviewImageUrl"],
         vak: Vak.fromMap(json["Vak"]),
