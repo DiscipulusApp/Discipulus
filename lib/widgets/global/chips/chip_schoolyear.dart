@@ -106,21 +106,6 @@ class _SchoolyearSelectorState extends State<SchoolyearSelector> {
               title: item.group.omschrijving ?? item.group.code,
               shortTitle: item.group.code,
               item: item.uuid,
-              bottomWiget: widget.gradesInformation != null
-                  ? () async {
-                      dynamic grades =
-                          (await uuidToSchoolyear(item.uuid))?.grades.filter();
-                      if (grades != null) {
-                        grades = widget.gradesInformation!.call(grades);
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: StatisticalTilesHeader(grades: grades),
-                        );
-                      }
-                      return null;
-                    }
-                  : null,
             ),
           );
         }
