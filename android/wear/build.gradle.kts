@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -20,18 +22,65 @@ android {
             ?: "1.0"
     }
 
+    // Load keystore properties from local.properties or key.properties
+    val keystoreProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        keystoreProperties.load(localPropertiesFile.inputStream())
+    }
+    val keyPropertiesFile = rootProject.file("key.properties")
+    if (keyPropertiesFile.exists()) {
+        keystoreProperties.load(keyPropertiesFile.inputStream())
+    }
+
+    // Helper function to robustly resolve keystore location across relative paths in CI and local setups
+    fun resolveKeystoreFile(rawPath: String?): File? {
+        if (rawPath.isNullOrBlank()) return null
+        val direct = File(rawPath)
+        if (direct.isAbsolute && direct.exists()) return direct
+
+        val candidates = listOf(
+            direct,
+            rootProject.file("app/$rawPath"),
+            project.file("../app/$rawPath"),
+            rootProject.file(rawPath),
+            project.file(rawPath),
+            rootProject.file("app/keystore.jks"),
+            project.file("../app/keystore.jks")
+        )
+        return candidates.firstOrNull { it.exists() }
+    }
+
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("CM_KEYSTORE_PATH") ?: "../app/keystore.jks"
-            val keystorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
-            val keyAlias = System.getenv("CM_KEY_ALIAS")
-            val keyPassword = System.getenv("CM_KEY_PASSWORD")
+            val ciKeystorePath = System.getenv("CM_KEYSTORE_PATH")
+            val ciKeystorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+            val ciKeyAlias = System.getenv("CM_KEY_ALIAS")
+            val ciKeyPassword = System.getenv("CM_KEY_PASSWORD")
 
-            if (file(keystorePath).exists() && keystorePassword != null) {
-                storeFile = file(keystorePath)
-                storePassword = keystorePassword
-                this.keyAlias = keyAlias
-                this.keyPassword = keyPassword
+            val resolvedCiKeystore = resolveKeystoreFile(ciKeystorePath ?: "keystore.jks")
+
+            if ((System.getenv("CI") == "true" || ciKeystorePassword != null) && resolvedCiKeystore != null && ciKeystorePassword != null) {
+                storeFile = resolvedCiKeystore
+                storePassword = ciKeystorePassword
+                keyAlias = ciKeyAlias ?: "discipulus"
+                keyPassword = ciKeyPassword ?: ciKeystorePassword
+                println("INFO: [wear] Configured release signing from CI environment (${resolvedCiKeystore.absolutePath})")
+            } else if (
+                keystoreProperties.containsKey("storeFile") &&
+                keystoreProperties.containsKey("storePassword") &&
+                keystoreProperties.containsKey("keyAlias") &&
+                keystoreProperties.containsKey("keyPassword")
+            ) {
+                val storePath = keystoreProperties["storeFile"] as String
+                val candidateFile = resolveKeystoreFile(storePath) ?: file(storePath)
+                storeFile = candidateFile
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                println("INFO: [wear] Configured release signing from properties (${candidateFile.absolutePath})")
+            } else {
+                println("WARNING: [wear] No release keystore configured. Falling back to debug signing for release build.")
             }
         }
     }
@@ -41,8 +90,10 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             val releaseSigning = signingConfigs.getByName("release")
-            if (releaseSigning.storeFile != null) {
-                signingConfig = releaseSigning
+            signingConfig = if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
+                releaseSigning
+            } else {
+                signingConfigs.getByName("debug")
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
