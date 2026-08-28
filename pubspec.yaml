@@ -104,6 +104,7 @@ dependencies:
   network_info_plus: ^7.0.0
   haptic_kit: ^1.0.1
   package_info_plus: ^9.0.1
+  isar_flutter_libs: ^3.1.0+1
 
   # Unused
   # flutter_carousel_widget: ^2.2.0

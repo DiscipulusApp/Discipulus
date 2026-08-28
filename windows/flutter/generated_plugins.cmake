@@ -12,6 +12,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_local_ai
   irondash_engine_context
   isar_community_flutter_libs
+  isar_flutter_libs
   permission_handler_windows
   share_plus
   super_native_extensions
