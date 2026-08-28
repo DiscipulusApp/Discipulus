@@ -480,59 +480,84 @@ class ExpandableEventBody extends StatefulWidget {
 
 class _ExpandableEventBodyState extends State<ExpandableEventBody> {
   bool _isExpanded = false;
-  final GlobalKey _key = GlobalKey();
+  bool _canExpand = false;
+  final GlobalKey _measureKey = GlobalKey();
 
-  Size? get childSize {
-    final RenderBox? renderLogo =
-        _key.currentContext?.findRenderObject() as RenderBox?;
-    return renderLogo?.size;
+  void _checkOverflow() {
+    final RenderBox? renderBox =
+        _measureKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null && renderBox.hasSize) {
+      final bool canExpand =
+          renderBox.size.height > widget.constraints.maxHeight;
+      if (canExpand != _canExpand && mounted) {
+        setState(() {
+          _canExpand = canExpand;
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
+  }
+
+  @override
+  void didUpdateWidget(ExpandableEventBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkOverflow());
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      alignment: Alignment.bottomRight,
       children: [
+        // Offstage measuring copy with unconstrained height to measure true content size
+        Offstage(
+          offstage: true,
+          child: KeyedSubtree(
+            key: _measureKey,
+            child: widget.child,
+          ),
+        ),
+        // Visible content with strict clipping and expand button
         CustomAnimatedSize(
+          curve: Easing.emphasizedDecelerate,
+          duration: Durations.short3,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ConstrainedBox(
-                key: _key,
-                constraints:
-                    !_isExpanded ? widget.constraints : const BoxConstraints(),
-                child: widget.child,
+              ClipRect(
+                child: ConstrainedBox(
+                  constraints: (!_isExpanded && _canExpand)
+                      ? widget.constraints
+                      : const BoxConstraints(),
+                  child: widget.child,
+                ),
               ),
-              if (_isExpanded)
-                const SizedBox(
-                  height: 38 + 8, // Button height + Padding
+              if (_canExpand)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 36,
+                    child: IconButton.filledTonal(
+                      onPressed: () => setState(() {
+                        _isExpanded = !_isExpanded;
+                      }),
+                      icon: Icon(
+                        _isExpanded
+                            ? Icons.expand_less
+                            : Icons.expand_more,
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),
         ),
-        CustomAnimatedSize(
-          curve: Easing.emphasizedDecelerate,
-          duration: Durations.short3,
-          child: Padding(
-            padding: EdgeInsets.all(
-                ((childSize?.height ?? 0) >= widget.constraints.maxHeight)
-                    ? 8
-                    : 0),
-            child: SizedBox(
-              width: double.infinity,
-              height: ((childSize?.height ?? 0) >= widget.constraints.maxHeight)
-                  ? 38
-                  : 0,
-              child: IconButton.filled(
-                onPressed: () => setState(() {
-                  _isExpanded = !_isExpanded;
-                }),
-                icon: _isExpanded
-                    ? const Icon(Icons.expand_less)
-                    : const Icon(Icons.expand_more),
-              ),
-            ),
-          ),
-        )
       ],
     );
   }
