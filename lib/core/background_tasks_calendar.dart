@@ -87,46 +87,86 @@ Future<void> _quickRefreshCalendar(
     Profile profile, bool enableNotifications) async {
   if (!enableNotifications) return;
 
-  final changes = await _detectScheduleChanges(profile);
-  if (changes.isEmpty) return;
+  final range = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 7)),
+    end: DateTime.now().add(const Duration(days: 7 * 4)),
+  );
 
-  if (changes.length > 3) {
-    await _sendSummaryNotification(profile, changes.length);
-  } else {
-    await _sendDetailedNotifications(profile, changes);
+  // Get events and absences before refresh
+  final calendarEventsBefore = await _getCalendarEvents(range);
+  final absenceEventIdsBefore = calendarEventsBefore
+      .where((e) => e.afwezigheid != null)
+      .map((e) => e.id)
+      .toSet();
+
+  // Single network fetch to Magister (fetches both afspraken and absenties)
+  await profile.getEvents(range);
+
+  final calendarEventsAfter = await _getCalendarEvents(range);
+
+  // 1. Detect schedule changes (cancelled/moved/changed lessons) if enabled
+  if (profile.settings.eventsNotifications) {
+    final changes = <int, _ChangedEvent>{};
+    _detectStatusChanges(changes, calendarEventsBefore, calendarEventsAfter);
+    _detectInfoTypeChanges(changes, calendarEventsBefore, calendarEventsAfter);
+    _detectLocationChanges(changes, calendarEventsBefore, calendarEventsAfter);
+    changes.removeWhere((_, change) => !change.hasInterestingChanges);
+
+    if (changes.isNotEmpty) {
+      if (changes.length > 3) {
+        await _sendSummaryNotification(profile, changes.length);
+      } else {
+        await _sendDetailedNotifications(profile, changes);
+      }
+    }
+  }
+
+  // 2. Detect newly registered absences if enabled
+  if (profile.settings.absenceNotifications) {
+    final newAbsenceEvents = calendarEventsAfter
+        .where((e) =>
+            e.afwezigheid != null && !absenceEventIdsBefore.contains(e.id))
+        .toList();
+
+    for (final event in newAbsenceEvents) {
+      final absence = event.afwezigheid;
+      if (absence == null) continue;
+
+      final String absenceName = absence.omschrijving.isNotEmpty
+          ? absence.omschrijving.capitalized
+          : absence.verantwoordingtype.name;
+
+      final String title = "Nieuwe absentie: $absenceName";
+      final String subjectText =
+          event.title.isNotEmpty ? "${event.title} • " : "";
+      final String timeText =
+          "${event.start.formattedDate}${event.lesuurVan != null ? ' (lesuur ${event.lesuurVan})' : ''}";
+      final String geoorloofdText =
+          !absence.geoorloofd ? " • Ongeoorloofd" : "";
+      final String body = "$subjectText$timeText$geoorloofdText";
+
+      await NotificationController.createNotification(
+        NativeNotification(
+          id: event.id.abs(),
+          title: title,
+          body: body,
+          channel: NotificationChannel.absences,
+          payload: NotificationPayload(
+            profile: profile,
+            payload: {"event_id": event.id},
+          ),
+        ),
+      );
+    }
   }
 }
 
-Future<Map<int, _ChangedEvent>> _detectScheduleChanges(Profile profile) async {
-  // Get events before and after refresh
-  final calendarEventsBefore = await _getCalendarEvents();
-  await profile.getEvents(
-    DateTimeRange(
-      start: DateTime.now(),
-      end: DateTime.now().add(
-        const Duration(days: 7 * 4), // We will fetch the next four weeks
-      ),
-    ),
-  );
-  final calendarEventsAfter = await _getCalendarEvents();
-
-  // Detect all types of changes
-  final changes = <int, _ChangedEvent>{};
-  _detectStatusChanges(changes, calendarEventsBefore, calendarEventsAfter);
-  _detectInfoTypeChanges(changes, calendarEventsBefore, calendarEventsAfter);
-  _detectLocationChanges(changes, calendarEventsBefore, calendarEventsAfter);
-
-  // Only keep interesting changes
-  changes.removeWhere((_, change) => !change.hasInterestingChanges);
-
-  return changes;
-}
-
-Future<List<CalendarEvent>> _getCalendarEvents() async {
+Future<List<CalendarEvent>> _getCalendarEvents([DateTimeRange? range]) async {
+  final start = range?.start ?? DateTime.now().subtract(const Duration(days: 7));
+  final end = range?.end ?? DateTime.now().add(const Duration(days: 14));
   return await isar.calendarEvents
       .filter()
-      .startBetween(
-          DateTime.now(), DateTime.now().add(const Duration(days: 14)))
+      .startBetween(start, end)
       .findAll();
 }
 
@@ -454,3 +494,4 @@ Future<void> scheduleReminders(Profile profile) async {
       )
   ]);
 }
+

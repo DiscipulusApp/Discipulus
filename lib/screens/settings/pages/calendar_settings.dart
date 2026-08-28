@@ -41,6 +41,54 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
           selectedDay: date,
         ),
         SwitchListTile(
+          value: appSettings.useTimeGridCalendar,
+          secondary: const Icon(Icons.calendar_view_week),
+          title: const Text("Tijdroosterweergave"),
+          subtitle: const Text(
+              "Gebruik het multi-kolom tijdrooster als standaard kalender"),
+          onChanged: (value) => setState(() {
+            appSettings
+              ..useTimeGridCalendar = value
+              ..save();
+          }),
+        ),
+        if (appSettings.useTimeGridCalendar)
+          ListTile(
+            leading: const Icon(Icons.view_agenda_outlined),
+            title: const Text("Standaardweergave"),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(appSettings.timeGridDefaultDayView
+                    ? "Dagoverzicht"
+                    : (appSettings.workWeek
+                        ? "Werkweek (5 dagen)"
+                        : "Volledige week (7 dagen)")),
+                const SizedBox(height: 8),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(
+                      value: true,
+                      label: Text("Dag"),
+                      icon: Icon(Icons.calendar_view_day),
+                    ),
+                    ButtonSegment(
+                      value: false,
+                      label: Text("Week"),
+                      icon: Icon(Icons.calendar_view_week),
+                    ),
+                  ],
+                  selected: {appSettings.timeGridDefaultDayView},
+                  onSelectionChanged: (selected) => setState(() {
+                    appSettings
+                      ..timeGridDefaultDayView = selected.first
+                      ..save();
+                  }),
+                ),
+              ],
+            ),
+          ),
+        SwitchListTile(
           value: !appSettings.workWeek,
           secondary: const Icon(Icons.date_range),
           title: const Text("Weekend"),

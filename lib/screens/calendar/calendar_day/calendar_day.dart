@@ -2,6 +2,7 @@ import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_header.dart';
+import 'package:discipulus/screens/calendar/calendar_grid_view.dart';
 import 'package:discipulus/screens/calendar/calendar_schedule.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -87,6 +88,15 @@ class _CalendarDayViewState extends State<CalendarDayView>
 
   @override
   Widget build(BuildContext context) {
+    if (appSettings.useTimeGridCalendar) {
+      return CalendarGridView(
+        initialDate: widget.displayedDay,
+        initialMode: appSettings.timeGridDefaultDayView
+            ? CalendarGridDisplayMode.day
+            : null,
+      );
+    }
+
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -128,7 +138,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
                                 : const SizedBox(),
                           ),
                         ),
-                      if (date.dayOnly != DateTime.now().dayOnly)
+                        if (date.dayOnly != DateTime.now().dayOnly)
                         IconButton(
                           onPressed: () async =>
                               selectedDay.value = DateTime.now(),
@@ -138,14 +148,24 @@ class _CalendarDayViewState extends State<CalendarDayView>
                         onPressed: () async {
                           DateTime? date = await showDatePicker(
                             context: context,
+                            initialDate: selectedDay.value,
+                            firstDate: DateTime.now()
+                                .subtract(const Duration(days: 365)),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
                             currentDate: DateTime.now(),
-                            initialDate: appSettings.workWeek &&
-                                    selectedDay.value.weekday > 5
-                                ? null
-                                : selectedDay.value,
-                            firstDate: DateTime(1970, 01, 05),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365 * 2),
+                            initialEntryMode: DatePickerEntryMode.calendarOnly,
+                            initialDatePickerMode: DatePickerMode.day,
+                            keyboardType: TextInputType.datetime,
+                            builder: (context, child) => Theme(
+                              data: Theme.of(context).copyWith(
+                                datePickerTheme: DatePickerThemeData(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                ),
+                              ),
+                              child: child!,
                             ),
                             selectableDayPredicate: (DateTime day) {
                               if (appSettings.workWeek) {

@@ -87,6 +87,20 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
           },
         ),
         SwitchListTile(
+          secondary: const Icon(Icons.person_remove_alt_1_outlined),
+          title: const Text("Absentie notificaties"),
+          subtitle: const Text(
+              "Krijg een melding wanneer er een absentie of te laat melding wordt geregistreerd"),
+          value: activeProfile.settings.absenceNotifications,
+          onChanged: (value) {
+            setState(() {
+              activeProfile
+                ..settings.absenceNotifications = value
+                ..save();
+            });
+          },
+        ),
+        SwitchListTile(
           secondary: const Icon(Icons.replay),
           title: const Text("Herinnerings notificaties"),
           subtitle: const Text(

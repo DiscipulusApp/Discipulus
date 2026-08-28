@@ -69,6 +69,8 @@ class Settings {
 
   // Calendar
   bool workWeek = true;
+  bool useTimeGridCalendar = false;
+  bool timeGridDefaultDayView = false;
   bool coloredFinishedTests = false;
   bool showAutoCancelledEvents = false;
   bool combineDoublePeriods = true;
@@ -188,6 +190,7 @@ class ProfileSettings {
   bool spoilerGradeNotfications = false; // Shows the grade in the notification
   bool eventsNotifications = false;
   bool remindNotifications = true;
+  bool absenceNotifications = false;
 
   // Spotlight item indexing
   bool spotlightIndexMessages = true;

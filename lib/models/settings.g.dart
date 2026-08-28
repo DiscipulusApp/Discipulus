@@ -167,28 +167,38 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
-    r'useHandoff': PropertySchema(
+    r'timeGridDefaultDayView': PropertySchema(
       id: 29,
+      name: r'timeGridDefaultDayView',
+      type: IsarType.bool,
+    ),
+    r'useHandoff': PropertySchema(
+      id: 30,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useLocalAI': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'useLocalAI',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
+    r'useTimeGridCalendar': PropertySchema(
+      id: 33,
+      name: r'useTimeGridCalendar',
+      type: IsarType.bool,
+    ),
     r'workWeek': PropertySchema(
-      id: 32,
+      id: 34,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 33,
+      id: 35,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -279,11 +289,13 @@ void _settingsSerialize(
   writer.writeBool(offsets[26], object.showEmptySpaceBetweenLessons);
   writer.writeByte(offsets[27], object.subjectSortType.index);
   writer.writeByte(offsets[28], object.themeVariant.index);
-  writer.writeBool(offsets[29], object.useHandoff);
-  writer.writeBool(offsets[30], object.useLocalAI);
-  writer.writeBool(offsets[31], object.useMaterialYou);
-  writer.writeBool(offsets[32], object.workWeek);
-  writer.writeBool(offsets[33], object.zoomLineGraph);
+  writer.writeBool(offsets[29], object.timeGridDefaultDayView);
+  writer.writeBool(offsets[30], object.useHandoff);
+  writer.writeBool(offsets[31], object.useLocalAI);
+  writer.writeBool(offsets[32], object.useMaterialYou);
+  writer.writeBool(offsets[33], object.useTimeGridCalendar);
+  writer.writeBool(offsets[34], object.workWeek);
+  writer.writeBool(offsets[35], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -341,11 +353,13 @@ Settings _settingsDeserialize(
   object.themeVariant =
       _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[28])] ??
           ThemeVariant.system;
-  object.useHandoff = reader.readBool(offsets[29]);
-  object.useLocalAI = reader.readBool(offsets[30]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[31]);
-  object.workWeek = reader.readBool(offsets[32]);
-  object.zoomLineGraph = reader.readBool(offsets[33]);
+  object.timeGridDefaultDayView = reader.readBool(offsets[29]);
+  object.useHandoff = reader.readBool(offsets[30]);
+  object.useLocalAI = reader.readBool(offsets[31]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[32]);
+  object.useTimeGridCalendar = reader.readBool(offsets[33]);
+  object.workWeek = reader.readBool(offsets[34]);
+  object.zoomLineGraph = reader.readBool(offsets[35]);
   return object;
 }
 
@@ -436,10 +450,14 @@ P _settingsDeserializeProp<P>(
     case 30:
       return (reader.readBool(offset)) as P;
     case 31:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 32:
       return (reader.readBool(offset)) as P;
+    case 32:
+      return (reader.readBoolOrNull(offset)) as P;
     case 33:
+      return (reader.readBool(offset)) as P;
+    case 34:
+      return (reader.readBool(offset)) as P;
+    case 35:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2044,6 +2062,16 @@ extension SettingsQueryFilter
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      timeGridDefaultDayViewEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'timeGridDefaultDayView',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterFilterCondition> useHandoffEqualTo(
       bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -2087,6 +2115,16 @@ extension SettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'useMaterialYou',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      useTimeGridCalendarEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'useTimeGridCalendar',
         value: value,
       ));
     });
@@ -2466,6 +2504,20 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByTimeGridDefaultDayView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timeGridDefaultDayView', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByTimeGridDefaultDayViewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timeGridDefaultDayView', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseHandoff() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.asc);
@@ -2499,6 +2551,19 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseMaterialYouDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useMaterialYou', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseTimeGridCalendar() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useTimeGridCalendar', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByUseTimeGridCalendarDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useTimeGridCalendar', Sort.desc);
     });
   }
 
@@ -2880,6 +2945,20 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByTimeGridDefaultDayView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timeGridDefaultDayView', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByTimeGridDefaultDayViewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'timeGridDefaultDayView', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseHandoff() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.asc);
@@ -2913,6 +2992,19 @@ extension SettingsQuerySortThenBy
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseMaterialYouDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useMaterialYou', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseTimeGridCalendar() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useTimeGridCalendar', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByUseTimeGridCalendarDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useTimeGridCalendar', Sort.desc);
     });
   }
 
@@ -3124,6 +3216,13 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct>
+      distinctByTimeGridDefaultDayView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'timeGridDefaultDayView');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByUseHandoff() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'useHandoff');
@@ -3139,6 +3238,12 @@ extension SettingsQueryWhereDistinct
   QueryBuilder<Settings, Settings, QDistinct> distinctByUseMaterialYou() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'useMaterialYou');
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QDistinct> distinctByUseTimeGridCalendar() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'useTimeGridCalendar');
     });
   }
 
@@ -3351,6 +3456,13 @@ extension SettingsQueryProperty
     });
   }
 
+  QueryBuilder<Settings, bool, QQueryOperations>
+      timeGridDefaultDayViewProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'timeGridDefaultDayView');
+    });
+  }
+
   QueryBuilder<Settings, bool, QQueryOperations> useHandoffProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'useHandoff');
@@ -3366,6 +3478,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool?, QQueryOperations> useMaterialYouProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'useMaterialYou');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations> useTimeGridCalendarProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'useTimeGridCalendar');
     });
   }
 
@@ -3393,104 +3511,109 @@ const ProfileSettingsSchema = Schema(
   name: r'ProfileSettings',
   id: -1417985179991404223,
   properties: {
-    r'autoInsertHeaderAndFooter': PropertySchema(
+    r'absenceNotifications': PropertySchema(
       id: 0,
+      name: r'absenceNotifications',
+      type: IsarType.bool,
+    ),
+    r'autoInsertHeaderAndFooter': PropertySchema(
+      id: 1,
       name: r'autoInsertHeaderAndFooter',
       type: IsarType.bool,
     ),
     r'eventsNotifications': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'eventsNotifications',
       type: IsarType.bool,
     ),
     r'favoritePeople': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'favoritePeople',
       type: IsarType.objectList,
       target: r'Contact',
     ),
     r'gradesNotfications': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'gradesNotfications',
       type: IsarType.bool,
     ),
     r'ignoredSuggestedStudiewijzerGroups': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'ignoredSuggestedStudiewijzerGroups',
       type: IsarType.longList,
     ),
     r'lastRefresh': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'lastRefresh',
       type: IsarType.dateTime,
     ),
     r'mailFooter': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'mailFooter',
       type: IsarType.string,
     ),
     r'mailHeader': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'mailHeader',
       type: IsarType.string,
     ),
     r'messagesNotifications': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'messagesNotifications',
       type: IsarType.bool,
     ),
     r'remindNotifications': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'remindNotifications',
       type: IsarType.bool,
     ),
     r'smartAlarmEnabled': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'smartAlarmEnabled',
       type: IsarType.bool,
     ),
     r'smartAlarmLatestTime': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'smartAlarmLatestTime',
       type: IsarType.dateTime,
     ),
     r'smartAlarmOffset': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'smartAlarmOffset',
       type: IsarType.long,
     ),
     r'spoilerGradeNotfications': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'spoilerGradeNotfications',
       type: IsarType.bool,
     ),
     r'spotlightIndexAssignments': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'spotlightIndexAssignments',
       type: IsarType.bool,
     ),
     r'spotlightIndexMessages': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'spotlightIndexMessages',
       type: IsarType.bool,
     ),
     r'spotlightIndexStudiewijzers': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'spotlightIndexStudiewijzers',
       type: IsarType.bool,
     ),
     r'startingPageIndex': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'startingPageIndex',
       type: IsarType.long,
     ),
     r'sufficientFrom': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'sufficientFrom',
       type: IsarType.double,
     ),
     r'useAutoDND': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'useAutoDND',
       type: IsarType.bool,
     )
@@ -3537,31 +3660,32 @@ void _profileSettingsSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.autoInsertHeaderAndFooter);
-  writer.writeBool(offsets[1], object.eventsNotifications);
+  writer.writeBool(offsets[0], object.absenceNotifications);
+  writer.writeBool(offsets[1], object.autoInsertHeaderAndFooter);
+  writer.writeBool(offsets[2], object.eventsNotifications);
   writer.writeObjectList<Contact>(
-    offsets[2],
+    offsets[3],
     allOffsets,
     ContactSchema.serialize,
     object.favoritePeople,
   );
-  writer.writeBool(offsets[3], object.gradesNotfications);
-  writer.writeLongList(offsets[4], object.ignoredSuggestedStudiewijzerGroups);
-  writer.writeDateTime(offsets[5], object.lastRefresh);
-  writer.writeString(offsets[6], object.mailFooter);
-  writer.writeString(offsets[7], object.mailHeader);
-  writer.writeBool(offsets[8], object.messagesNotifications);
-  writer.writeBool(offsets[9], object.remindNotifications);
-  writer.writeBool(offsets[10], object.smartAlarmEnabled);
-  writer.writeDateTime(offsets[11], object.smartAlarmLatestTime);
-  writer.writeLong(offsets[12], object.smartAlarmOffset);
-  writer.writeBool(offsets[13], object.spoilerGradeNotfications);
-  writer.writeBool(offsets[14], object.spotlightIndexAssignments);
-  writer.writeBool(offsets[15], object.spotlightIndexMessages);
-  writer.writeBool(offsets[16], object.spotlightIndexStudiewijzers);
-  writer.writeLong(offsets[17], object.startingPageIndex);
-  writer.writeDouble(offsets[18], object.sufficientFrom);
-  writer.writeBool(offsets[19], object.useAutoDND);
+  writer.writeBool(offsets[4], object.gradesNotfications);
+  writer.writeLongList(offsets[5], object.ignoredSuggestedStudiewijzerGroups);
+  writer.writeDateTime(offsets[6], object.lastRefresh);
+  writer.writeString(offsets[7], object.mailFooter);
+  writer.writeString(offsets[8], object.mailHeader);
+  writer.writeBool(offsets[9], object.messagesNotifications);
+  writer.writeBool(offsets[10], object.remindNotifications);
+  writer.writeBool(offsets[11], object.smartAlarmEnabled);
+  writer.writeDateTime(offsets[12], object.smartAlarmLatestTime);
+  writer.writeLong(offsets[13], object.smartAlarmOffset);
+  writer.writeBool(offsets[14], object.spoilerGradeNotfications);
+  writer.writeBool(offsets[15], object.spotlightIndexAssignments);
+  writer.writeBool(offsets[16], object.spotlightIndexMessages);
+  writer.writeBool(offsets[17], object.spotlightIndexStudiewijzers);
+  writer.writeLong(offsets[18], object.startingPageIndex);
+  writer.writeDouble(offsets[19], object.sufficientFrom);
+  writer.writeBool(offsets[20], object.useAutoDND);
 }
 
 ProfileSettings _profileSettingsDeserialize(
@@ -3571,34 +3695,35 @@ ProfileSettings _profileSettingsDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = ProfileSettings(
-    lastRefresh: reader.readDateTimeOrNull(offsets[5]),
-    mailFooter: reader.readStringOrNull(offsets[6]),
+    lastRefresh: reader.readDateTimeOrNull(offsets[6]),
+    mailFooter: reader.readStringOrNull(offsets[7]),
   );
-  object.autoInsertHeaderAndFooter = reader.readBool(offsets[0]);
-  object.eventsNotifications = reader.readBool(offsets[1]);
+  object.absenceNotifications = reader.readBool(offsets[0]);
+  object.autoInsertHeaderAndFooter = reader.readBool(offsets[1]);
+  object.eventsNotifications = reader.readBool(offsets[2]);
   object.favoritePeople = reader.readObjectList<Contact>(
-        offsets[2],
+        offsets[3],
         ContactSchema.deserialize,
         allOffsets,
         Contact(),
       ) ??
       [];
-  object.gradesNotfications = reader.readBool(offsets[3]);
+  object.gradesNotfications = reader.readBool(offsets[4]);
   object.ignoredSuggestedStudiewijzerGroups =
-      reader.readLongList(offsets[4]) ?? [];
-  object.mailHeader = reader.readStringOrNull(offsets[7]);
-  object.messagesNotifications = reader.readBool(offsets[8]);
-  object.remindNotifications = reader.readBool(offsets[9]);
-  object.smartAlarmEnabled = reader.readBool(offsets[10]);
-  object.smartAlarmLatestTime = reader.readDateTimeOrNull(offsets[11]);
-  object.smartAlarmOffset = reader.readLong(offsets[12]);
-  object.spoilerGradeNotfications = reader.readBool(offsets[13]);
-  object.spotlightIndexAssignments = reader.readBool(offsets[14]);
-  object.spotlightIndexMessages = reader.readBool(offsets[15]);
-  object.spotlightIndexStudiewijzers = reader.readBool(offsets[16]);
-  object.startingPageIndex = reader.readLong(offsets[17]);
-  object.sufficientFrom = reader.readDouble(offsets[18]);
-  object.useAutoDND = reader.readBool(offsets[19]);
+      reader.readLongList(offsets[5]) ?? [];
+  object.mailHeader = reader.readStringOrNull(offsets[8]);
+  object.messagesNotifications = reader.readBool(offsets[9]);
+  object.remindNotifications = reader.readBool(offsets[10]);
+  object.smartAlarmEnabled = reader.readBool(offsets[11]);
+  object.smartAlarmLatestTime = reader.readDateTimeOrNull(offsets[12]);
+  object.smartAlarmOffset = reader.readLong(offsets[13]);
+  object.spoilerGradeNotfications = reader.readBool(offsets[14]);
+  object.spotlightIndexAssignments = reader.readBool(offsets[15]);
+  object.spotlightIndexMessages = reader.readBool(offsets[16]);
+  object.spotlightIndexStudiewijzers = reader.readBool(offsets[17]);
+  object.startingPageIndex = reader.readLong(offsets[18]);
+  object.sufficientFrom = reader.readDouble(offsets[19]);
+  object.useAutoDND = reader.readBool(offsets[20]);
   return object;
 }
 
@@ -3614,6 +3739,8 @@ P _profileSettingsDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
+      return (reader.readBool(offset)) as P;
+    case 3:
       return (reader.readObjectList<Contact>(
             offset,
             ContactSchema.deserialize,
@@ -3621,28 +3748,26 @@ P _profileSettingsDeserializeProp<P>(
             Contact(),
           ) ??
           []) as P;
-    case 3:
-      return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readLongList(offset) ?? []) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
       return (reader.readStringOrNull(offset)) as P;
     case 8:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
       return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 12:
-      return (reader.readLong(offset)) as P;
-    case 13:
       return (reader.readBool(offset)) as P;
+    case 12:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 13:
+      return (reader.readLong(offset)) as P;
     case 14:
       return (reader.readBool(offset)) as P;
     case 15:
@@ -3650,10 +3775,12 @@ P _profileSettingsDeserializeProp<P>(
     case 16:
       return (reader.readBool(offset)) as P;
     case 17:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 18:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 19:
+      return (reader.readDouble(offset)) as P;
+    case 20:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3662,6 +3789,16 @@ P _profileSettingsDeserializeProp<P>(
 
 extension ProfileSettingsQueryFilter
     on QueryBuilder<ProfileSettings, ProfileSettings, QFilterCondition> {
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      absenceNotificationsEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'absenceNotifications',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
       autoInsertHeaderAndFooterEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {

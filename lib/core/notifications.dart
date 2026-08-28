@@ -6,6 +6,7 @@ import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
+import 'package:discipulus/screens/calendar/absences.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
@@ -48,7 +49,7 @@ class NotificationPayload {
   }
 }
 
-enum NotificationChannel { calendar, grades, messages, reminders }
+enum NotificationChannel { calendar, grades, messages, reminders, absences }
 
 class NotificationChannelDetails {
   final String channelKey;
@@ -84,7 +85,12 @@ extension on NotificationChannel {
         channelKey: "discipulus-reminders",
         channelName: "Reminders",
         channelDescription: "Reminders van toetsen, activiteiten en opdrachten",
-      )
+      ),
+      NotificationChannel.absences: NotificationChannelDetails(
+        channelKey: "discipulus-absences",
+        channelName: "Absenties",
+        channelDescription: "Krijg berichten wanneer er een absentie wordt geregistreerd",
+      ),
     };
     return channels[this]!;
   }
@@ -309,6 +315,13 @@ class NotificationController {
           ));
         }
 
+        break;
+      case NotificationChannel.absences:
+        // Absence notification was pressed.
+        activeProfile = payload.profile ?? activeProfile;
+        Layout.of(navKey.currentContext!)?.goToPage(const AbsencesScreen(
+          key: ValueKey("ALLOWED_ROOT"),
+        ));
         break;
       default:
     }
