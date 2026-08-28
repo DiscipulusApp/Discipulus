@@ -87,8 +87,7 @@ class WatchService with WidgetsBindingObserver {
         .findAll();
 
     Map<DateTime, List<CalendarEvent>> rawGrouped =
-        groupBy(events.where((e) => !e.isCanceled),
-            (e) => e.start.dayOnly);
+        groupBy(events, (e) => e.start.dayOnly);
 
     // Apply combineEvents per day to prevent cross-day combining
     Map<String, List<Map<String, dynamic>>> data = {};
@@ -107,7 +106,8 @@ class WatchService with WidgetsBindingObserver {
                 'status': e.first.status.index,
                 'startTime': e.first.start.millisecondsSinceEpoch,
                 'endTime': e.last.einde.millisecondsSinceEpoch,
-                'isCompleted': e.first.afgerond
+                'isCompleted': e.first.afgerond,
+                'isCanceled': e.first.isCanceled,
               }..removeWhere((key, value) => value == null))
           .toList();
     }

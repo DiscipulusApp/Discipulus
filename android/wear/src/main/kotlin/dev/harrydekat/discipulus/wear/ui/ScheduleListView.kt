@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,16 +28,22 @@ import java.util.Locale
 @Composable
 fun ScheduleListView(viewModel: WearViewModel) {
     val schedule by viewModel.schedule.collectAsState()
+    val showCancelledLessons by viewModel.showCancelledLessons.collectAsState()
     val showBreakSeparators by viewModel.showBreakSeparators.collectAsState()
     val lastUpdate by viewModel.lastUpdate.collectAsState()
     val listState = rememberScalingLazyListState()
+    val visibleSchedule = schedule
+        .mapValues { (_, events) ->
+            if (showCancelledLessons) events else events.filterNot { it.status in 4..5 }
+        }
+        .filterValues { it.isNotEmpty() }
 
     ScreenScaffold(scrollState = listState) {
         ScalingLazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = listState
         ) {
-            if (schedule.isEmpty()) {
+            if (visibleSchedule.isEmpty()) {
                 item {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
@@ -48,7 +55,7 @@ fun ScheduleListView(viewModel: WearViewModel) {
                     }
                 }
             } else {
-                val sortedDates = schedule.keys.sorted()
+                val sortedDates = visibleSchedule.keys.sorted()
                 sortedDates.forEach { dateKey ->
                     item {
                         Text(
@@ -59,7 +66,7 @@ fun ScheduleListView(viewModel: WearViewModel) {
                         )
                     }
 
-                    val events = schedule[dateKey] ?: emptyList()
+                    val events = visibleSchedule[dateKey] ?: emptyList()
                     if (events.isEmpty()) {
                         item {
                             Text(
@@ -92,7 +99,7 @@ fun ScheduleListView(viewModel: WearViewModel) {
                     }
                 }
             }
-            if (schedule.isNotEmpty()) {
+            if (visibleSchedule.isNotEmpty()) {
                 item {
                     LastUpdateFooter(lastUpdate = lastUpdate)
                 }
@@ -130,19 +137,20 @@ fun BreakRow(durationMinutes: Int) {
 fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
     // Only treat the event as completed if it is actually a homework task (infoType == 1)
     val isCompleted = event.isCompleted && event.infoType == 1
+    val isCanceled = event.status in 4..5
 
-    val containerColor = if (isCompleted) {
-        MaterialTheme.colorScheme.secondaryContainer // Themed completed container
-    } else {
-        when (event.infoType) {
+    val containerColor = when {
+        isCanceled -> MaterialTheme.colorScheme.errorContainer
+        isCompleted -> MaterialTheme.colorScheme.secondaryContainer
+        else -> when (event.infoType) {
             in 2..5 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
             else -> MaterialTheme.colorScheme.surfaceContainer
         }
     }
-    val contentColor = if (isCompleted) {
-        MaterialTheme.colorScheme.onSecondaryContainer
-    } else {
-        when (event.infoType) {
+    val contentColor = when {
+        isCanceled -> MaterialTheme.colorScheme.onErrorContainer
+        isCompleted -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> when (event.infoType) {
             in 2..5 -> MaterialTheme.colorScheme.onTertiaryContainer
             else -> MaterialTheme.colorScheme.onSurface
         }
@@ -152,7 +160,7 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
     val cardHeight = if (hasDoubleHour) 60.dp else 48.dp
 
     Card(
-        onClick = { if (event.infoType == 1) onClick() },
+        onClick = { if (event.infoType == 1 && !isCanceled) onClick() },
         modifier = Modifier
             .fillMaxWidth()
             .height(cardHeight)
@@ -169,19 +177,17 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
         ) {
             // Leading Hour Indicator circular badge
             if (event.startHourIndicator != null) {
-                val badgeBgColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.secondary // Themed completed badge
-                } else if (event.infoType in 2..5) {
-                    MaterialTheme.colorScheme.tertiary // Themed tertiary badge
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f) // Themed grey badge
+                val badgeBgColor = when {
+                    isCanceled -> MaterialTheme.colorScheme.error
+                    isCompleted -> MaterialTheme.colorScheme.secondary
+                    event.infoType in 2..5 -> MaterialTheme.colorScheme.tertiary
+                    else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
                 }
-                val badgeTextColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.onSecondary
-                } else if (event.infoType in 2..5) {
-                    MaterialTheme.colorScheme.onTertiary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
+                val badgeTextColor = when {
+                    isCanceled -> MaterialTheme.colorScheme.onError
+                    isCompleted -> MaterialTheme.colorScheme.onSecondary
+                    event.infoType in 2..5 -> MaterialTheme.colorScheme.onTertiary
+                    else -> MaterialTheme.colorScheme.onSurface
                 }
 
                 Box(
@@ -216,7 +222,9 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                     text = event.name,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        textDecoration = if (isCanceled) TextDecoration.LineThrough else TextDecoration.None
+                    )
                 )
 
                 val shortInfo = when (event.infoType) {
@@ -231,7 +239,7 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                 }
 
                 // Conditionally render the subtitle row to prevent empty elements from taking vertical space
-                if (!event.location.isNullOrEmpty() || shortInfo != null) {
+                if (!event.location.isNullOrEmpty() || shortInfo != null || isCanceled) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -259,6 +267,15 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = accentColor
+                                )
+                            )
+                        }
+
+                        if (isCanceled) {
+                            Text(
+                                text = "• Uitgevallen",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.error
                                 )
                             )
                         }
