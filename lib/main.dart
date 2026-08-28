@@ -147,15 +147,15 @@ class MainAppState extends State<MainApp> {
 
   @override
   void initState() {
+    super.initState();
     updateTheme();
     _linkSub = appLinks.uriLinkStream.listen(Intents.uniLinkListener);
+    Intents.initShareHandler();
 
     Future(() async {
       await AccountMigration.checkAndMigrateAccounts();
       await AdService.initialize();
     });
-
-    super.initState();
   }
 
   @override

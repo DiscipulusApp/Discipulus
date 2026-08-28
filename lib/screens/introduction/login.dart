@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:desktop_webview_window/desktop_webview_window.dart';
@@ -51,6 +52,9 @@ Future<TokenSet?> showMagisterLoginDialog(
     )
     ..loadRequest(auth.generateLoginURL(tenant: tenant, username: username));
 
+  bool hasReturned = false;
+  StreamSubscription? browserLinkSub;
+
   Future<void> loginWithBrowser({bool noWebview = false}) async {
     if (!noWebview &&
         await WebviewWindow.isWebviewAvailable() &&
@@ -88,7 +92,12 @@ Future<TokenSet?> showMagisterLoginDialog(
         webViewConfiguration:
             const WebViewConfiguration(enableDomStorage: false),
       );
-      appLinks.uriLinkStream.listen((uri) => redirectUrl.value = uri);
+      await browserLinkSub?.cancel();
+      browserLinkSub = appLinks.uriLinkStream.listen((uri) {
+        if (uri.scheme == "m6loapp" || uri.toString().contains("#code")) {
+          redirectUrl.value = uri;
+        }
+      });
     }
   }
 
@@ -96,8 +105,15 @@ Future<TokenSet?> showMagisterLoginDialog(
     loginWithBrowser();
   }
 
-  Future<void> returnWithTokenSet(Uri redirectURL) async =>
-      Navigator.of(context).pop(await auth.returnURLToTokenSet(redirectURL));
+  Future<void> returnWithTokenSet(Uri redirectURL) async {
+    if (hasReturned) return;
+    hasReturned = true;
+    await browserLinkSub?.cancel();
+    TokenSet? tokenSet = await auth.returnURLToTokenSet(redirectURL);
+    if (context.mounted) {
+      Navigator.of(context).pop(tokenSet);
+    }
+  }
 
   return await showDialog<TokenSet?>(
     context: context,

@@ -316,28 +316,71 @@ class NotificationController {
 }
 
 class Intents {
-  static uniLinkListener(Uri uri) async {
-    if (uri.hasScheme && uri.scheme == "discipulus") {
-      if (uri.host == "login") {
-        // Handle login to alternative service.
+  static String? _lastHandledUri;
+  static DateTime? _lastHandledUriTime;
 
-        final String? data = uri.queryParameters["data"];
-        if (data == null) return;
+  static String? _lastHandledShareContent;
+  static DateTime? _lastHandledShareTime;
 
-        final Map<String, dynamic> json = jsonDecode(data);
+  static Future<void> uniLinkListener(Uri uri) async {
+    final String uriString = uri.toString();
+    final DateTime now = DateTime.now();
 
-        final AuthQrResult qrResult = AuthQrResult.fromJson(json);
+    // Deduplicate identical incoming URIs within a 2-second debounce window
+    if (_lastHandledUri == uriString &&
+        _lastHandledUriTime != null &&
+        now.difference(_lastHandledUriTime!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastHandledUri = uriString;
+    _lastHandledUriTime = now;
+
+    final bool isDiscipulusLogin =
+        uri.hasScheme && uri.scheme == "discipulus" && uri.host == "login";
+    final bool isWebLogin = (uri.scheme == "http" || uri.scheme == "https") &&
+        (uri.host == "harrydekat.dev" || uri.host.endsWith(".harrydekat.dev")) &&
+        (uri.pathSegments.contains("login") ||
+            uri.path == "/login" ||
+            uri.path.endsWith("/login"));
+
+    final bool isDiscipulusCalendar =
+        uri.hasScheme && uri.scheme == "discipulus" && uri.host == "calendar";
+    final bool isWebCalendar = (uri.scheme == "http" || uri.scheme == "https") &&
+        (uri.host == "harrydekat.dev" || uri.host.endsWith(".harrydekat.dev")) &&
+        (uri.pathSegments.contains("calendar") ||
+            uri.path == "/calendar" ||
+            uri.path.endsWith("/calendar"));
+
+    if (isDiscipulusLogin || isWebLogin) {
+      // Handle login to alternative service.
+      try {
+        final AuthQrResult qrResult =
+            AuthQrResult.fromRawJson(uri.toString());
 
         if (qrResult.requestId.isEmpty || qrResult.backendUrl.isEmpty) {
           return;
         }
 
-        LoginWithDiscipulusAccountSelector(
-          payload: qrResult,
-          redirect: true,
-        ).push(navKey.currentContext!);
-      } else if (uri.host == "calendar") {
-        // Handle calendar related deeplinks
+        void openSelector() {
+          final context = navKey.currentContext;
+          if (context != null && context.mounted) {
+            LoginWithDiscipulusAccountSelector(
+              payload: qrResult,
+              redirect: true,
+            ).push(context);
+          }
+        }
+
+        if (navKey.currentContext == null ||
+            !(navKey.currentContext?.mounted ?? false)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => openSelector());
+        } else {
+          openSelector();
+        }
+      } catch (_) {}
+    } else if (isDiscipulusCalendar || isWebCalendar) {
+      // Handle calendar related deeplinks
+      try {
         int? personId = int.tryParse(uri.queryParameters["profileId"] ?? "");
         int? calendarId = int.tryParse(uri.queryParameters["eventId"] ?? "");
         Profile? profile =
@@ -377,22 +420,44 @@ class Intents {
             );
           }
         }
-      }
-    } else if (Platform.isAndroid || Platform.isIOS) {
-      final handler = ShareHandlerPlatform.instance;
-      SharedMedia? media = await handler.getInitialSharedMedia();
+      } catch (_) {}
+    }
+  }
 
-      handler.sharedMediaStream.listen((SharedMedia media) {
-        if (!navKey.currentContext!.mounted) {
+  /// Initializes share intent handling with deduplication
+  static void initShareHandler() {
+    if (Platform.isAndroid || Platform.isIOS) {
+      final handler = ShareHandlerPlatform.instance;
+
+      void handleMedia(SharedMedia? media) {
+        if (media == null) return;
+
+        final String contentKey =
+            "${media.content}_${media.attachments?.map((e) => e?.path).join(',')}";
+        final DateTime now = DateTime.now();
+
+        // Deduplicate identical shared media events within 2 seconds
+        if (_lastHandledShareContent == contentKey &&
+            _lastHandledShareTime != null &&
+            now.difference(_lastHandledShareTime!) < const Duration(seconds: 2)) {
           return;
         }
-        media.launchMessageSheet();
-      });
+        _lastHandledShareContent = contentKey;
+        _lastHandledShareTime = now;
 
-      // Initial app start
-      if (!(navKey.currentContext?.mounted ?? false)) return;
+        if (navKey.currentContext?.mounted ?? false) {
+          media.launchMessageSheet();
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (navKey.currentContext?.mounted ?? false) {
+              media.launchMessageSheet();
+            }
+          });
+        }
+      }
 
-      await media.launchMessageSheet();
+      handler.sharedMediaStream.listen(handleMedia);
+      handler.getInitialSharedMedia().then(handleMedia);
     }
   }
 }

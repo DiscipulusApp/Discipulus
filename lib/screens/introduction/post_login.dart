@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:discipulus/core/ad_service.dart';
 import 'package:discipulus/core/notifications.dart';
@@ -134,9 +135,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
     );
   }
 
-  // --- CARDS ---
-
-  /// Card 1: Meldingen & Herinneringen (With giant Material You interactive button)
+  /// Card 1: Meldingen & Herinneringen
   Widget _buildNotificationsCard() {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -148,28 +147,28 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // Notification Banner 1: New Grade (matching _quickRefreshGrades)
             CustomCard(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               margin: const EdgeInsets.symmetric(vertical: 2),
               elevation: 0,
               color: colorScheme.surfaceContainerHigh,
               child: ListTile(
                 dense: true,
+                visualDensity: VisualDensity.compact,
                 leading: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: colorScheme.primary.withAlpha(30),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.grade_rounded,
-                      color: colorScheme.primary, size: 16),
+                      color: colorScheme.primary, size: 15),
                 ),
                 title: const Text(
                   "Nieuwe cijfers gevonden",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
                 ),
                 subtitle: const Text(
                   "Je hebt een 8,5 voor Wiskunde B gehaald",
@@ -178,32 +177,32 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                 trailing: Text(
                   "Zojuist",
                   style: TextStyle(
-                      fontSize: 10, color: colorScheme.onSurfaceVariant),
+                      fontSize: 9.5, color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ),
-            // Notification Banner 2: Schedule Change (matching _buildEventNotification)
             CustomCard(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               margin: const EdgeInsets.symmetric(vertical: 2),
               elevation: 0,
               color: colorScheme.surfaceContainerHigh,
               child: ListTile(
                 dense: true,
+                visualDensity: VisualDensity.compact,
                 leading: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
                     color: colorScheme.error.withAlpha(30),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.event_busy_rounded,
-                      color: colorScheme.error, size: 16),
+                      color: colorScheme.error, size: 15),
                 ),
                 title: const Text(
                   "Nederlands komt te vervallen",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
                 ),
                 subtitle: const Text(
                   "Nederlands op 24 mei (4e uur) komt te vervallen",
@@ -212,17 +211,54 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
                 trailing: Text(
                   "08:15",
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 9.5,
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            // Notification Banner 3: Reminder / Herinnering
+            CustomCard(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.symmetric(vertical: 2),
+              elevation: 0,
+              color: colorScheme.surfaceContainerHigh,
+              child: ListTile(
+                dense: true,
+                visualDensity: VisualDensity.compact,
+                leading: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiary.withAlpha(30),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.alarm_on_rounded,
+                      color: colorScheme.tertiary, size: 15),
+                ),
+                title: const Text(
+                  "Herinnering: Geschiedenis toets",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
+                ),
+                subtitle: const Text(
+                  "Morgen 2e uur • Hoofdstuk 3 & 4 doornemen",
+                  style: TextStyle(fontSize: 10),
+                ),
+                trailing: Text(
+                  "19:00",
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
             // Giant Material You Interactive Toggle Button
-            Expanded(
+            const Expanded(
               child: Center(
-                child: const _ExpressiveNotificationToggleButton(),
+                child: _ExpressiveNotificationToggleButton(),
               ),
             ),
           ],
@@ -230,13 +266,13 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
       ),
       title: "Meldingen & Herinneringen",
       description:
-          "Blijf direct op de hoogte van nieuwe cijfers, roosterwijzigingen of berichten. Jij bepaalt wat je ontvangt.",
+          "Blijf direct op de hoogte van nieuwe cijfers, roosterwijzigingen en herinneringen. Jij bepaalt wat je ontvangt.",
       bottomColor: colorScheme.primaryContainer,
       onBottomColor: colorScheme.onPrimaryContainer,
     );
   }
 
-  /// Card 2: Thema & Personalisatie (Rich, uniform padding, no double text)
+  /// Card 2: Thema & Personalisatie
   Widget _buildThemeCard() {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -328,7 +364,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
     );
   }
 
-  /// Card 3: AI & Gemini Assistent (With middle configuration button and authentic AI sheet showcase)
+  /// Card 3: AI & Gemini Assistent
   Widget _buildAiCard() {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -897,6 +933,64 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
 
 // --- GIANT MATERIAL YOU NOTIFICATION TOGGLE BUTTON ---
 
+// --- MATERIAL YOU JAGGED / ORGANIC NOTIFICATION TOGGLE BUTTON ---
+
+class _NotificationJaggedMorphShapePainter extends CustomPainter {
+  final Color color;
+  final double morphProgress; // 0.0 = sharp jagged star (disabled), 1.0 = smooth organic cookie (enabled)
+
+  _NotificationJaggedMorphShapePainter({
+    required this.color,
+    required this.morphProgress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2 * 0.92;
+    final path = Path();
+
+    const points = 180;
+    const numSpikes = 12; // 12-point jagged star
+
+    for (int i = 0; i <= points; i++) {
+      final theta = (i / points) * 2 * math.pi;
+
+      // Jagged sharp star formula (linear triangle wave with sharp crisp peaks)
+      final triangleWave =
+          (2 / math.pi) * math.asin(math.sin(numSpikes * theta));
+      final rJagged = radius * (0.76 + 0.24 * triangleWave);
+
+      // Smooth 7-lobed organic flower/cookie formula
+      final rSmooth = radius * (1.0 + 0.12 * math.sin(7 * theta));
+
+      final r = (1.0 - morphProgress) * rJagged + morphProgress * rSmooth;
+
+      final x = center.dx + r * math.cos(theta);
+      final y = center.dy + r * math.sin(theta);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_NotificationJaggedMorphShapePainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.morphProgress != morphProgress;
+  }
+}
+
 class _ExpressiveNotificationToggleButton extends StatefulWidget {
   const _ExpressiveNotificationToggleButton();
 
@@ -907,24 +1001,59 @@ class _ExpressiveNotificationToggleButton extends StatefulWidget {
 
 class _ExpressiveNotificationToggleButtonState
     extends State<_ExpressiveNotificationToggleButton>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   bool _isAllowed = false;
   late final AnimationController _rotationController;
+  late final AnimationController _morphController;
+  late final AnimationController _pressController;
+  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _rotationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
     )..repeat();
+
+    _morphController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+      value: 0.0,
+    );
+
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.88).animate(
+      CurvedAnimation(
+        parent: _pressController,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.elasticOut,
+      ),
+    );
+
     _checkPermission();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _rotationController.dispose();
+    _morphController.dispose();
+    _pressController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermission();
+    }
   }
 
   Future<void> _checkPermission() async {
@@ -933,6 +1062,11 @@ class _ExpressiveNotificationToggleButtonState
       setState(() {
         _isAllowed = allowed;
       });
+      if (allowed) {
+        _morphController.animateTo(1.0, curve: Curves.easeInOutCubic);
+      } else {
+        _morphController.animateTo(0.0, curve: Curves.easeInOutCubic);
+      }
     }
   }
 
@@ -944,12 +1078,16 @@ class _ExpressiveNotificationToggleButtonState
         setState(() {
           _isAllowed = allowed;
         });
+        if (allowed) {
+          _morphController.animateTo(1.0, curve: Curves.easeInOutCubic);
+        }
       }
     } else {
       if (mounted) {
         setState(() {
           _isAllowed = false;
         });
+        _morphController.animateTo(0.0, curve: Curves.easeInOutCubic);
       }
     }
   }
@@ -958,76 +1096,118 @@ class _ExpressiveNotificationToggleButtonState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return GestureDetector(
-      onTap: _toggleNotifications,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 84,
-            height: 84,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (_isAllowed)
-                  AnimatedBuilder(
-                    animation: _rotationController,
-                    builder: (context, child) {
-                      return Transform.rotate(
-                        angle: _rotationController.value * 2 * 3.14159,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTapDown: (_) => _pressController.forward(),
+          onTapUp: (_) {
+            _pressController.reverse();
+            _toggleNotifications();
+          },
+          onTapCancel: () => _pressController.reverse(),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([
+              _rotationController,
+              _morphController,
+              _pressController,
+            ]),
+            builder: (context, child) {
+              final currentColor = Color.lerp(
+                colorScheme.errorContainer,
+                colorScheme.primary,
+                _morphController.value,
+              )!;
+
+              final currentIconColor = Color.lerp(
+                colorScheme.onErrorContainer,
+                colorScheme.onPrimary,
+                _morphController.value,
+              )!;
+
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: SizedBox(
+                  width: 90,
+                  height: 90,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Transform.rotate(
+                        angle: _rotationController.value * 2 * math.pi,
                         child: CustomPaint(
-                          size: const Size(84, 84),
-                          painter: M3MorphShapePainter(
-                            color: colorScheme.primary,
-                            morphProgress: 0,
+                          size: const Size(90, 90),
+                          painter: _NotificationJaggedMorphShapePainter(
+                            color: currentColor,
+                            morphProgress: _morphController.value,
                           ),
                         ),
-                      );
-                    },
-                  )
-                else
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withAlpha(80),
-                        width: 1.5,
                       ),
-                    ),
+                      Icon(
+                        _morphController.value > 0.5
+                            ? Icons.notifications_active_rounded
+                            : Icons.notifications_off_rounded,
+                        size: 38,
+                        color: currentIconColor,
+                      ),
+                    ],
                   ),
-                Icon(
-                  _isAllowed
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_off_outlined,
-                  size: 34,
-                  color: _isAllowed
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant,
                 ),
-              ],
-            ),
+              );
+            },
           ),
-          const SizedBox(height: 6),
-          Text(
-            _isAllowed ? "Meldingen aan" : "Meldingen uit",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: _isAllowed ? colorScheme.primary : colorScheme.onSurface,
-            ),
+        ),
+        const SizedBox(height: 8),
+
+        // Status Badge Chip
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+          decoration: BoxDecoration(
+            color: _isAllowed
+                ? colorScheme.primaryContainer.withAlpha(200)
+                : colorScheme.errorContainer.withAlpha(200),
+            borderRadius: BorderRadius.circular(12),
           ),
-          Text(
-            _isAllowed ? "Tik om te wijzigen" : "Tik om in te schakelen",
-            style: TextStyle(
-              fontSize: 10,
-              color: colorScheme.onSurfaceVariant,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isAllowed
+                    ? Icons.check_circle_rounded
+                    : Icons.error_outline_rounded,
+                size: 13,
+                color: _isAllowed
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onErrorContainer,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                _isAllowed
+                    ? "Meldingen actief"
+                    : "Meldingen staan nog uit",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: _isAllowed
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onErrorContainer,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+
+        Text(
+          _isAllowed
+              ? "Tik op het icoon om te wijzigen"
+              : "Tik op het icoon om in te schakelen",
+          style: TextStyle(
+            fontSize: 10,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

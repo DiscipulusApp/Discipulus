@@ -108,6 +108,9 @@ class Settings {
   /// Variable-Ratio
   bool disableGradeReveal = false;
 
+  /// Custom Gateway URL for Zero-Trust authentication handoff
+  String? customGatewayUrl;
+
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
 }
 

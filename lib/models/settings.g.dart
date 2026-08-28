@@ -69,121 +69,126 @@ const SettingsSchema = CollectionSchema(
       name: r'curvedGraphs',
       type: IsarType.bool,
     ),
-    r'disableGradeReveal': PropertySchema(
+    r'customGatewayUrl': PropertySchema(
       id: 10,
+      name: r'customGatewayUrl',
+      type: IsarType.string,
+    ),
+    r'disableGradeReveal': PropertySchema(
+      id: 11,
       name: r'disableGradeReveal',
       type: IsarType.bool,
     ),
     r'dndTurnedOnTime': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'dndTurnedOnTime',
       type: IsarType.dateTime,
     ),
     r'drawerOnBack': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'drawerOnBack',
       type: IsarType.bool,
     ),
     r'drawerOpenOnRight': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'drawerOpenOnRight',
       type: IsarType.bool,
     ),
     r'enabledGradeBadgeTypes': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'enabledGradeBadgeTypes',
       type: IsarType.byteList,
       enumMap: _SettingsenabledGradeBadgeTypesEnumValueMap,
     ),
     r'lastWatchSync': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'lastWatchSync',
       type: IsarType.dateTime,
     ),
     r'openAfterDownload': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'openAfterDownload',
       type: IsarType.bool,
     ),
     r'openRouterAPIKey': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'openRouterAPIKey',
       type: IsarType.string,
     ),
     r'openRouterModel': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'openRouterModel',
       type: IsarType.string,
     ),
     r'saveVirtualFiles': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'saveVirtualFiles',
       type: IsarType.bool,
     ),
     r'sendCrashInfo': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'sendCrashInfo',
       type: IsarType.bool,
     ),
     r'shortBronTitle': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'shortBronTitle',
       type: IsarType.bool,
     ),
     r'showAutoCancelledEvents': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'showAutoCancelledEvents',
       type: IsarType.bool,
     ),
     r'showBronExtension': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'showBronExtension',
       type: IsarType.bool,
     ),
     r'showCalcCardsInGlobalAverageList': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'showCalcCardsInGlobalAverageList',
       type: IsarType.bool,
     ),
     r'showEmptySpaceBetweenLessons': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'showEmptySpaceBetweenLessons',
       type: IsarType.bool,
     ),
     r'subjectSortType': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'subjectSortType',
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
     r'themeVariant': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'themeVariant',
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'useHandoff': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useLocalAI': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'useLocalAI',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 32,
+      id: 33,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -214,6 +219,12 @@ int _settingsEstimateSize(
     for (var i = 0; i < object.alarms.length; i++) {
       final value = object.alarms[i];
       bytesCount += AndroidAlarmSchema.estimateSize(value, offsets, allOffsets);
+    }
+  }
+  {
+    final value = object.customGatewayUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
     }
   }
   bytesCount += 3 + object.enabledGradeBadgeTypes.length;
@@ -248,30 +259,31 @@ void _settingsSerialize(
   writer.writeBool(offsets[7], object.coloredsufficientFromLine);
   writer.writeBool(offsets[8], object.combineDoublePeriods);
   writer.writeBool(offsets[9], object.curvedGraphs);
-  writer.writeBool(offsets[10], object.disableGradeReveal);
-  writer.writeDateTime(offsets[11], object.dndTurnedOnTime);
-  writer.writeBool(offsets[12], object.drawerOnBack);
-  writer.writeBool(offsets[13], object.drawerOpenOnRight);
+  writer.writeString(offsets[10], object.customGatewayUrl);
+  writer.writeBool(offsets[11], object.disableGradeReveal);
+  writer.writeDateTime(offsets[12], object.dndTurnedOnTime);
+  writer.writeBool(offsets[13], object.drawerOnBack);
+  writer.writeBool(offsets[14], object.drawerOpenOnRight);
   writer.writeByteList(
-      offsets[14], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
-  writer.writeDateTime(offsets[15], object.lastWatchSync);
-  writer.writeBool(offsets[16], object.openAfterDownload);
-  writer.writeString(offsets[17], object.openRouterAPIKey);
-  writer.writeString(offsets[18], object.openRouterModel);
-  writer.writeBool(offsets[19], object.saveVirtualFiles);
-  writer.writeBool(offsets[20], object.sendCrashInfo);
-  writer.writeBool(offsets[21], object.shortBronTitle);
-  writer.writeBool(offsets[22], object.showAutoCancelledEvents);
-  writer.writeBool(offsets[23], object.showBronExtension);
-  writer.writeBool(offsets[24], object.showCalcCardsInGlobalAverageList);
-  writer.writeBool(offsets[25], object.showEmptySpaceBetweenLessons);
-  writer.writeByte(offsets[26], object.subjectSortType.index);
-  writer.writeByte(offsets[27], object.themeVariant.index);
-  writer.writeBool(offsets[28], object.useHandoff);
-  writer.writeBool(offsets[29], object.useLocalAI);
-  writer.writeBool(offsets[30], object.useMaterialYou);
-  writer.writeBool(offsets[31], object.workWeek);
-  writer.writeBool(offsets[32], object.zoomLineGraph);
+      offsets[15], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
+  writer.writeDateTime(offsets[16], object.lastWatchSync);
+  writer.writeBool(offsets[17], object.openAfterDownload);
+  writer.writeString(offsets[18], object.openRouterAPIKey);
+  writer.writeString(offsets[19], object.openRouterModel);
+  writer.writeBool(offsets[20], object.saveVirtualFiles);
+  writer.writeBool(offsets[21], object.sendCrashInfo);
+  writer.writeBool(offsets[22], object.shortBronTitle);
+  writer.writeBool(offsets[23], object.showAutoCancelledEvents);
+  writer.writeBool(offsets[24], object.showBronExtension);
+  writer.writeBool(offsets[25], object.showCalcCardsInGlobalAverageList);
+  writer.writeBool(offsets[26], object.showEmptySpaceBetweenLessons);
+  writer.writeByte(offsets[27], object.subjectSortType.index);
+  writer.writeByte(offsets[28], object.themeVariant.index);
+  writer.writeBool(offsets[29], object.useHandoff);
+  writer.writeBool(offsets[30], object.useLocalAI);
+  writer.writeBool(offsets[31], object.useMaterialYou);
+  writer.writeBool(offsets[32], object.workWeek);
+  writer.writeBool(offsets[33], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -299,40 +311,41 @@ Settings _settingsDeserialize(
   object.coloredsufficientFromLine = reader.readBool(offsets[7]);
   object.combineDoublePeriods = reader.readBool(offsets[8]);
   object.curvedGraphs = reader.readBool(offsets[9]);
-  object.disableGradeReveal = reader.readBool(offsets[10]);
-  object.dndTurnedOnTime = reader.readDateTimeOrNull(offsets[11]);
-  object.drawerOnBack = reader.readBool(offsets[12]);
-  object.drawerOpenOnRight = reader.readBool(offsets[13]);
+  object.customGatewayUrl = reader.readStringOrNull(offsets[10]);
+  object.disableGradeReveal = reader.readBool(offsets[11]);
+  object.dndTurnedOnTime = reader.readDateTimeOrNull(offsets[12]);
+  object.drawerOnBack = reader.readBool(offsets[13]);
+  object.drawerOpenOnRight = reader.readBool(offsets[14]);
   object.enabledGradeBadgeTypes = reader
-          .readByteList(offsets[14])
+          .readByteList(offsets[15])
           ?.map((e) =>
               _SettingsenabledGradeBadgeTypesValueEnumMap[e] ??
               GradeBadgeTypes.weight)
           .toList() ??
       [];
   object.id = id;
-  object.lastWatchSync = reader.readDateTimeOrNull(offsets[15]);
-  object.openAfterDownload = reader.readBool(offsets[16]);
-  object.openRouterAPIKey = reader.readStringOrNull(offsets[17]);
-  object.openRouterModel = reader.readString(offsets[18]);
-  object.saveVirtualFiles = reader.readBool(offsets[19]);
-  object.sendCrashInfo = reader.readBool(offsets[20]);
-  object.shortBronTitle = reader.readBool(offsets[21]);
-  object.showAutoCancelledEvents = reader.readBool(offsets[22]);
-  object.showBronExtension = reader.readBool(offsets[23]);
-  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[24]);
-  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[25]);
+  object.lastWatchSync = reader.readDateTimeOrNull(offsets[16]);
+  object.openAfterDownload = reader.readBool(offsets[17]);
+  object.openRouterAPIKey = reader.readStringOrNull(offsets[18]);
+  object.openRouterModel = reader.readString(offsets[19]);
+  object.saveVirtualFiles = reader.readBool(offsets[20]);
+  object.sendCrashInfo = reader.readBool(offsets[21]);
+  object.shortBronTitle = reader.readBool(offsets[22]);
+  object.showAutoCancelledEvents = reader.readBool(offsets[23]);
+  object.showBronExtension = reader.readBool(offsets[24]);
+  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[25]);
+  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[26]);
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
-          reader.readByteOrNull(offsets[26])] ??
+          reader.readByteOrNull(offsets[27])] ??
       SubjectSortType.alphabetical;
   object.themeVariant =
-      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[27])] ??
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[28])] ??
           ThemeVariant.system;
-  object.useHandoff = reader.readBool(offsets[28]);
-  object.useLocalAI = reader.readBool(offsets[29]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[30]);
-  object.workWeek = reader.readBool(offsets[31]);
-  object.zoomLineGraph = reader.readBool(offsets[32]);
+  object.useHandoff = reader.readBool(offsets[29]);
+  object.useLocalAI = reader.readBool(offsets[30]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[31]);
+  object.workWeek = reader.readBool(offsets[32]);
+  object.zoomLineGraph = reader.readBool(offsets[33]);
   return object;
 }
 
@@ -371,14 +384,16 @@ P _settingsDeserializeProp<P>(
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 12:
       return (reader.readBool(offset)) as P;
+    case 12:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 13:
       return (reader.readBool(offset)) as P;
     case 14:
+      return (reader.readBool(offset)) as P;
+    case 15:
       return (reader
               .readByteList(offset)
               ?.map((e) =>
@@ -386,16 +401,14 @@ P _settingsDeserializeProp<P>(
                   GradeBadgeTypes.weight)
               .toList() ??
           []) as P;
-    case 15:
-      return (reader.readDateTimeOrNull(offset)) as P;
     case 16:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 17:
-      return (reader.readStringOrNull(offset)) as P;
-    case 18:
-      return (reader.readString(offset)) as P;
-    case 19:
       return (reader.readBool(offset)) as P;
+    case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
+      return (reader.readString(offset)) as P;
     case 20:
       return (reader.readBool(offset)) as P;
     case 21:
@@ -409,22 +422,24 @@ P _settingsDeserializeProp<P>(
     case 25:
       return (reader.readBool(offset)) as P;
     case 26:
+      return (reader.readBool(offset)) as P;
+    case 27:
       return (_SettingssubjectSortTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
-    case 27:
+    case 28:
       return (_SettingsthemeVariantValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeVariant.system) as P;
-    case 28:
-      return (reader.readBool(offset)) as P;
     case 29:
       return (reader.readBool(offset)) as P;
     case 30:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 31:
       return (reader.readBool(offset)) as P;
+    case 31:
+      return (reader.readBoolOrNull(offset)) as P;
     case 32:
+      return (reader.readBool(offset)) as P;
+    case 33:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1018,6 +1033,160 @@ extension SettingsQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'curvedGraphs',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'customGatewayUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'customGatewayUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'customGatewayUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'customGatewayUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'customGatewayUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'customGatewayUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      customGatewayUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'customGatewayUrl',
+        value: '',
       ));
     });
   }
@@ -2074,6 +2243,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByCustomGatewayUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customGatewayUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByCustomGatewayUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customGatewayUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByDisableGradeReveal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'disableGradeReveal', Sort.asc);
@@ -2464,6 +2645,18 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByCustomGatewayUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customGatewayUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByCustomGatewayUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customGatewayUrl', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByDisableGradeReveal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'disableGradeReveal', Sort.asc);
@@ -2807,6 +3000,14 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct> distinctByCustomGatewayUrl(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'customGatewayUrl',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByDisableGradeReveal() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'disableGradeReveal');
@@ -3026,6 +3227,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool, QQueryOperations> curvedGraphsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'curvedGraphs');
+    });
+  }
+
+  QueryBuilder<Settings, String?, QQueryOperations> customGatewayUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'customGatewayUrl');
     });
   }
 
