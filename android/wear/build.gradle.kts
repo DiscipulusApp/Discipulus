@@ -14,9 +14,13 @@ android {
         applicationId = "dev.harrydekat.discipulus"
         minSdk = 28
         targetSdk = 36
-        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull()
+        val rawVersionCode = (project.findProperty("wearVersionCode") as? String)?.toIntOrNull()
+            ?: (project.findProperty("versionCode") as? String)?.toIntOrNull()
             ?: (project.findProperty("flutter.versionCode") as? String)?.toIntOrNull()
             ?: 1
+        // Wear OS builds must have a distinct versionCode (e.g. +100000 offset) from phone builds
+        // so Google Play Console accepts both releases under the same applicationId.
+        versionCode = if (rawVersionCode < 100000) rawVersionCode + 100000 else rawVersionCode
         versionName = (project.findProperty("versionName") as? String)
             ?: (project.findProperty("flutter.versionName") as? String)
             ?: "1.0"
