@@ -325,8 +325,11 @@ void updateMenuBar({required List<DestinationSegement> destinations}) async {
 
 /// Returns a [IconButton] that opens the drawer if the drawer has to be opened (in small views)
 Widget? leadingAppBarButton(BuildContext context) {
-  if (!Layout.of(context)!.persistantDrawer &&
-      !Navigator.of(context).canPop()) {
+  final ModalRoute<dynamic>? currentRoute = ModalRoute.of(context);
+  final bool isRootPage =
+      currentRoute?.isFirst ?? !Navigator.of(context).canPop();
+
+  if (!Layout.of(context)!.persistantDrawer && isRootPage) {
     return Center(
       child: IconButton(
         onPressed: () => Layout.of(context)!.drawerController.toggleDrawer(),
