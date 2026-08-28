@@ -936,14 +936,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0+1"
-  isar_flutter_libs:
-    dependency: "direct main"
+  isar_community:
+    dependency: transitive
     description:
-      name: isar_flutter_libs
-      sha256: bc6768cc4b9c61aabff77152e7f33b4b17d2fc93134f7af1c3dd51500fe8d5e8
+      name: isar_community
+      sha256: "683fd093956eac3a660776afb70d65d50a3391b3587b40b89e3d12586b8cc47f"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.0+1"
+    version: "3.3.2"
+  isar_community_flutter_libs:
+    dependency: "direct main"
+    description:
+      name: isar_community_flutter_libs
+      sha256: c44340fa38c81ef16d924202d443bbe799cde4826be9a31a9dc92ee612e1966f
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.2"
   isar_generator:
     dependency: "direct dev"
     description:

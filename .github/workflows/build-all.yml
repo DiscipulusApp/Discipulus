@@ -357,9 +357,13 @@ jobs:
           flutter pub get
 
       - name: Build Android (APK & App Bundle)
+        env:
+          RUSTFLAGS: "-C link-arg=-Wl,-z,max-page-size=16384"
         run: |
+          echo "use_precompiled_binaries: false" > cargokit_options.yaml
           flutter build apk --release --split-per-abi --android-skip-build-dependency-validation --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
           flutter build appbundle --release --android-skip-build-dependency-validation --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          rm -f cargokit_options.yaml
 
       - name: Build Wear OS APK & App Bundle (AAB)
         run: |
