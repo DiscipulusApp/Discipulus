@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.harrydekat.discipulus"
-        minSdk = 30
+        minSdk = 28
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull()
             ?: (project.findProperty("flutter.versionCode") as? String)?.toIntOrNull()
@@ -39,6 +39,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             val releaseSigning = signingConfigs.getByName("release")
             if (releaseSigning.storeFile != null) {
                 signingConfig = releaseSigning

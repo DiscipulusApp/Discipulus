@@ -37,7 +37,18 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="discipulus" android:host="calendar" />
+                <data android:scheme="discipulus" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="harrydekat.dev" android:pathPrefix="/login" />
+                <data android:scheme="http" android:host="harrydekat.dev" android:pathPrefix="/login" />
+                <data android:scheme="https" android:host="harrydekat.dev" android:pathPrefix="/Discipulus/login" />
+                <data android:scheme="http" android:host="harrydekat.dev" android:pathPrefix="/Discipulus/login" />
+                <data android:scheme="https" android:host="harrydekat.dev" android:pathPrefix="/calendar" />
+                <data android:scheme="http" android:host="harrydekat.dev" android:pathPrefix="/calendar" />
             </intent-filter>
             <!-- AUTO DND -->
             <intent-filter>

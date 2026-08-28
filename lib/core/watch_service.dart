@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
+import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
@@ -11,9 +12,10 @@ import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:isar/isar.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
+import 'package:discipulus/screens/settings/pages/wear_os_setup.dart';
 
 class WatchService with WidgetsBindingObserver {
   static final WatchService _instance = WatchService._internal();
@@ -38,6 +40,28 @@ class WatchService with WidgetsBindingObserver {
     _initialized = true;
 
     _watch.messageStream.listen((message) {
+      if (message['command'] == 'open_watch_setup' ||
+          message['command'] == 'request_tokenset_login') {
+        final context = navKey.currentContext;
+        if (context != null && context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const WearOSSetupScreen(),
+            ),
+          );
+        }
+        return;
+      }
+
+      if (message['command'] == 'toggle_event') {
+        final id = message['id'] as int?;
+        final completed = message['completed'] as bool?;
+        if (id != null) {
+          _handleToggleEvent(id, completed);
+        }
+        return;
+      }
+
       if (activeProfileNullable == null) return;
       if (message['command'] == 'get_schedule') {
         _sendSchedule();
@@ -100,6 +124,10 @@ class WatchService with WidgetsBindingObserver {
                 'name': e.first.title,
                 'shortName': e.first.subject.value?.afkorting,
                 'location': e.first.lokatie ?? "",
+                'description': e.first.inhoud ?? e.first.omschrijving ?? "",
+                'teacher': e.first.docenten?.map((d) => d.naam ?? d.docentcode ?? "").where((s) => s.isNotEmpty).join(", "),
+                'startHourIndicator': e.first.lesuurVan,
+                'endHourIndicator': e.last.lesuurTotMet,
                 'lesuurVan': e.first.lesuurVan,
                 'lesuurTotMet': e.last.lesuurTotMet,
                 'infoType': e.first.infoType.index,
@@ -167,6 +195,24 @@ class WatchService with WidgetsBindingObserver {
       'data': schoolyearsData,
     });
     _updateSyncTime();
+  }
+
+  Future<void> _handleToggleEvent(int id, bool? completed) async {
+    final profile = activeProfileNullable;
+    if (profile == null) return;
+
+    final event = await isar.calendarEvents.where().uuidEqualTo(id).findFirst();
+    if (event != null) {
+      event.afgerond = completed ?? !event.afgerond;
+      event.save();
+      try {
+        await event.sync();
+      } catch (e) {
+        debugPrint("Error syncing toggled event to Magister: $e");
+      }
+      // Re-send updated schedule to watch so both sides stay in sync
+      _sendSchedule(profile);
+    }
   }
 
   void _updateSyncTime() {

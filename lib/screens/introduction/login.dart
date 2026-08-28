@@ -49,7 +49,7 @@ Future<TokenSet?> showMagisterLoginDialog(
         },
       ),
     )
-    ..loadRequest(auth.generateLoginURL());
+    ..loadRequest(auth.generateLoginURL(tenant: tenant, username: username));
 
   Future<void> loginWithBrowser({bool noWebview = false}) async {
     if (!noWebview &&
@@ -114,8 +114,9 @@ Future<TokenSet?> showMagisterLoginDialog(
                         .isMacOS) //Only iOS, macOS & Android are supported for logging in with a webview
                 ? [
                     IconButton(
-                        onPressed: () => webViewController
-                            .loadRequest(auth.generateLoginURL()),
+                        onPressed: () => webViewController.loadRequest(
+                            auth.generateLoginURL(
+                                tenant: tenant, username: username)),
                         icon: const Icon(Icons.refresh)),
                     IconButton(
                         onPressed: () => loginWithBrowser(noWebview: true),

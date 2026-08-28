@@ -1,16 +1,17 @@
 package dev.harrydekat.discipulus.wear.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -23,40 +24,93 @@ import androidx.wear.compose.material3.*
 import dev.harrydekat.discipulus.wear.models.ScheduleEvent
 import dev.harrydekat.discipulus.wear.viewmodel.WearViewModel
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ScheduleListView(viewModel: WearViewModel) {
+fun ScheduleListView(
+    viewModel: WearViewModel,
+    onNavigateToEventDetail: () -> Unit = {}
+) {
     val schedule by viewModel.schedule.collectAsState()
     val showCancelledLessons by viewModel.showCancelledLessons.collectAsState()
     val showBreakSeparators by viewModel.showBreakSeparators.collectAsState()
+    val eventTimeDisplay by viewModel.eventTimeDisplay.collectAsState()
+    val scheduleViewMode by viewModel.scheduleViewMode.collectAsState()
     val lastUpdate by viewModel.lastUpdate.collectAsState()
-    val listState = rememberScalingLazyListState()
-    val visibleSchedule = schedule
-        .mapValues { (_, events) ->
-            if (showCancelledLessons) events else events.filterNot { it.status in 4..5 }
-        }
-        .filterValues { it.isNotEmpty() }
 
-    ScreenScaffold(scrollState = listState) {
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState
-        ) {
-            if (visibleSchedule.isEmpty()) {
-                item {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Geen afspraken",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
-                        )
+    val visibleSchedule = remember(schedule, showCancelledLessons) {
+        schedule.mapValues { (_, events) ->
+            if (showCancelledLessons) events else events.filterNot { it.status in 4..5 || it.isCanceled }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.requestSchedule()
+    }
+
+    if (visibleSchedule.isEmpty() || visibleSchedule.values.all { it.isEmpty() }) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                "Geen afspraken",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
+            )
+        }
+    } else if (scheduleViewMode == 1) {
+        // Day-by-day horizontal pager
+        val sortedDates = remember(visibleSchedule) { visibleSchedule.keys.sorted() }
+        val todayStr = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
+        val initialPage = remember(sortedDates) {
+            val idx = sortedDates.indexOf(todayStr)
+            if (idx >= 0) idx else 0
+        }
+        val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { sortedDates.size })
+
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val dateKey = sortedDates[page]
+            val events = visibleSchedule[dateKey] ?: emptyList()
+
+            val dayTargetIndex = remember(events, showBreakSeparators) {
+                val now = System.currentTimeMillis()
+                var currentIdx = 1 // After Date header (index 0)
+                var target: Int? = null
+                for (i in events.indices) {
+                    val ev = events[i]
+                    if (target == null && ev.endTime.time > now) {
+                        target = currentIdx
+                    }
+                    currentIdx++
+                    if (showBreakSeparators && i < events.size - 1) {
+                        val nextEvent = events[i + 1]
+                        val gapMs = nextEvent.startTime.time - ev.endTime.time
+                        val gapMinutes = (gapMs / (1000 * 60)).toInt()
+                        if (gapMinutes >= 5) {
+                            currentIdx++
+                        }
                     }
                 }
-            } else {
-                val sortedDates = visibleSchedule.keys.sorted()
-                sortedDates.forEach { dateKey ->
+                target ?: 0
+            }
+
+            val listState = rememberScalingLazyListState(initialCenterItemIndex = dayTargetIndex)
+
+            LaunchedEffect(dayTargetIndex) {
+                if (dayTargetIndex > 0) {
+                    listState.scrollToItem(dayTargetIndex)
+                }
+            }
+
+            ScreenScaffold(scrollState = listState) {
+                ScalingLazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState
+                ) {
                     item {
                         Text(
                             text = formatDateHeader(dateKey),
@@ -66,7 +120,6 @@ fun ScheduleListView(viewModel: WearViewModel) {
                         )
                     }
 
-                    val events = visibleSchedule[dateKey] ?: emptyList()
                     if (events.isEmpty()) {
                         item {
                             Text(
@@ -81,7 +134,128 @@ fun ScheduleListView(viewModel: WearViewModel) {
                             item {
                                 EventCard(
                                     event = event,
-                                    onClick = { viewModel.toggleEventCompletion(event.id) }
+                                    eventTimeDisplay = eventTimeDisplay,
+                                    onClick = {
+                                        viewModel.selectEvent(event)
+                                        onNavigateToEventDetail()
+                                    }
+                                )
+                            }
+
+                            if (showBreakSeparators && index < events.size - 1) {
+                                val nextEvent = events[index + 1]
+                                val gapMs = nextEvent.startTime.time - event.endTime.time
+                                val gapMinutes = (gapMs / (1000 * 60)).toInt()
+                                if (gapMinutes >= 5) {
+                                    item {
+                                        BreakRow(durationMinutes = gapMinutes)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        LastUpdateFooter(lastUpdate = lastUpdate)
+                    }
+                }
+            }
+        }
+    } else {
+        // Continuous vertical list
+        val sortedDates = remember(visibleSchedule) { visibleSchedule.keys.sorted() }
+
+        val targetIndex = remember(visibleSchedule, sortedDates, showBreakSeparators) {
+            val now = System.currentTimeMillis()
+            var currentIdx = 1 // After "Rooster" title (index 0)
+            var target: Int? = null
+            var firstTodayHeaderIdx: Int? = null
+            val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            for (dateKey in sortedDates) {
+                val headerIdx = currentIdx
+                if (dateKey == todayStr && firstTodayHeaderIdx == null) {
+                    firstTodayHeaderIdx = headerIdx
+                }
+                currentIdx++ // For date header
+
+                val events = visibleSchedule[dateKey] ?: emptyList()
+                if (events.isEmpty()) {
+                    currentIdx++ // For "Vrij"
+                } else {
+                    for (i in events.indices) {
+                        val ev = events[i]
+                        if (target == null && ev.endTime.time > now) {
+                            target = currentIdx
+                        }
+                        currentIdx++ // For EventCard
+
+                        if (showBreakSeparators && i < events.size - 1) {
+                            val nextEvent = events[i + 1]
+                            val gapMs = nextEvent.startTime.time - ev.endTime.time
+                            val gapMinutes = (gapMs / (1000 * 60)).toInt()
+                            if (gapMinutes >= 5) {
+                                currentIdx++ // For BreakRow
+                            }
+                        }
+                    }
+                }
+            }
+            target ?: firstTodayHeaderIdx ?: 0
+        }
+
+        val listState = rememberScalingLazyListState(initialCenterItemIndex = targetIndex)
+
+        LaunchedEffect(targetIndex) {
+            if (targetIndex > 0) {
+                listState.scrollToItem(targetIndex)
+            }
+        }
+
+        ScreenScaffold(scrollState = listState) {
+            ScalingLazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
+                item {
+                    Text(
+                        text = "Rooster",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+
+                sortedDates.forEach { dateKey ->
+                    item {
+                        Text(
+                            text = formatDateHeader(dateKey),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                        )
+                    }
+
+                    val events = visibleSchedule[dateKey] ?: emptyList()
+                    if (events.isEmpty()) {
+                        item {
+                            Text(
+                                "Vrij",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                    } else {
+                        events.forEachIndexed { index, event ->
+                            item {
+                                EventCard(
+                                    event = event,
+                                    eventTimeDisplay = eventTimeDisplay,
+                                    onClick = {
+                                        viewModel.selectEvent(event)
+                                        onNavigateToEventDetail()
+                                    }
                                 )
                             }
 
@@ -98,8 +272,7 @@ fun ScheduleListView(viewModel: WearViewModel) {
                         }
                     }
                 }
-            }
-            if (visibleSchedule.isNotEmpty()) {
+
                 item {
                     LastUpdateFooter(lastUpdate = lastUpdate)
                 }
@@ -134,45 +307,40 @@ fun BreakRow(durationMinutes: Int) {
 }
 
 @Composable
-fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
-    // Only treat the event as completed if it is actually a homework task (infoType == 1)
+fun EventCard(event: ScheduleEvent, eventTimeDisplay: Int = 0, onClick: () -> Unit) {
     val isCompleted = event.isCompleted && event.infoType == 1
-    val isCanceled = event.status in 4..5
+    val isCanceled = event.status in 4..5 || event.isCanceled
 
     val containerColor = when {
-        isCanceled -> MaterialTheme.colorScheme.errorContainer
+        isCanceled -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
         isCompleted -> MaterialTheme.colorScheme.secondaryContainer
-        else -> when (event.infoType) {
-            in 2..5 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
-            else -> MaterialTheme.colorScheme.surfaceContainer
-        }
+        event.infoType in 2..5 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+        else -> MaterialTheme.colorScheme.surfaceContainer
     }
     val contentColor = when {
         isCanceled -> MaterialTheme.colorScheme.onErrorContainer
         isCompleted -> MaterialTheme.colorScheme.onSecondaryContainer
-        else -> when (event.infoType) {
-            in 2..5 -> MaterialTheme.colorScheme.onTertiaryContainer
-            else -> MaterialTheme.colorScheme.onSurface
-        }
+        event.infoType in 2..5 -> MaterialTheme.colorScheme.onTertiaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     val hasDoubleHour = event.endHourIndicator != null && event.startHourIndicator != event.endHourIndicator
     val cardHeight = if (hasDoubleHour) 60.dp else 48.dp
 
     Card(
-        onClick = { if (event.infoType == 1 && !isCanceled) onClick() },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(cardHeight)
-            .padding(vertical = 1.dp), // Less margin between items
+            .padding(vertical = 1.dp),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp) // Tight padding inside card
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(), // Fill available card height to center content vertically
+            modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Leading Hour Indicator circular badge
@@ -192,7 +360,7 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
 
                 Box(
                     modifier = Modifier
-                        .size(28.dp) // More compact badge (from 32.dp to 28.dp)
+                        .size(28.dp)
                         .background(
                             color = badgeBgColor,
                             shape = CircleShape
@@ -213,10 +381,10 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                         )
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp)) // Tighter spacer
+                Spacer(modifier = Modifier.width(6.dp))
             }
 
-            // Title & Location / HW abbreviations
+            // Title & Location / Time / HW abbreviations
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = event.name,
@@ -238,24 +406,39 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                     else -> null
                 }
 
-                // Conditionally render the subtitle row to prevent empty elements from taking vertical space
-                if (!event.location.isNullOrEmpty() || shortInfo != null || isCanceled) {
+                val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+                val timeStr = when (eventTimeDisplay) {
+                    1 -> timeFormat.format(event.startTime)
+                    2 -> "${timeFormat.format(event.startTime)} - ${timeFormat.format(event.endTime)}"
+                    else -> null
+                }
+
+                val subtitleParts = mutableListOf<String>()
+                if (!event.location.isNullOrEmpty()) {
+                    subtitleParts.add(event.location)
+                }
+                if (timeStr != null) {
+                    subtitleParts.add(timeStr)
+                }
+
+                if (subtitleParts.isNotEmpty() || shortInfo != null || isCanceled) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        if (!event.location.isNullOrEmpty()) {
+                        if (subtitleParts.isNotEmpty()) {
                             Text(
-                                text = event.location,
+                                text = subtitleParts.joinToString(" · "),
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
                         }
 
                         if (shortInfo != null) {
                             val accentColor = if (isCompleted) {
-                                MaterialTheme.colorScheme.secondary // Themed completed type indicator
+                                MaterialTheme.colorScheme.secondary
                             } else if (event.infoType in 2..5) {
                                 MaterialTheme.colorScheme.tertiary
                             } else {
@@ -263,7 +446,7 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
                             }
 
                             Text(
-                                text = "• $shortInfo",
+                                text = if (subtitleParts.isNotEmpty()) "• $shortInfo" else shortInfo,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = accentColor
@@ -273,9 +456,10 @@ fun EventCard(event: ScheduleEvent, onClick: () -> Unit) {
 
                         if (isCanceled) {
                             Text(
-                                text = "• Uitgevallen",
+                                text = if (subtitleParts.isNotEmpty() || shortInfo != null) "• Uitgevallen" else "Uitgevallen",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.error
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
                                 )
                             )
                         }

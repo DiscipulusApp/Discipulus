@@ -173,7 +173,7 @@ fun GradeDetailView(grade: WatchGrade) {
             }
 
             // 5. Description Card
-            if (grade.description.isNotEmpty()) {
+            if (!grade.description.isNullOrEmpty()) {
                 item { Spacer(modifier = Modifier.height(6.dp)) }
                 item {
                     Card(

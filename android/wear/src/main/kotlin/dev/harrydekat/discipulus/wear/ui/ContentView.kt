@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -20,6 +21,7 @@ import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -32,13 +34,21 @@ fun ContentView(
     viewModel: WearViewModel,
     onNavigateToSchedule: () -> Unit,
     onNavigateToGrades: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToEventDetail: () -> Unit = {}
 ) {
     val schedule by viewModel.schedule.collectAsState()
     val schoolyears by viewModel.schoolyears.collectAsState()
     val currentEvent by viewModel.currentEvent.collectAsState()
+    val nextEvent by viewModel.nextEvent.collectAsState()
+    val isStandalone by viewModel.isStandaloneMode.collectAsState()
+    val standaloneAccount by viewModel.standaloneAccount.collectAsState()
 
-    val hasData = schedule.isNotEmpty() || schoolyears.isNotEmpty()
+    LaunchedEffect(Unit) {
+        viewModel.refreshAll()
+    }
+
+    val showMainContent = schedule.isNotEmpty() || schoolyears.isNotEmpty() || (isStandalone && standaloneAccount != null)
 
     val listState = rememberScalingLazyListState()
 
@@ -47,7 +57,7 @@ fun ContentView(
             modifier = Modifier.fillMaxSize(),
             state = listState
         ) {
-            if (hasData) {
+            if (showMainContent) {
                 item {
                     Text(
                         text = "Discipulus",
@@ -59,7 +69,14 @@ fun ContentView(
 
                 currentEvent?.let { event ->
                     item {
-                        CurrentLessonTile(event = event, onClick = onNavigateToSchedule)
+                        CurrentLessonTile(
+                            event = event,
+                            nextEvent = nextEvent,
+                            onClick = {
+                                viewModel.selectEvent(event)
+                                onNavigateToEventDetail()
+                            }
+                        )
                     }
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
@@ -150,31 +167,107 @@ fun ContentView(
                 }
             } else {
                 item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Text(
+                        text = "Discipulus",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
+
+                item {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = CircleShape
+                            )
                     ) {
                         Icon(
-                            Icons.Default.Warning,
-                            contentDescription = "Geen gegevens",
-                            modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            Icons.Default.PhoneAndroid,
+                            contentDescription = "Telefoon koppelen",
+                            modifier = Modifier.size(24.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Geen gegevens", style = MaterialTheme.typography.titleSmall)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "Nog niet gesynchroniseerd.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { viewModel.refreshAll() },
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                    Text(
+                        "Kijk op je telefoon...",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                item {
+                    Text(
+                        "Open Discipulus op je telefoon om je horloge in te stellen.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+
+                item {
+                    Button(
+                        onClick = { viewModel.triggerPhoneSetup() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Probeer opnieuw", style = MaterialTheme.typography.labelMedium)
+                            Icon(
+                                Icons.Default.PhoneAndroid,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Koppel telefoon", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+
+                item {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        FilledTonalButton(
+                            onClick = onNavigateToSettings,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Instellingen",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        FilledTonalButton(
+                            onClick = { viewModel.refreshAll() },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Vernieuwen",
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }
@@ -186,6 +279,7 @@ fun ContentView(
 @Composable
 fun CurrentLessonTile(
     event: ScheduleEvent,
+    nextEvent: ScheduleEvent? = null,
     onClick: () -> Unit
 ) {
     val now = java.util.Date().time
@@ -294,8 +388,8 @@ fun CurrentLessonTile(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Box(
-                        modifier = Modifier.fillMaxWidth().height(22.dp),
-                        contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxWidth().height(22.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = extensionText,
@@ -307,8 +401,7 @@ fun CurrentLessonTile(
                     )
                 }
 
-
-                 // 2. Main Event Card (matching Calendar event layout)
+                // 2. Main Event Card (matching Calendar event layout)
                 Card(
                     onClick = onClick,
                     modifier = Modifier
@@ -319,7 +412,6 @@ fun CurrentLessonTile(
                         contentColor = contentColor
                     ),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
-
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
@@ -379,6 +471,45 @@ fun CurrentLessonTile(
                             )
                         }
                     }
+                }
+            }
+        }
+
+        // 3. Next upcoming lesson sub-card (for back-to-back lessons)
+        nextEvent?.let { next ->
+            Card(
+                onClick = onClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(34.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Hierna:",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 10.sp
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    val nextTime = timeFormatter.format(next.startTime)
+                    val nextLoc = next.location?.let { " ($it)" } ?: ""
+                    Text(
+                        text = "${next.name}$nextLoc om $nextTime",
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }

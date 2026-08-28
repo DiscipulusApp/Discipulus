@@ -8,6 +8,7 @@ import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,6 +34,10 @@ import java.util.Locale
 @Composable
 fun GradesListView(viewModel: WearViewModel, onNavigateToGradeDetail: () -> Unit) {
     val schoolyears by viewModel.schoolyears.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.requestGrades()
+    }
 
     if (schoolyears.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -179,7 +184,8 @@ fun SchoolYearGradesContent(
 // ── Subject Average Badge ──
 @Composable
 fun SubjectAverageBadge(avg: SubjectAverage) {
-    val isSufficient = avg.average >= 5.5 || avg.average == 0.0
+    val averageVal = avg.average ?: 0.0
+    val isSufficient = averageVal >= 5.5 || averageVal == 0.0
     val valueColor = if (isSufficient)
         MaterialTheme.colorScheme.onSurface
     else
@@ -199,7 +205,7 @@ fun SubjectAverageBadge(avg: SubjectAverage) {
             .background(bgColor)
     ) {
         Text(
-            text = avg.subjectShort.uppercase(),
+            text = avg.subject.take(3).uppercase(),
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
@@ -209,7 +215,7 @@ fun SubjectAverageBadge(avg: SubjectAverage) {
             maxLines = 1
         )
         Text(
-            text = if (avg.average > 0) String.format("%.1f", avg.average) else "-",
+            text = if (averageVal > 0) String.format(Locale.US, "%.1f", averageVal) else "-",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,

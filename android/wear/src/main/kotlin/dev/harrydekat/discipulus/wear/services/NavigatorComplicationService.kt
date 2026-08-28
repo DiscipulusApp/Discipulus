@@ -122,16 +122,18 @@ class NavigatorComplicationService : SuspendingComplicationDataSourceService() {
             val bais = ByteArrayInputStream(bytes)
             val map = ObjectInputStream(bais).use { it.readObject() } as? Map<String, List<ScheduleEvent>>
             val now = Date()
-            val allEvents = map?.values?.flatten()?.sortedBy { it.startTime } ?: emptyList()
+            val allEvents = map?.values?.flatten()
+                ?.filter { !it.isAllDay && !(it.isCompleted && it.infoType == 1) }
+                ?.sortedBy { it.startTime } ?: emptyList()
 
             // 1. Return currently active event (excluding completed homework events)
             val current = allEvents.firstOrNull { 
-                it.startTime.time <= now.time && it.endTime.time > now.time && !(it.isCompleted && it.infoType == 1) 
+                it.startTime.time <= now.time && it.endTime.time > now.time
             }
             if (current != null) return current
 
             // 2. Return next upcoming event that is not completed
-            allEvents.firstOrNull { it.startTime.after(now) && !(it.isCompleted && it.infoType == 1) }
+            allEvents.firstOrNull { it.startTime.after(now) }
         } catch (e: Exception) {
             Log.e("NavigatorComplication", "Error loading schedule for complication", e)
             null

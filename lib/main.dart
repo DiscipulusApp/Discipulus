@@ -113,7 +113,7 @@ void main(args) async {
   await NotificationController.init();
 
   if (Platform.isAndroid) await AndroidAlarmManager.initialize();
-  if (Platform.isIOS) WatchService().init();
+  if (Platform.isIOS || Platform.isAndroid) WatchService().init();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
