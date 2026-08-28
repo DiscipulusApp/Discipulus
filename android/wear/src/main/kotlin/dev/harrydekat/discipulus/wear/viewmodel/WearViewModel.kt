@@ -52,6 +52,11 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
     private val _showBreakSeparators = MutableStateFlow(prefs.getBoolean("show_break_separators", true))
     val showBreakSeparators: StateFlow<Boolean> = _showBreakSeparators.asStateFlow()
 
+    private val _showCancelledLessons = MutableStateFlow(
+        prefs.getBoolean("show_cancelled_lessons", false)
+    )
+    val showCancelledLessons: StateFlow<Boolean> = _showCancelledLessons.asStateFlow()
+
     private val _hapticsEnabled = MutableStateFlow(prefs.getBoolean("haptics_enabled", true))
     val hapticsEnabled: StateFlow<Boolean> = _hapticsEnabled.asStateFlow()
 
@@ -93,6 +98,11 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
     fun setShowBreakSeparators(value: Boolean) {
         _showBreakSeparators.value = value
         prefs.edit().putBoolean("show_break_separators", value).apply()
+    }
+
+    fun setShowCancelledLessons(value: Boolean) {
+        _showCancelledLessons.value = value
+        prefs.edit().putBoolean("show_cancelled_lessons", value).apply()
     }
 
     fun setHapticsEnabled(value: Boolean) {
@@ -139,7 +149,9 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
 
     fun updateCurrentEvent() {
         val now = java.util.Date()
-        val allEvents = _schedule.value.values.flatten().sortedBy { it.startTime }
+        val allEvents = _schedule.value.values.flatten()
+            .filterNot { it.status in 4..5 }
+            .sortedBy { it.startTime }
 
         val current = allEvents.firstOrNull { it.startTime.time <= now.time && it.endTime.time > now.time }
         if (current != null) {
@@ -164,7 +176,9 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
         val context = getApplication<Application>()
         val now = java.util.Date()
         val allEvents = _schedule.value.values.flatten()
-        val upcomingEvents = allEvents.filter { it.startTime.after(now) && !it.isCompleted }
+        val upcomingEvents = allEvents.filter {
+            it.startTime.after(now) && !it.isCompleted && it.status !in 4..5
+        }
 
         for (event in allEvents) {
             val intent = Intent(context, WearReminderReceiver::class.java)
