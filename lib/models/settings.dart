@@ -87,6 +87,7 @@ class Settings {
   bool coloredsufficientFromLine = true;
   bool showCalcCardsInGlobalAverageList = false;
   bool zoomLineGraph = true;
+  bool pietjePrecies = false;
   @enumerated
   SubjectSortType subjectSortType = SubjectSortType.highestAverage;
   @ignore

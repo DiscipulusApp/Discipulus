@@ -189,10 +189,10 @@ class _GradesLineChartState extends State<GradesLineChart> {
           Color? onColor,
           bool drawBackground = true}) =>
       LineChartBarData(
-        barWidth: 5,
-        isStrokeCapRound: true,
-        isStrokeJoinRound: true,
-        isCurved: appSettings.curvedGraphs,
+        barWidth: appSettings.pietjePrecies ? 2.0 : 5.0,
+        isStrokeCapRound: !appSettings.pietjePrecies,
+        isStrokeJoinRound: !appSettings.pietjePrecies,
+        isCurved: appSettings.pietjePrecies ? false : appSettings.curvedGraphs,
         showingIndicators: [3],
         aboveBarData: BarAreaData(
             show: drawBackground,
@@ -206,12 +206,27 @@ class _GradesLineChartState extends State<GradesLineChart> {
             color: elevatedColor(addElevation: 0)),
         color: color ?? Theme.of(context).colorScheme.primary,
         dotData: FlDotData(
-          getDotPainter: (p0, p1, p2, p3) => FlDotCirclePainter(
-              color: color ?? Theme.of(context).colorScheme.primary,
-              strokeColor: onColor ?? Theme.of(context).colorScheme.onPrimary,
-              strokeWidth: 2,
-              radius: 7.5),
+          show: appSettings.pietjePrecies,
+          getDotPainter: (spot, percent, barData, index) {
+            Grade? grade = spotToGrade(spot.x.toInt());
+            final isHighlighted = widget.highlightGrade != null &&
+                ((widget.highlightGrade!.id == null && grade == null) ||
+                    (grade != null && grade.id == widget.highlightGrade?.id));
+            return FlDotCirclePainter(
+              color: isHighlighted
+                  ? (onColor ?? Theme.of(context).colorScheme.onPrimary)
+                  : (color ?? Theme.of(context).colorScheme.primary),
+              strokeColor: isHighlighted
+                  ? (color ?? Theme.of(context).colorScheme.primary)
+                  : (onColor ?? Theme.of(context).colorScheme.onPrimary),
+              strokeWidth: isHighlighted ? 2.5 : 1.5,
+              radius: isHighlighted
+                  ? 6.0
+                  : (appSettings.pietjePrecies ? 3.0 : 0.0),
+            );
+          },
           checkToShowDot: (spot, barData) {
+            if (appSettings.pietjePrecies) return true;
             Grade? grade = spotToGrade(spot.x.toInt());
             if (widget.highlightGrade != null) {
               if (widget.highlightGrade!.id == null && grade == null) {
@@ -325,14 +340,31 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                 : 0,
                             gridData: FlGridData(
                               horizontalInterval: 1,
-                              drawVerticalLine: false,
+                              drawVerticalLine: appSettings.pietjePrecies,
                               drawHorizontalLine: true,
                               checkToShowHorizontalLine: (value) =>
+                                  appSettings.pietjePrecies ||
                                   (value - appSettings.sufficientFrom) > 1 ||
                                   (value - appSettings.sufficientFrom) < -1,
                               getDrawingHorizontalLine: (value) => FlLine(
-                                color: elevatedColor(addElevation: 1),
-                                strokeWidth: 4,
+                                color: appSettings.pietjePrecies
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant
+                                        .withValues(alpha: 0.4)
+                                    : elevatedColor(addElevation: 1),
+                                strokeWidth:
+                                    appSettings.pietjePrecies ? 1 : 4,
+                                dashArray:
+                                    appSettings.pietjePrecies ? [4, 4] : null,
+                              ),
+                              getDrawingVerticalLine: (value) => FlLine(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: 0.25),
+                                strokeWidth: 1,
+                                dashArray: [4, 4],
                               ),
                             ),
                             borderData: FlBorderData(show: false),
@@ -342,11 +374,35 @@ class _GradesLineChartState extends State<GradesLineChart> {
                               topTitles: const AxisTitles(),
                               leftTitles: AxisTitles(
                                 sideTitles: SideTitles(
-                                  reservedSize: 30,
-                                  showTitles: false,
+                                  reservedSize:
+                                      appSettings.pietjePrecies ? 28 : 30,
+                                  showTitles: appSettings.pietjePrecies,
                                   interval: 1,
-                                  getTitlesWidget: (value, meta) =>
-                                      Text(meta.formattedValue),
+                                  getTitlesWidget: (value, meta) {
+                                    if (!appSettings.pietjePrecies) {
+                                      return Text(meta.formattedValue);
+                                    }
+                                    if (value == value.roundToDouble() &&
+                                        value >= 1 &&
+                                        value <= 10) {
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 6),
+                                        child: Text(
+                                          value.toInt().toString(),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
                                 ),
                               ),
                             ),
@@ -482,9 +538,13 @@ class _GradesLineChartState extends State<GradesLineChart> {
                                           .colorScheme
                                           .errorContainer
                                       : elevatedColor(addElevation: 1),
-                                  strokeWidth: 5,
-                                  dashArray: [10, 0],
-                                  strokeCap: StrokeCap.round,
+                                  strokeWidth:
+                                      appSettings.pietjePrecies ? 1.5 : 5,
+                                  dashArray:
+                                      appSettings.pietjePrecies ? [6, 4] : [10, 0],
+                                  strokeCap: appSettings.pietjePrecies
+                                      ? StrokeCap.butt
+                                      : StrokeCap.round,
                                 ),
                               ],
                             ),

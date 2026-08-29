@@ -135,6 +135,20 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
           },
         ),
         SwitchListTile(
+          value: appSettings.pietjePrecies,
+          secondary: const Icon(Icons.straighten_rounded),
+          title: const Text("Pietje precies"),
+          subtitle: const Text(
+              "Toont duidelijke assen met schaalverdeling, dunnere strakke lijnen en hoeken voor maximale nauwkeurigheid"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..pietjePrecies = value
+                ..save();
+            });
+          },
+        ),
+        SwitchListTile(
           value: !appSettings.disableGradeReveal,
           secondary: const Icon(Icons.stars_rounded),
           title: const Text("Cijfer onthullingen"),

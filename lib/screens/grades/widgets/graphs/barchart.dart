@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
@@ -267,8 +268,14 @@ class _HorizontalBarchartState extends State<HorizontalBarchart>
                 horizontalInterval: _getInterval(computedMaxY),
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (value) => FlLine(
-                  color: CardTheme.of(context).color,
-                  strokeWidth: 4,
+                  color: appSettings.pietjePrecies
+                      ? Theme.of(context)
+                          .colorScheme
+                          .outlineVariant
+                          .withValues(alpha: 0.4)
+                      : CardTheme.of(context).color,
+                  strokeWidth: appSettings.pietjePrecies ? 1 : 4,
+                  dashArray: appSettings.pietjePrecies ? [4, 4] : null,
                 ),
               ),
               extraLinesData: ExtraLinesData(
@@ -289,7 +296,32 @@ class _HorizontalBarchartState extends State<HorizontalBarchart>
                 ),
                 rightTitles: const AxisTitles(),
                 topTitles: const AxisTitles(),
-                leftTitles: const AxisTitles(),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: appSettings.pietjePrecies,
+                    reservedSize: 24,
+                    interval: _getInterval(computedMaxY),
+                    getTitlesWidget: (value, meta) {
+                      if (!appSettings.pietjePrecies || value == 0) {
+                        return const SizedBox.shrink();
+                      }
+                      return RotatedBox(
+                        quarterTurns: -1,
+                        child: Text(
+                          value == value.roundToDouble()
+                              ? value.toInt().toString()
+                              : value.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
               maxY: computedMaxY,
               minY: widget.minValue ??
@@ -346,8 +378,8 @@ class _HorizontalBarchartState extends State<HorizontalBarchart>
                         toY: entry.value,
                         width: 24,
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(8),
-                        ),
+                                top: Radius.circular(8),
+                              ),
                         color: entry.color?.call(entry.baseValue).barColor ??
                             Theme.of(context).colorScheme.primary,
                         rodStackItems: [
