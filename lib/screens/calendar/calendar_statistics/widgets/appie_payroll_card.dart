@@ -1,6 +1,7 @@
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/models/account.dart';
+import 'package:discipulus/screens/calendar/calendar_statistics/widgets/appie_receipt_export.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -58,8 +59,8 @@ class AppiePayrollCalculator {
     for (final sy in schoolyears) {
       final syEvents = events.where((e) =>
           !e.isCanceled &&
-          !e.duurtHeleDag && 
-          e.afwezigheid?.verantwoordingtype != AbsenceType.absent && 
+          !e.duurtHeleDag &&
+          e.afwezigheid?.verantwoordingtype != AbsenceType.absent &&
           e.start.isAfter(sy.begin.subtract(const Duration(days: 1))) &&
           e.start.isBefore(sy.einde.add(const Duration(days: 1))));
 
@@ -106,6 +107,7 @@ class AppiePayrollCard extends StatefulWidget {
     this.selectedSchoolyear,
     this.title,
     this.subtitle,
+    this.sourceName,
     this.margin,
   });
 
@@ -114,6 +116,7 @@ class AppiePayrollCard extends StatefulWidget {
   final Schoolyear? selectedSchoolyear;
   final String? title;
   final String? subtitle;
+  final String? sourceName;
   final EdgeInsetsGeometry? margin;
 
   @override
@@ -144,8 +147,8 @@ class _AppiePayrollCardState extends State<AppiePayrollCard> {
       orElse: () => payrolls.isNotEmpty
           ? payrolls.first
           : SchoolyearPayroll(
-              schoolyear: widget.schoolyears.firstOrNull ??
-                  profile.activeSchoolyear,
+              schoolyear:
+                  widget.schoolyears.firstOrNull ?? profile.activeSchoolyear,
               totalHours: 0,
               totalEarnings: 0,
               eventCount: 0,
@@ -282,7 +285,26 @@ class _AppiePayrollCardState extends State<AppiePayrollCard> {
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+
+            const SizedBox(height: 4),
+
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: () => AppieReceiptExportDialog.show(
+                  context,
+                  payrolls: payrolls,
+                  grandTotalHours: grandTotalHours,
+                  grandTotalEarnings: grandTotalEarnings,
+                  profile: profile,
+                  sourceName: widget.sourceName,
+                ),
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: const Text("Zie je salarisstrook"),
+              ),
+            ),
+
+            const SizedBox(height: 8),
 
             // Schoolyear Breakdown Section
             if (widget.selectedSchoolyear != null) ...[
@@ -295,7 +317,8 @@ class _AppiePayrollCardState extends State<AppiePayrollCard> {
               const SizedBox(height: 6),
               CustomCard(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -355,7 +378,8 @@ class _AppiePayrollCardState extends State<AppiePayrollCard> {
                 CustomCard(
                   margin: const EdgeInsets.only(bottom: 6),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     child: Row(
                       children: [
                         Expanded(

@@ -190,6 +190,7 @@ class _TeacherDetailStatisticsScreenState
               selectedSchoolyear: null,
               title: "Wat als school een appie was?",
               subtitle: "Albert Heijn salaris bij ${widget.teacherName}",
+              sourceName: "Docent: ${widget.teacherName}",
               margin: EdgeInsets.zero,
             ),
           ),

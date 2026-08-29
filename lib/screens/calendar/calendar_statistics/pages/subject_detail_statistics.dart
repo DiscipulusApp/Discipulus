@@ -195,6 +195,7 @@ class _SubjectDetailStatisticsScreenState
               selectedSchoolyear: null,
               title: "Wat als school een appie was?",
               subtitle: "Albert Heijn salaris voor ${widget.subjectName}",
+              sourceName: "Vak: ${widget.subjectName}",
               margin: EdgeInsets.zero,
             ),
           ),
