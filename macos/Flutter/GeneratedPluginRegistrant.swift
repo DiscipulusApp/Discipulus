@@ -19,7 +19,7 @@ import flutter_local_ai
 import flutter_local_notifications
 import home_widget
 import irondash_engine_context
-import isar_community_flutter_libs
+import isar_flutter_libs
 import mobile_scanner
 import network_info_plus
 import open_file_mac

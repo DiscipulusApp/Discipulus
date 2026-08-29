@@ -20,7 +20,7 @@ dependencies:
   dio: ^5.3.3
   intl: ^0.19.0
   super_clipboard: ^0.9.1
-  isar_community_flutter_libs: ^3.3.2
+  isar_flutter_libs: ^3.1.0+1
   flutter:
     sdk: flutter
 
