@@ -2,7 +2,6 @@ import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
-import 'package:discipulus/screens/grades/widgets/grade_header.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/chips/chips.dart';
 import 'package:flutter/material.dart' hide FilterChip;

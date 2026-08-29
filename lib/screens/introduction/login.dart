@@ -195,7 +195,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   late final ValueNotifier<String> textState;
   bool _hasError = false;
   String? _errorMessage;
-  StackTrace? _stackTrace;
 
   @override
   void initState() {
@@ -221,7 +220,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     setState(() {
       _hasError = false;
       _errorMessage = null;
-      _stackTrace = null;
     });
     tokenSet.value = await showMagisterLoginDialog(context);
     // If the dialog was dismissed and no token was retrieved,
@@ -240,7 +238,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       setState(() {
         _hasError = false;
         _errorMessage = null;
-        _stackTrace = null;
         textState.value = "Gegevens ophalen van Magister...";
       });
 
@@ -296,7 +293,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         setState(() {
           _hasError = true;
           _errorMessage = e.toString();
-          _stackTrace = s;
           textState.value = "ERROR: $e";
         });
       }

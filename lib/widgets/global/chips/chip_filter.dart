@@ -1,3 +1,4 @@
+import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/api/models/subjects.dart';
@@ -342,3 +343,230 @@ class GradesFilterMenu extends StatelessWidget {
     );
   }
 }
+
+class CalendarFilterMenuChip extends StatefulWidget {
+  const CalendarFilterMenuChip({
+    super.key,
+    this.title = const Text("Filter"),
+    this.schoolyear,
+    required this.allSchoolyears,
+    required this.allEvents,
+    this.onChanged,
+  });
+
+  final Widget title;
+  final Schoolyear? schoolyear;
+  final List<Schoolyear> allSchoolyears;
+  final List<CalendarEvent> allEvents;
+  final void Function()? onChanged;
+
+  @override
+  State<CalendarFilterMenuChip> createState() => _CalendarFilterMenuChipState();
+}
+
+class _CalendarFilterMenuChipState extends State<CalendarFilterMenuChip> {
+  @override
+  Widget build(BuildContext context) {
+    bool isActive = widget.schoolyear != null
+        ? Settings.activeCalendarFilters
+            .where((f) => f.schoolyearUuid == widget.schoolyear!.uuid)
+            .isNotEmpty
+        : Settings.activeCalendarFilters.isNotEmpty;
+
+    return ActionChip(
+      backgroundColor:
+          isActive ? Theme.of(context).colorScheme.secondaryContainer : null,
+      side: isActive ? const BorderSide(style: BorderStyle.none) : null,
+      avatar: const Icon(Icons.filter_list),
+      label: widget.title,
+      onPressed: () => showScrollableModalBottomSheet(
+        context: context,
+        builder: (context, setState, scrollcontroller) => ListView(
+          controller: scrollcontroller,
+          children: [
+            CalendarFilterMenu(
+              schoolyear: widget.schoolyear,
+              allSchoolyears: widget.allSchoolyears,
+              allEvents: widget.allEvents,
+              onChanged: () {
+                setState(() {});
+                widget.onChanged?.call();
+              },
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CalendarFilterMenu extends StatelessWidget {
+  const CalendarFilterMenu({
+    super.key,
+    this.schoolyear,
+    required this.allSchoolyears,
+    required this.allEvents,
+    this.onChanged,
+  });
+
+  final Schoolyear? schoolyear;
+  final List<Schoolyear> allSchoolyears;
+  final List<CalendarEvent> allEvents;
+  final void Function()? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasActiveFilters = schoolyear != null
+        ? Settings.activeCalendarFilters
+            .where((f) => f.schoolyearUuid == schoolyear!.uuid)
+            .isNotEmpty
+        : Settings.activeCalendarFilters.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16)
+                .copyWith(top: 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Filters",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                FilledButton.tonal(
+                  onPressed: !hasActiveFilters
+                      ? null
+                      : () {
+                          if (schoolyear != null) {
+                            Settings.activeCalendarFilters.removeWhere(
+                                (f) => f.schoolyearUuid == schoolyear!.uuid);
+                          } else {
+                            Settings.activeCalendarFilters.clear();
+                          }
+                          onChanged?.call();
+                        },
+                  child: const Text("Alles uitzetten"),
+                )
+              ],
+            ),
+          ),
+          if (schoolyear != null) ...[
+            const ListTitle(child: Text("Docenten")),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildTeacherChips(
+                  context, schoolyear!, _getEventsForSchoolyear(schoolyear!)),
+            ),
+          ] else ...[
+            // "Alles" option: list all of the teachers per year
+            for (final sy in allSchoolyears) ...[
+              Builder(
+                builder: (context) {
+                  final syEvents = _getEventsForSchoolyear(sy);
+                  final teachers = _getTeachersForEvents(syEvents);
+                  if (teachers.isEmpty) return const SizedBox();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ListTitle(
+                        child: Text(sy.groep.omschrijving ?? sy.groep.code),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildTeacherChips(context, sy, syEvents),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ]
+          ],
+          const BottomSheetBottomContentPadding()
+        ],
+      ),
+    );
+  }
+
+  List<CalendarEvent> _getEventsForSchoolyear(Schoolyear sy) {
+    return allEvents
+        .where((e) =>
+            e.start.isAfter(sy.begin.subtract(const Duration(days: 1))) &&
+            e.start.isBefore(sy.einde.add(const Duration(days: 1))))
+        .toList();
+  }
+
+  List<_TeacherInfo> _getTeachersForEvents(List<CalendarEvent> events) {
+    final Map<String, _TeacherInfo> teacherMap = {};
+    for (final e in events) {
+      final docenten = e.docenten;
+      if (docenten != null && docenten.isNotEmpty) {
+        for (final d in docenten) {
+          final name = d.naam ?? d.docentcode;
+          if (name != null && name.isNotEmpty && !teacherMap.containsKey(name)) {
+            teacherMap[name] = _TeacherInfo(
+              name: name,
+              code: d.docentcode,
+            );
+          }
+        }
+      }
+    }
+    final list = teacherMap.values.toList();
+    list.sort((a, b) => a.name.compareTo(b.name));
+    return list;
+  }
+
+  Widget _buildTeacherChips(
+      BuildContext context, Schoolyear sy, List<CalendarEvent> events) {
+    final teachers = _getTeachersForEvents(events);
+    if (teachers.isEmpty) {
+      return const Text("Geen docenten gevonden",
+          style: TextStyle(fontStyle: FontStyle.italic));
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        for (final teacher in teachers)
+          ToggleChip(
+            key: ValueKey(
+                "calendar_teacher_${sy.uuid}_${teacher.name.hashCode}"),
+            label: Text(teacher.name),
+            initalValue: Settings.activeCalendarFilters
+                .whereType<CalendarTeacherFilter>()
+                .any((f) =>
+                    f.name == teacher.name && f.schoolyearUuid == sy.uuid),
+            onChanged: (isEnabled) {
+              if (isEnabled) {
+                Settings.activeCalendarFilters.add(
+                  CalendarTeacherFilter(
+                    "${sy.uuid}_${teacher.name}".hashCode,
+                    name: teacher.name,
+                    code: teacher.code,
+                    schoolyearUuid: sy.uuid,
+                  ),
+                );
+              } else {
+                Settings.activeCalendarFilters.removeWhere((f) =>
+                    f is CalendarTeacherFilter &&
+                    f.name == teacher.name &&
+                    f.schoolyearUuid == sy.uuid);
+              }
+              onChanged?.call();
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _TeacherInfo {
+  final String name;
+  final String? code;
+  const _TeacherInfo({required this.name, this.code});
+}
+

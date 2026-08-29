@@ -2,6 +2,8 @@ import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
+import 'package:discipulus/utils/extensions.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 
 /// Card representing a single combined event on the time grid
@@ -39,6 +41,13 @@ class TimeGridEventCard extends StatelessWidget {
       bgColor = theme.colorScheme.errorContainer;
       textColor = theme.colorScheme.onErrorContainer;
       subTextColor = textColor.withValues(alpha: 0.85);
+    } else if (isDone) {
+      bgColor = theme.colorScheme.surfaceContainerHighest
+      .applySurfaceTint(tint: Colors.lightGreenAccent, elevation: 99)
+      .harmonizeWith(theme.colorScheme.primaryContainer);
+      textColor = theme.colorScheme.onSurfaceVariant;
+      subTextColor = textColor.withValues(alpha: 0.85);
+      
     } else if (showTestColor) {
       bgColor = theme.colorScheme.tertiaryContainer;
       textColor = theme.colorScheme.onTertiaryContainer;
@@ -105,15 +114,6 @@ class TimeGridEventCard extends StatelessWidget {
                     // Title & Lesuur
                     Row(
                       children: [
-                        if (isDone && (hasHomework || isTest) && !isNarrow)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 3),
-                            child: Icon(
-                              Icons.check_circle_outline_rounded,
-                              size: 13,
-                              color: subTextColor,
-                            ),
-                          ),
                         Expanded(
                           child: Text(
                             first.title,

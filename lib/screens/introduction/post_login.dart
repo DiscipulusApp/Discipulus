@@ -218,42 +218,45 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
               ),
             ),
             // Notification Banner 3: Reminder / Herinnering
-            CustomCard(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              elevation: 0,
-              color: colorScheme.surfaceContainerHigh,
-              child: ListTile(
-                dense: true,
-                visualDensity: VisualDensity.compact,
-                leading: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: colorScheme.tertiary.withAlpha(30),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.alarm_on_rounded,
-                      color: colorScheme.tertiary, size: 15),
-                ),
-                title: const Text(
-                  "Herinnering: Geschiedenis toets",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
-                ),
-                subtitle: const Text(
-                  "Morgen 2e uur • Hoofdstuk 3 & 4 doornemen",
-                  style: TextStyle(fontSize: 10),
-                ),
-                trailing: Text(
-                  "19:00",
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
+            // 
+            // Fun, but no room really. 
+            //
+            // CustomCard(
+            //   shape: RoundedRectangleBorder(
+            //     borderRadius: BorderRadius.circular(16),
+            //   ),
+            //   margin: const EdgeInsets.symmetric(vertical: 2),
+            //   elevation: 0,
+            //   color: colorScheme.surfaceContainerHigh,
+            //   child: ListTile(
+            //     dense: true,
+            //     visualDensity: VisualDensity.compact,
+            //     leading: Container(
+            //       padding: const EdgeInsets.all(5),
+            //       decoration: BoxDecoration(
+            //         color: colorScheme.tertiary.withAlpha(30),
+            //         shape: BoxShape.circle,
+            //       ),
+            //       child: Icon(Icons.alarm_on_rounded,
+            //           color: colorScheme.tertiary, size: 15),
+            //     ),
+            //     title: const Text(
+            //       "Herinnering: Geschiedenis toets",
+            //       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
+            //     ),
+            //     subtitle: const Text(
+            //       "Morgen 2e uur • Hoofdstuk 3 & 4 doornemen",
+            //       style: TextStyle(fontSize: 10),
+            //     ),
+            //     trailing: Text(
+            //       "19:00",
+            //       style: TextStyle(
+            //         fontSize: 9.5,
+            //         color: colorScheme.onSurfaceVariant,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 6),
             // Giant Material You Interactive Toggle Button
             const Expanded(

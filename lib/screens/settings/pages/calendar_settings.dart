@@ -1,4 +1,5 @@
 import 'package:discipulus/api/models/calendar.dart';
+import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_header.dart';
@@ -6,6 +7,9 @@ import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
+
+import 'package:discipulus/utils/account_manager.dart';
+import 'package:isar/isar.dart';
 
 class CalendarSettingsPage extends StatefulWidget {
   const CalendarSettingsPage({super.key});
@@ -16,6 +20,8 @@ class CalendarSettingsPage extends StatefulWidget {
 
 class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
   ValueNotifier<DateTime> date = ValueNotifier(DateTime.now());
+  bool _isSyncing = false;
+  String _syncStatus = "";
 
   @override
   void dispose() {
@@ -27,6 +33,84 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
       setState(() {
         settings.call(appSettings).save();
       });
+
+  Future<void> _performFullCareerFetch() async {
+    if (activeProfile.isOffline || _isSyncing) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Hele schoolcarrière synchroniseren?"),
+        content: const Text(
+          "Dit haalt alle kalendergebeurtenissen op van al je geregistreerde schooljaren. Dit kan even duren.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Annuleren"),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Synchroniseren"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _isSyncing = true;
+      _syncStatus = "Schooljaren voorbereiden...";
+    });
+
+    try {
+      final schoolyears = await activeProfile.schoolyears
+          .filter()
+          .sortByBeginDesc()
+          .findAll();
+
+      final total = schoolyears.length;
+      for (int i = 0; i < total; i++) {
+        if (!mounted) break;
+        final sy = schoolyears[i];
+        setState(() {
+          _syncStatus =
+              "Schooljaar ${sy.groep.omschrijving ?? sy.groep.code} ophalen (${i + 1}/$total)...";
+        });
+        await activeProfile.getEvents(DateTimeRange(
+          start: sy.begin,
+          end: sy.einde,
+        ));
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Alle kalendergebeurtenissen succesvol gesynchroniseerd!"),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Fout bij synchroniseren: $e"),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+          _syncStatus = "";
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +212,8 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
               body: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: CalendarDayViewBody(
+                  key: ValueKey(
+                      "example_${appSettings.combineDoublePeriods}_${appSettings.showEmptySpaceBetweenLessons}_${appSettings.hideEventswithoutHours}_${appSettings.coloredFinishedTests}_${appSettings.showAutoCancelledEvents}"),
                   day: DateTime.now(),
                   exampleEvents: exampleEvents,
                 ),
@@ -157,6 +243,33 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
               ..showEmptySpaceBetweenLessons = value
               ..save();
           }),
+        ),
+        SwitchListTile(
+          value: appSettings.hideEventswithoutHours,
+          secondary: const Icon(Icons.event_busy),
+          title: const Text("Evenementen zonder uren weglaten"),
+          subtitle: const Text(
+              "Laat evenementen zonder lesuren niet zien in de kalender"),
+          onChanged: (value) => setState(() {
+            appSettings
+              ..hideEventswithoutHours = value
+              ..save();
+          }),
+        ),
+        ListTile(
+          leading: const Icon(Icons.sync_rounded),
+          title: const Text("Volledige schoolcarrière synchroniseren"),
+          subtitle: Text(_isSyncing
+              ? _syncStatus
+              : "Haal alle kalendergebeurtenissen van alle schooljaren op"),
+          trailing: _isSyncing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : null,
+          onTap: _isSyncing ? null : _performFullCareerFetch,
         ),
       ],
     );
@@ -216,11 +329,26 @@ List<CalendarEvent> exampleEvents = [
     type: CalendarType.general,
   ),
   CalendarEvent(
+    lesuurVan: null,
+    lesuurTotMet: null,
+    omschrijving: "Mentorles",
+    rawInhoud:
+        "Dit is een afspraak of activiteit zonder lesuur die verborgen kan worden.",
+    start: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 14 + 15)),
+    einde: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 15)),
+    id: -6,
+    afgerond: false,
+    rawInfoType: InfoType.information,
+    rawStatus: Status.unknown,
+    rawLokatie: "Aula A",
+    type: CalendarType.general,
+  ),
+  CalendarEvent(
     lesuurVan: 5,
     lesuurTotMet: 5,
     omschrijving: "Engelse taal",
-    start: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 14)),
-    einde: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 15)),
+    start: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 15)),
+    einde: DateTime.now().dayOnly.add(const Duration(minutes: 60 * 16)),
     id: -5,
     afgerond: false,
     rawInfoType: InfoType.none,

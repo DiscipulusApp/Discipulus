@@ -164,7 +164,8 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
               (appSettings.showAutoCancelledEvents ||
                   (!appSettings.showAutoCancelledEvents &&
                       ![Status.automaticallyCanceled, Status.manuallyCanceled]
-                          .contains(e.status))))
+                          .contains(e.status))) &&
+              (!appSettings.hideEventswithoutHours || e.lesuurVan != null))
           .combineEvents();
     }
 

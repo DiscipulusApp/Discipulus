@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
@@ -74,7 +73,8 @@ class HorizontalBarchart extends StatefulWidget {
     required this.data,
     this.initialData,
     this.maxValuePadding,
-    this.horizontalInterval = 1,
+    this.horizontalInterval,
+    this.reservedSideTitleSize,
     this.horizontalLines = const [],
   });
 
@@ -90,8 +90,11 @@ class HorizontalBarchart extends StatefulWidget {
   /// will still be dynamic in size, but it will use the min max as a clamp.
   final double? maxValuePadding;
 
-  /// The interval between two lines
-  final double horizontalInterval;
+  /// The interval between two lines. If null, dynamically calculated based on maxValue.
+  final double? horizontalInterval;
+
+  /// Custom reserved width for the side title label block. If null, dynamically calculated.
+  final double? reservedSideTitleSize;
 
   // Extra horizontal lines can be added. These will be drawn behind the bars.
   final List<HorizontalLine> horizontalLines;
@@ -103,7 +106,11 @@ class HorizontalBarchart extends StatefulWidget {
   State<HorizontalBarchart> createState() => _HorizontalBarchartState();
 }
 
-class _HorizontalBarchartState extends State<HorizontalBarchart> {
+class _HorizontalBarchartState extends State<HorizontalBarchart>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   late final ValueNotifier<double> calculatedHeight;
   void setCalculatedHeight() {
     if (entries.isEmpty) {
@@ -115,18 +122,57 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
     }
   }
 
+  double get _sideTitleSize {
+    if (widget.reservedSideTitleSize != null) {
+      return widget.reservedSideTitleSize!;
+    }
+    return 76.0;
+  }
+
+  double _getInterval(double maxY) {
+    if (widget.horizontalInterval != null) {
+      return widget.horizontalInterval!;
+    }
+    if (maxY <= 12) return 1.0;
+    if (maxY <= 50) return 5.0;
+    if (maxY <= 100) return 10.0;
+    if (maxY <= 250) return 25.0;
+    if (maxY <= 500) return 50.0;
+    return max(1, (maxY / 5).roundToDouble());
+  }
+
+  Future<void>? _dataFuture;
+
+  void _loadData() {
+    _dataFuture = widget.data().then((data) {
+      if (mounted) {
+        setState(() {
+          entries = data;
+          setCalculatedHeight();
+        });
+      }
+    });
+  }
+
   @override
-  initState() {
+  void initState() {
     calculatedHeight = ValueNotifier(200);
     if (widget.initialData != null) {
       entries = widget.initialData!;
       setCalculatedHeight();
     }
+    _loadData();
     super.initState();
   }
 
   @override
-  dispose() {
+  void didUpdateWidget(HorizontalBarchart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadData();
+  }
+
+  @override
+  void dispose() {
     calculatedHeight.dispose();
     super.dispose();
   }
@@ -139,12 +185,9 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return FutureBuilder(
-      future: Future(() async {
-        entries = await widget.data();
-        setCalculatedHeight();
-        return Future.value(true);
-      }),
+      future: _dataFuture,
       builder: (context, snapshot) {
         return CustomAnimatedSize(
           child: ValueListenableBuilder(
@@ -156,10 +199,11 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                     child: child,
                   );
 
-              if (snapshot.hasData ||
+              if (entries.isNotEmpty ||
+                  snapshot.connectionState == ConnectionState.done ||
                   (snapshot.connectionState == ConnectionState.waiting &&
                       widget.initialData != null)) {
-                // Data loaded successfully, or initial data has been provided.
+                // Data loaded successfully, or existing data available to smoothly animate from
                 return parent(
                   CustomCard(
                     child: _graphBuilder(),
@@ -189,6 +233,27 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
         ),
       );
     } else {
+      final maxEntryVal = entries.isEmpty
+          ? 10.0
+          : entries
+              .map((e) => e.extraValue != null && e.extraValue!.abs() > 0.05
+                  ? e.value + 1
+                  : e.value)
+              .reduce((value, element) => max(value, element))
+              .toDouble();
+
+      // Right-side padding for the tooltip label at the end of the bar
+      final padding = widget.maxValuePadding != null
+          ? widget.maxValuePadding!
+          : (maxEntryVal <= 10 ? 2.0 : maxEntryVal * 0.28);
+
+      final computedMaxY = widget.maxValue != null
+          ? widget.maxValue!
+          : (maxEntryVal + padding).clamp(
+              widget.minValue ?? 0.0,
+              double.infinity,
+            );
+
       return RepaintBoundary(
         child: RotatedBox(
           quarterTurns: 1,
@@ -199,7 +264,7 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
               borderData: FlBorderData(show: false),
               gridData: FlGridData(
                 show: true,
-                horizontalInterval: widget.horizontalInterval,
+                horizontalInterval: _getInterval(computedMaxY),
                 drawVerticalLine: false,
                 getDrawingHorizontalLine: (value) => FlLine(
                   color: CardTheme.of(context).color,
@@ -213,7 +278,7 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
               titlesData: FlTitlesData(
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
-                    reservedSize: 72,
+                    reservedSize: _sideTitleSize,
                     showTitles: true,
                     interval: 1,
                     getTitlesWidget: (id, meta) => CustomSideTile(
@@ -226,25 +291,14 @@ class _HorizontalBarchartState extends State<HorizontalBarchart> {
                 topTitles: const AxisTitles(),
                 leftTitles: const AxisTitles(),
               ),
-              maxY: widget.maxValuePadding != null || widget.maxValue == null
-                  ? (entries
-                              .map((e) => e.extraValue != null &&
-                                      e.extraValue!.abs() > 0.05
-                                  ? e.value + 1
-                                  : e.value)
-                              .reduce((value, element) => max(value, element))
-                              .toDouble() +
-                          (widget.maxValuePadding ?? 0))
-                      .clamp(
-                      widget.minValue ?? double.infinity,
-                      widget.maxValue ?? double.infinity,
-                    )
-                  : widget.maxValue,
+              maxY: computedMaxY,
               minY: widget.minValue ??
-                  entries
-                      .map((e) => e.value)
-                      .reduce((value, element) => min(value, element))
-                      .toDouble(),
+                  (entries.isEmpty
+                      ? 0.0
+                      : entries
+                          .map((e) => e.value)
+                          .reduce((value, element) => min(value, element))
+                          .toDouble()),
               barTouchData: BarTouchData(
                 touchCallback: (p0, p1) async {
                   if (p0 is FlTapUpEvent &&
@@ -343,7 +397,6 @@ class CustomSideTile extends StatelessWidget {
           axisSide: AxisSide.bottom,
           rotationQuarterTurns: 1,
         ),
-        // axisSide: AxisSide.bottom,
         space: 0,
         fitInside: SideTitleFitInsideData.disable(),
         child: AnimatedContainer(
@@ -354,20 +407,28 @@ class CustomSideTile extends StatelessWidget {
           color: entry.color?.call(entry.baseValue).barColor ??
               Theme.of(context).colorScheme.primary,
           child: Padding(
-            padding: EdgeInsets.only(left: entry.indicator != null ? 4 : 8),
-            child: CustomAnimatedSize(
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                if (entry.indicator != null)
+            padding: EdgeInsets.only(
+              left: entry.indicator != null ? 4 : 8,
+              right: 4,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (entry.indicator != null) ...[
                   Icon(
                     entry.indicator,
                     color: entry.color?.call(entry.baseValue).textColor ??
                         Theme.of(context).colorScheme.onPrimary,
                     size: 18,
                   ),
-                ElasticAnimation(
+                  const SizedBox(width: 2),
+                ],
+                Flexible(
                   child: Text(
                     key: ValueKey(entry.name),
                     entry.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: entry.color?.call(entry.baseValue).textColor ??
@@ -375,7 +436,7 @@ class CustomSideTile extends StatelessWidget {
                     ),
                   ),
                 ),
-              ]),
+              ],
             ),
           ),
         ),

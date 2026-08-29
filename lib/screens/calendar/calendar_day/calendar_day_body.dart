@@ -119,6 +119,10 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
                 .not()
                 .statusEqualTo(Status.manuallyCanceled),
           )
+          .optional(
+            appSettings.hideEventswithoutHours,
+            (q) => q.lesuurVanIsNotNull(),
+          )
           .sortByStart()
           .limit(5)
           .findFirst();
@@ -139,6 +143,10 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
                     .and()
                     .not()
                     .statusEqualTo(Status.manuallyCanceled),
+              )
+              .optional(
+                appSettings.hideEventswithoutHours,
+                (q) => q.lesuurVanIsNotNull(),
               )
               .sortByStart()
               .findFirst())
@@ -324,10 +332,11 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
     List<List<CalendarEvent>> list = events
         .where(
           (e) =>
-              appSettings.showAutoCancelledEvents ||
-              (!appSettings.showAutoCancelledEvents &&
-                  ![Status.automaticallyCanceled, Status.manuallyCanceled]
-                      .contains(e.status)),
+              (appSettings.showAutoCancelledEvents ||
+                  (!appSettings.showAutoCancelledEvents &&
+                      ![Status.automaticallyCanceled, Status.manuallyCanceled]
+                          .contains(e.status))) &&
+              (!appSettings.hideEventswithoutHours || e.lesuurVan != null),
         )
         .combineEvents();
 
@@ -335,7 +344,8 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
     List<int> eventLengths = [];
 
     for (CalendarEvent event in events) {
-      if (!event.duurtHeleDag) {
+      if (!event.duurtHeleDag &&
+          (!appSettings.hideEventswithoutHours || event.lesuurVan != null)) {
         eventLengths.add(event.einde.difference(event.start).inMinutes);
       }
     }

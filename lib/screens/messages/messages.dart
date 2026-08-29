@@ -27,7 +27,6 @@ class _MessagesListScreenState extends State<MessagesListScreen>
   MessagesFolder? messagesFolder;
   List<Bericht> _messages = [];
   List<MessageFilter> _messageFilters = List.of(Settings.activeMessageFilters);
-  @override
   late final ScrollController _scrollController;
 
   bool endWasReached = false;

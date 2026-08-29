@@ -1,4 +1,3 @@
-import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/ai_service.dart';
 import 'package:discipulus/screens/gemini/chat_screen.dart';
 import 'package:discipulus/screens/gemini/functions/ai_models.dart';

@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
 
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/models/settings.dart';
@@ -19,7 +17,6 @@ import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/tiles/loading_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_ai/flutter_local_ai.dart';
 
 class ChatMessage {
   final String text;

@@ -1,6 +1,5 @@
 import 'package:discipulus/api/authentication.dart';
 import 'package:discipulus/core/watch_service.dart';
-import 'package:discipulus/models/account.dart';
 import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -52,64 +51,6 @@ class _WearOSSetupScreenState extends State<WearOSSetupScreen> {
     }
   }
 
-  Future<void> _loginForProfile(Profile profile) async {
-    final account = profile.account.value;
-    String? tenant;
-    if (account?.endPoint != null && account!.endPoint.isNotEmpty) {
-      try {
-        final host = Uri.parse(account.endPoint).host;
-        if (host.isNotEmpty) tenant = host;
-      } catch (_) {}
-    }
-
-    final tokenSet = await showMagisterLoginDialog(
-      context,
-      tenant: tenant,
-    );
-    if (tokenSet == null) return;
-
-    setState(() {
-      _isLoading = true;
-      _statusMessage = "Gegevens koppelen voor ${profile.name}...";
-    });
-
-    try {
-      final apiEndpoint = await Authentication.apiEndpoint(tokenSet);
-
-      await _watch.sendMessage({
-        'type': 'tokenset',
-        'data': {
-          'accessToken': tokenSet.accessToken,
-          'refreshToken': tokenSet.refreshToken ?? '',
-          'idToken': tokenSet.idToken,
-          'expiresAt': tokenSet.expiredDate?.millisecondsSinceEpoch ??
-              (DateTime.now().millisecondsSinceEpoch + 3600000),
-          'apiEndpoint': apiEndpoint.toString(),
-          'personId': profile.id,
-          'accountName': profile.name,
-        },
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                "Nieuwe tokenset succesvol gekoppeld aan horloge voor ${profile.name}!"),
-          ),
-        );
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Fout bij koppelen van tokenset: $e")),
-        );
-      }
-    }
-  }
 
   Future<void> _loginNewMagisterAccount() async {
     final tokenSet = await showMagisterLoginDialog(context);

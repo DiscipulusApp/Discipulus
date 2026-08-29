@@ -1,10 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class CustomGatewaySettingsPage extends StatefulWidget {
   const CustomGatewaySettingsPage({super.key});
@@ -52,7 +49,7 @@ class _CustomGatewaySettingsPageState extends State<CustomGatewaySettingsPage> {
       ..save();
 
     setState(() {
-      _urlController.text = finalUrl ?? "";
+      _urlController.text = finalUrl;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -60,9 +57,7 @@ class _CustomGatewaySettingsPageState extends State<CustomGatewaySettingsPage> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Text(
-          finalUrl != null
-              ? "Eigen gateway ingesteld op $finalUrl"
-              : "Eigen gateway verwijderd. Publieke fallback actief.",
+          "Eigen gateway ingesteld op $finalUrl",
         ),
       ),
     );
@@ -131,25 +126,12 @@ class _CustomGatewaySettingsPageState extends State<CustomGatewaySettingsPage> {
     }
   }
 
-  Future<void> _openGuide() async {
-    final uri = Uri.parse("https://harrydekat.dev/Discipulus");
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Kon webpagina niet openen: https://harrydekat.dev/Discipulus"),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final hasGateway = (appSettings.customGatewayUrl ?? "").trim().isNotEmpty;
+    (appSettings.customGatewayUrl ?? "").trim().isNotEmpty;
 
     return ScaffoldSkeleton(
       appBar: (isRefreshing, trailingRefreshButton, leading) =>

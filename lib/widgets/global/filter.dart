@@ -1,9 +1,99 @@
+import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/subjects.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+
+abstract class CalendarFilter {
+  final int uuid;
+
+  /// If this value is set, the filter will only work when a certain schoolyear is active.
+  final int? schoolyearUuid;
+  CalendarFilter(this.uuid, {this.schoolyearUuid});
+}
+
+class CalendarTeacherFilter extends CalendarFilter {
+  CalendarTeacherFilter(
+    super.uuid, {
+    required this.name,
+    this.code,
+    super.schoolyearUuid,
+  });
+
+  final String name;
+  final String? code;
+}
+
+class CalendarSubjectFilter extends CalendarFilter {
+  CalendarSubjectFilter(super.uuid, {super.schoolyearUuid});
+}
+
+extension CalendarFilterExtension
+    on QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition> {
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      applyCalendarFilter({
+    List<CalendarFilter>? filters,
+    int? schoolyearUuid,
+  }) {
+    List<CalendarFilter> activeFilters = [
+      ...(filters ?? Settings.activeCalendarFilters),
+    ];
+
+    if (schoolyearUuid != null) {
+      activeFilters.removeWhere(
+        (f) => f.schoolyearUuid != null && f.schoolyearUuid != schoolyearUuid,
+      );
+    }
+
+    return optional(
+      activeFilters.any((e) => e is CalendarTeacherFilter),
+      (q) => q.anyOf(
+        activeFilters.whereType<CalendarTeacherFilter>(),
+        (q, element) => q.docentenElement(
+          (q) => q
+              .naamEqualTo(element.name)
+              .optional(element.code != null, (q) => q.or().docentcodeEqualTo(element.code)),
+        ),
+      ),
+    );
+  }
+}
+
+extension CalendarEventListFilterExtension on Iterable<CalendarEvent> {
+  List<CalendarEvent> applyCalendarFilter({
+    List<CalendarFilter>? filters,
+    int? schoolyearUuid,
+  }) {
+    List<CalendarFilter> activeFilters = [
+      ...(filters ?? Settings.activeCalendarFilters),
+    ];
+
+    if (schoolyearUuid != null) {
+      activeFilters.removeWhere(
+        (f) => f.schoolyearUuid != null && f.schoolyearUuid != schoolyearUuid,
+      );
+    }
+
+    if (activeFilters.isEmpty) return toList();
+
+    return where((event) {
+      final teacherFilters =
+          activeFilters.whereType<CalendarTeacherFilter>().toList();
+      if (teacherFilters.isNotEmpty) {
+        final docenten = event.docenten ?? [];
+        final matches = teacherFilters.any((tf) => docenten.any((d) =>
+            (d.naam != null && d.naam == tf.name) ||
+            (tf.code != null && d.docentcode != null && d.docentcode == tf.code) ||
+            (d.naam == null && d.docentcode != null && d.docentcode == tf.name)));
+        if (!matches) return false;
+      }
+      return true;
+    }).toList();
+  }
+}
+
 
 abstract class GradeFilter {
   final int uuid;

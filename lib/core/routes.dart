@@ -6,7 +6,7 @@ import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/bronnen/external_source_list.dart';
-// import 'package:discipulus/screens/calendar/calendar_week/calendar_week.dart';
+import 'package:discipulus/screens/calendar/calendar_statistics/calendar_statistics.dart';
 
 import 'package:discipulus/screens/grades/grade_subject_list.dart';
 import 'package:discipulus/screens/grades/grades_subject.dart';
@@ -130,14 +130,25 @@ List<DestinationSegement> destinations(List<Permission> permissions,
             view: const SubjectListScreen(),
             subviews: const [SubjectGradesScreen],
           ),
+      ]),
+      DestinationSegement(name: "Statistieken", destinations: [
         if (permissions.hasPermissions(PermissionType.cijfers))
           Destination(
-            label: "Statistieken",
+            label: "Cijfer Statistieken",
             icon: const Icon(Icons.bar_chart_outlined),
             filledIcon: const Icon(Icons.bar_chart_rounded),
             shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
             view: const GradesStatisticsScreen(),
             subviews: const [SubjectGradesScreen],
+          ),
+                  if (permissions.hasPermissions(PermissionType.cijfers))
+          Destination(
+            label: "Kalender Statistieken",
+            icon: const Icon(Icons.pie_chart_outline_outlined),
+            filledIcon: const Icon(Icons.pie_chart_rounded),
+            shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
+            view: const CalendarStatisticsScreen(),
+            subviews: const [CalendarStatisticsScreen],
           ),
       ]),
       DestinationSegement(name: "Elektronische leeromgeving", destinations: [

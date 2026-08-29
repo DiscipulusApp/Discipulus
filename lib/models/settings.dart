@@ -75,6 +75,7 @@ class Settings {
   bool showAutoCancelledEvents = false;
   bool combineDoublePeriods = true;
   bool showEmptySpaceBetweenLessons = true;
+  bool hideEventswithoutHours = false;
 
   // Grades
   @enumerated
@@ -92,6 +93,11 @@ class Settings {
 
   /// This contains the active grade filters, this value won't be saved.
   static List<GradeFilter> activeGradeFilters = [];
+
+  @ignore
+
+  /// This contains the active calendar filters, this value won't be saved.
+  static List<CalendarFilter> activeCalendarFilters = [];
 
   @ignore
 

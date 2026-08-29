@@ -257,18 +257,21 @@ class Profile {
   late String name;
   DateTime? birthdate;
 
-  /// Returns the age of the user based on their birthdate.
+  /// Returns the age of the user on a specific date based on their birthdate.
   @ignore
-  int? get age {
+  int? ageOn(DateTime date) {
     if (birthdate == null) return null;
-    DateTime today = DateTime.now();
-    int age = today.year - birthdate!.year;
-    if (today.month < birthdate!.month ||
-        (today.month == birthdate!.month && today.day < birthdate!.day)) {
+    int age = date.year - birthdate!.year;
+    if (date.month < birthdate!.month ||
+        (date.month == birthdate!.month && date.day < birthdate!.day)) {
       age--;
     }
     return age;
   }
+
+  /// Returns the age of the user based on their birthdate.
+  @ignore
+  int? get age => ageOn(DateTime.now());
 
   /// Whether the user is under 13 years old.
   @ignore
