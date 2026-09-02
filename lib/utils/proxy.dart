@@ -48,7 +48,7 @@ class WiiProxyService {
             final jsonList = _lastFetchedEvents
                 .map((e) => {
                       'id': e.id,
-                      'start': e.start?.toLocal().toIso8601String() ?? "",
+                      'start': e.start.toLocal().toIso8601String(),
                       'topic': e.vakken?.firstOrNull?.naam ??
                           e.omschrijving ??
                           "Geen les",

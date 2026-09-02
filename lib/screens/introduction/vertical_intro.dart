@@ -72,8 +72,10 @@ class _VerticalIntroductionScreenState
     _controller.addListener(() {
       _offset.value = _controller.offset;
     });
-    Future(() async => hasAppleWatch = await WatchConnectivity().isPaired)
+    if (Platform.isIOS) {
+      Future(() async => hasAppleWatch = await WatchConnectivity().isPaired)
         .then((_) => setState(() {}));
+    }
   }
 
   @override

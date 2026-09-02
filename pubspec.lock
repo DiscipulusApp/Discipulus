@@ -373,10 +373,10 @@ packages:
     dependency: "direct main"
     description:
       name: desktop_webview_window
-      sha256: "57cf20d81689d5cbb1adfd0017e96b669398a669d927906073b0e42fc64111c0"
+      sha256: b6fdae2cbf9571879b1761c12f27facaf82e22d0bdc74d049907c2a09a432957
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.3"
+    version: "0.3.0"
   device_info_plus:
     dependency: "direct overridden"
     description:
@@ -1504,6 +1504,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
+  silky_scroll:
+    dependency: "direct main"
+    description:
+      name: silky_scroll
+      sha256: "8595e55b763981dc6748f26d88596ed31c2169cd47bf04af39ee4ba9ab8544f6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.6.4"
   sky_engine:
     dependency: transitive
     description: flutter

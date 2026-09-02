@@ -56,9 +56,13 @@ Future<TokenSet?> showMagisterLoginDialog(
   StreamSubscription? browserLinkSub;
 
   Future<void> loginWithBrowser({bool noWebview = false}) async {
+    // The package that is used has an issue with Linux where it closes the whole app instead of the webview window, so we will not do this for Linux either.
+    // https://github.com/MixinNetwork/flutter-plugins/issues/457
+
     if (!noWebview &&
         await WebviewWindow.isWebviewAvailable() &&
-        !Platform.isMacOS) {
+        !Platform.isMacOS &&
+        !Platform.isLinux) {
       WebviewWindow.clearAll();
       final webview = await WebviewWindow.create(
         configuration: CreateConfiguration(
@@ -72,15 +76,17 @@ Future<TokenSet?> showMagisterLoginDialog(
         ),
       );
       webview
-        ..addOnUrlRequestCallback((requestUrl) async {
+        ..setOnUrlRequestCallback((requestUrl) {
           final uri = Uri.parse(requestUrl);
           print("PATH: ${uri.path}");
           if (uri.scheme == "m6loapp") {
             redirectUrl.value = uri;
             webview.close();
+            return false;
           } else if (uri.path.contains("account/login")) {
-            await Dio().getUri(uri).then((value) => print(value.realUri));
+            Dio().getUri(uri).then((value) => print(value.realUri));
           }
+          return true;
         })
         ..launch(auth
             .generateLoginURL(tenant: tenant, username: username)
@@ -102,6 +108,7 @@ Future<TokenSet?> showMagisterLoginDialog(
   }
 
   if (!Platform.isAndroid && !Platform.isIOS && !Platform.isMacOS) {
+    // This automatically opens the webview in a sperate window for desktop platforms, but, since macOS does support webviews, we will not do this for macOS.
     loginWithBrowser();
   }
 
@@ -162,7 +169,9 @@ Future<TokenSet?> showMagisterLoginDialog(
                         icon: const Icon(Icons.open_in_browser),
                         label: const Text("Openen in browser"),
                       ),
-                      if (!Platform.isMacOS) // This does not work in macOS.
+                      if (!Platform.isMacOS &&
+                          !Platform
+                              .isLinux) // This does not work in macOS or Linux (see comment above).
                         FilledButton.icon(
                           onPressed: () => loginWithBrowser(),
                           icon: const Icon(Icons.open_in_new),
@@ -201,7 +210,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     super.initState();
     tokenSet = ValueNotifier(null);
     textState = ValueNotifier("");
-    LoginLogger.instance.startSession(widget.dummy ? "Dummy Login" : "Magister Login");
+    LoginLogger.instance
+        .startSession(widget.dummy ? "Dummy Login" : "Magister Login");
     if (!widget.dummy) {
       WidgetsBinding.instance.addPostFrameCallback((_) => setTokenSet());
     } else {
@@ -267,7 +277,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         const Duration(seconds: 5),
         () {
           if (!_hasError && mounted) {
-            textState.value = "Nog even geduld, je schoolgegevens worden gesynchroniseerd...";
+            textState.value =
+                "Nog even geduld, je schoolgegevens worden gesynchroniseerd...";
           }
         },
       );
@@ -320,7 +331,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   IconButton(
                     icon: const Icon(Icons.copy_rounded),
                     tooltip: "Kopieer logboek",
-                    onPressed: () => LoginLogger.instance.copyToClipboard(context),
+                    onPressed: () =>
+                        LoginLogger.instance.copyToClipboard(context),
                   ),
                   IconButton(
                     icon: const Icon(Icons.share_rounded),

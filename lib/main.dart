@@ -50,11 +50,12 @@ import 'package:dnd_manager/dnd_manager.dart';
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/expressive_intro.dart';
-import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/account_migration.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/utils/desktop_header_bar.dart';
+import 'package:discipulus/utils/desktop_scroll_behavior.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -282,28 +283,30 @@ class MainAppState extends State<MainApp> {
               : appSettings.brightness == ThemeBrightness.dark
                   ? ThemeMode.dark
                   : ThemeMode.light,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              padding: MediaQuery.of(context).padding.copyWith(
-                    top: MediaQuery.of(context).padding.top +
-                        (Platform.isMacOS ? 28 : 0),
-                  ),
-            ),
-            child: ScrollConfiguration(
-              behavior: Platform.isIOS || Platform.isMacOS
-                  ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
-                  : const MaterialScrollBehavior(),
-              child: Layout(child: child!),
-            ),
-          ),
+          builder: (context, child) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              DesktopHeaderBar.updateHeaderBarTheme(Theme.of(context));
+            });
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: MediaQuery.of(context).padding.copyWith(
+                      top: MediaQuery.of(context).padding.top +
+                          (Platform.isMacOS ? 28 : 0),
+                    ),
+              ),
+              child: ScrollConfiguration(
+                behavior: Platform.isIOS || Platform.isMacOS
+                    ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
+                    : const GlobalScrollBehavior(),
+                child: Layout(child: child!),
+              ),
+            );
+          },
           home: (() {
             if (appSettings.activeProfileUuid == null &&
                 isar.profiles.countSync() == 0) {
               // No profile was found, so we will show the introduction screen
-              if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-                return const ExpressiveIntroductionScreen();
-              }
-              return const VerticalIntroductionScreen();
+              return const ExpressiveIntroductionScreen();
             } else {
               // An account was found, so we will show the starting view that the
               // user configured

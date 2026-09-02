@@ -13,6 +13,7 @@ import 'package:discipulus/screens/gemini/chat_screen.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/desktop_header_bar.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -339,6 +340,12 @@ class LayoutState extends State<Layout>
     if ((widget.child.key == const ValueKey("NO_DRAWER") ||
         !_showDrawer ||
         appSettings.activeProfileUuid == null)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        DesktopHeaderBar.updateHeaderBarColor(
+          background: Theme.of(context).colorScheme.surface,
+          foreground: Theme.of(context).colorScheme.onSurface,
+        );
+      });
       // This widget is not a widget that should contain a sidebar, so we will
       // not do anything
       return Theme(
@@ -348,6 +355,14 @@ class LayoutState extends State<Layout>
         child: widget.child,
       );
     } else {
+      if (backgroundColor != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          DesktopHeaderBar.updateHeaderBarColor(
+            background: backgroundColor!,
+            foreground: Theme.of(context).colorScheme.onSurface,
+          );
+        });
+      }
       return Scaffold(
         backgroundColor:
             Platform.isMacOS ? Colors.transparent : backgroundColor,
