@@ -19,6 +19,7 @@ import 'package:discipulus/screens/settings/pages/notification_settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/foundation.dart';
@@ -150,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: page.icon,
             title: Text(page.name),
             subtitle: page.desc != null ? Text(page.desc!) : null,
-            onTap: () => page.page.push(context).then((_) => setState(() {})),
+            onTap: () => page.page.pushSideView(context).then((_) => setState(() {})),
             trailing: const Icon(Icons.navigate_next),
           )
       ],
@@ -159,14 +160,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class ProfileChangeWidget extends StatelessWidget {
-  const ProfileChangeWidget(
-      {super.key, required this.updateState, this.showAddProfileButton = true});
+  const ProfileChangeWidget({
+    super.key,
+    required this.updateState,
+    this.showAddProfileButton = true,
+    this.showName = true,
+    this.vertical = false,
+  });
 
   final void Function(VoidCallback fn) updateState;
   final bool showAddProfileButton;
+  final bool showName;
+  final bool vertical;
 
   @override
   Widget build(BuildContext context) {
+
+    if (vertical) {
+      return Column(
+        children: [
+          for (Profile profile in isar.profiles
+              .filter()
+              .not()
+              .accountIsNull()
+              .findAllSync())
+            InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                // Change the profile to this one
+                activeProfile = profile;
+                updateState(() {});
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: profile.isActive
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: ProfilePicture(
+                      key: ValueKey(profile.base64ProfilePicture),
+                      base64ProfilePicture:
+                          profile.base64ProfilePicture,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (showAddProfileButton)
+            IconButton.filledTonal(
+              onPressed: () =>
+                  const CreateAccountScreen().push(context),
+              icon: const Icon(Icons.person_add),
+            )
+        ],
+      );
+    }
+    
     return Hero(
       tag: "profileSelector",
       child: Padding(
@@ -190,46 +247,52 @@ class ProfileChangeWidget extends StatelessWidget {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(4),
-                        child: Card.outlined(
-                          color: profile.isActive
-                              ? Theme.of(context).colorScheme.primaryContainer
-                              : null,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                Theme(
-                                  data: profile.isActive
-                                      ? Theme.of(context).copyWith(
-                                          colorScheme: Theme.of(context)
-                                              .colorScheme
-                                              .copyWith(
-                                                primaryContainer:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .primary,
-                                                onPrimaryContainer:
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .onPrimary,
-                                              ),
-                                        )
-                                      : Theme.of(context),
-                                  child: ProfilePicture(
-                                    key: ValueKey(profile.base64ProfilePicture),
-                                    base64ProfilePicture:
-                                        profile.base64ProfilePicture,
+                          child: Card.outlined(
+                            color: profile.isActive
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  Theme(
+                                    data: profile.isActive
+                                        ? Theme.of(context).copyWith(
+                                            colorScheme: Theme.of(context)
+                                                .colorScheme
+                                                .copyWith(
+                                                  primaryContainer:
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                  onPrimaryContainer:
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .onPrimary,
+                                                ),
+                                          )
+                                        : Theme.of(context),
+                                    child: ProfilePicture(
+                                      key: ValueKey(profile.base64ProfilePicture),
+                                      base64ProfilePicture:
+                                          profile.base64ProfilePicture,
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(profile.name),
-                                )
-                              ],
+                                  if (showName)
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        profile.name,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.clip,
+                                      ),
+                                    )
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ),
                   if (showAddProfileButton)
                     IconButton.filledTonal(

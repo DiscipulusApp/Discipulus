@@ -348,7 +348,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
       child: Column(
         children: [
           CustomCard(
-            elevation: 0,
             child: ListTile(
               leading: const Icon(Icons.date_range),
               title: Text(
@@ -362,7 +361,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
             children: [
               Expanded(
                 child: CustomCard(
-                  elevation: 0,
                   child: ListTile(
                     leading: const Icon(Icons.supervisor_account),
                     title: Text(
@@ -376,7 +374,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
               if (location != "")
                 IntrinsicWidth(
                   child: CustomCard(
-                    elevation: 0,
                     color: event.lokatie == event.rawLokatie
                         ? null
                         : Theme.of(context).colorScheme.tertiaryContainer,
@@ -444,20 +441,18 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: InverseCardElevation(
-                child: Column(
-                  children: [
-                    for (var e in widget.combinedEvent.combineEvents())
-                      SimpleDayViewEventTile(
-                        event: e,
-                        callback: () async => await widget.callback?.call(),
-                        onTapOverride: () => CalendarDayView(
-                          displayedDay: event.start.dayOnly,
-                        ).push(context),
-                        navigationTile: widget.showSeeInContext,
-                      ),
-                  ],
-                ),
+              child: Column(
+                children: [
+                  for (var e in widget.combinedEvent.combineEvents())
+                    SimpleDayViewEventTile(
+                      event: e,
+                      callback: () async => await widget.callback?.call(),
+                      onTapOverride: () => CalendarDayView(
+                        displayedDay: event.start.dayOnly,
+                      ).push(context),
+                      navigationTile: widget.showSeeInContext,
+                    ),
+                ],
               ),
             ),
             for (var e in _buildImportantTiles())
@@ -471,7 +466,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
             if (event.omschrijving != null)
               CustomCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                elevation: 0,
                 child: ListTile(
                   leading: const Icon(Icons.short_text),
                   title: const Text("Omschrijving"),
@@ -491,7 +485,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
             if (event.vakken != null)
               CustomCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                elevation: 0,
                 child: ListTile(
                   leading: const Icon(Icons.book),
                   title: const Text("Vak(ken)"),
@@ -503,7 +496,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
             if (event.gewijzigd != null)
               CustomCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                elevation: 0,
                 child: ListTile(
                   leading: const Icon(Icons.edit_calendar),
                   title: const Text("Laaste aanpassing"),
@@ -517,9 +509,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
               ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: InverseCardElevation(
-                  child: MoreBronnenTile(
-                      bronnen: widget.combinedEvent.expand((e) => e.bronnen))),
+              child: MoreBronnenTile(
+                  bronnen: widget.combinedEvent.expand((e) => e.bronnen)),
             ),
             const ListTile(
               leading: Icon(Icons.edit_rounded),
@@ -549,7 +540,6 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
         parchmentHtml.encode(controller.document).nullOnEmpty?.withoutHTML ==
             event.inhoud?.withoutHTML;
     return CustomCard(
-      elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         children: [

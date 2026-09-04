@@ -182,33 +182,39 @@ const SettingsSchema = CollectionSchema(
       name: r'timeGridDefaultDayView',
       type: IsarType.bool,
     ),
-    r'useHandoff': PropertySchema(
+    r'tips': PropertySchema(
       id: 32,
+      name: r'tips',
+      type: IsarType.object,
+      target: r'Tips',
+    ),
+    r'useHandoff': PropertySchema(
+      id: 33,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useLocalAI': PropertySchema(
-      id: 33,
+      id: 34,
       name: r'useLocalAI',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 34,
+      id: 35,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'useTimeGridCalendar': PropertySchema(
-      id: 35,
+      id: 36,
       name: r'useTimeGridCalendar',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 36,
+      id: 37,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 37,
+      id: 38,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -220,7 +226,7 @@ const SettingsSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {r'AndroidAlarm': AndroidAlarmSchema},
+  embeddedSchemas: {r'AndroidAlarm': AndroidAlarmSchema, r'Tips': TipsSchema},
   getId: _settingsGetId,
   getLinks: _settingsGetLinks,
   attach: _settingsAttach,
@@ -255,6 +261,8 @@ int _settingsEstimateSize(
     }
   }
   bytesCount += 3 + object.openRouterModel.length * 3;
+  bytesCount +=
+      3 + TipsSchema.estimateSize(object.tips, allOffsets[Tips]!, allOffsets);
   return bytesCount;
 }
 
@@ -302,12 +310,18 @@ void _settingsSerialize(
   writer.writeByte(offsets[29], object.subjectSortType.index);
   writer.writeByte(offsets[30], object.themeVariant.index);
   writer.writeBool(offsets[31], object.timeGridDefaultDayView);
-  writer.writeBool(offsets[32], object.useHandoff);
-  writer.writeBool(offsets[33], object.useLocalAI);
-  writer.writeBool(offsets[34], object.useMaterialYou);
-  writer.writeBool(offsets[35], object.useTimeGridCalendar);
-  writer.writeBool(offsets[36], object.workWeek);
-  writer.writeBool(offsets[37], object.zoomLineGraph);
+  writer.writeObject<Tips>(
+    offsets[32],
+    allOffsets,
+    TipsSchema.serialize,
+    object.tips,
+  );
+  writer.writeBool(offsets[33], object.useHandoff);
+  writer.writeBool(offsets[34], object.useLocalAI);
+  writer.writeBool(offsets[35], object.useMaterialYou);
+  writer.writeBool(offsets[36], object.useTimeGridCalendar);
+  writer.writeBool(offsets[37], object.workWeek);
+  writer.writeBool(offsets[38], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -368,12 +382,18 @@ Settings _settingsDeserialize(
       _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[30])] ??
           ThemeVariant.system;
   object.timeGridDefaultDayView = reader.readBool(offsets[31]);
-  object.useHandoff = reader.readBool(offsets[32]);
-  object.useLocalAI = reader.readBool(offsets[33]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[34]);
-  object.useTimeGridCalendar = reader.readBool(offsets[35]);
-  object.workWeek = reader.readBool(offsets[36]);
-  object.zoomLineGraph = reader.readBool(offsets[37]);
+  object.tips = reader.readObjectOrNull<Tips>(
+        offsets[32],
+        TipsSchema.deserialize,
+        allOffsets,
+      ) ??
+      Tips();
+  object.useHandoff = reader.readBool(offsets[33]);
+  object.useLocalAI = reader.readBool(offsets[34]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[35]);
+  object.useTimeGridCalendar = reader.readBool(offsets[36]);
+  object.workWeek = reader.readBool(offsets[37]);
+  object.zoomLineGraph = reader.readBool(offsets[38]);
   return object;
 }
 
@@ -466,16 +486,23 @@ P _settingsDeserializeProp<P>(
     case 31:
       return (reader.readBool(offset)) as P;
     case 32:
-      return (reader.readBool(offset)) as P;
+      return (reader.readObjectOrNull<Tips>(
+            offset,
+            TipsSchema.deserialize,
+            allOffsets,
+          ) ??
+          Tips()) as P;
     case 33:
       return (reader.readBool(offset)) as P;
     case 34:
-      return (reader.readBoolOrNull(offset)) as P;
-    case 35:
       return (reader.readBool(offset)) as P;
+    case 35:
+      return (reader.readBoolOrNull(offset)) as P;
     case 36:
       return (reader.readBool(offset)) as P;
     case 37:
+      return (reader.readBool(offset)) as P;
+    case 38:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2197,6 +2224,13 @@ extension SettingsQueryObject
       return query.object(q, r'alarms');
     });
   }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> tips(
+      FilterQuery<Tips> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'tips');
+    });
+  }
 }
 
 extension SettingsQueryLinks
@@ -3576,6 +3610,12 @@ extension SettingsQueryProperty
       timeGridDefaultDayViewProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'timeGridDefaultDayView');
+    });
+  }
+
+  QueryBuilder<Settings, Tips, QQueryOperations> tipsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tips');
     });
   }
 
@@ -5162,3 +5202,80 @@ extension AndroidAlarmQueryFilter
 
 extension AndroidAlarmQueryObject
     on QueryBuilder<AndroidAlarm, AndroidAlarm, QFilterCondition> {}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const TipsSchema = Schema(
+  name: r'Tips',
+  id: -5847072420322669530,
+  properties: {
+    r'hasSeenGridCalendarScrollTip': PropertySchema(
+      id: 0,
+      name: r'hasSeenGridCalendarScrollTip',
+      type: IsarType.bool,
+    )
+  },
+  estimateSize: _tipsEstimateSize,
+  serialize: _tipsSerialize,
+  deserialize: _tipsDeserialize,
+  deserializeProp: _tipsDeserializeProp,
+);
+
+int _tipsEstimateSize(
+  Tips object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  return bytesCount;
+}
+
+void _tipsSerialize(
+  Tips object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeBool(offsets[0], object.hasSeenGridCalendarScrollTip);
+}
+
+Tips _tipsDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Tips(
+    hasSeenGridCalendarScrollTip: reader.readBoolOrNull(offsets[0]) ?? false,
+  );
+  return object;
+}
+
+P _tipsDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension TipsQueryFilter on QueryBuilder<Tips, Tips, QFilterCondition> {
+  QueryBuilder<Tips, Tips, QAfterFilterCondition>
+      hasSeenGridCalendarScrollTipEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'hasSeenGridCalendarScrollTip',
+        value: value,
+      ));
+    });
+  }
+}
+
+extension TipsQueryObject on QueryBuilder<Tips, Tips, QFilterCondition> {}

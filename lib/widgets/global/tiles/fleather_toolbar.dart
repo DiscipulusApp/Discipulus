@@ -104,9 +104,14 @@ class CustomToolBar extends StatelessWidget {
 
 Widget buildButton(BuildContext context, ParchmentAttribute<dynamic>? attr,
     IconData icon, bool isToggled, void Function()? onPressed) {
+  final toolbarElevation = CardTheme.of(context).elevation ?? 0;
+  final targetElevation = isToggled
+      ? (toolbarElevation == 0 ? 1.0 : 0.0)
+      : (toolbarElevation == 0 ? 0.0 : 1.0);
+
   return CustomCard(
     margin: const EdgeInsets.symmetric(horizontal: 2),
-    elevation: isToggled ? 0 : 1,
+    elevation: targetElevation,
     child: InkWell(
       onTap: onPressed,
       child: Padding(
@@ -114,6 +119,7 @@ Widget buildButton(BuildContext context, ParchmentAttribute<dynamic>? attr,
         child: Icon(
           icon,
           size: 18,
+          color: isToggled ? Theme.of(context).colorScheme.primary : null,
         ),
       ),
     ),

@@ -120,6 +120,9 @@ class Settings {
   /// Custom Gateway URL for Zero-Trust authentication handoff
   String? customGatewayUrl;
 
+  /// If a user has seen certain tips or not.
+  Tips tips = Tips();
+
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
 }
 
@@ -279,4 +282,13 @@ class AndroidAlarm {
       ..alarms = []
       ..save();
   }
+}
+
+@embedded
+class Tips {
+  bool hasSeenGridCalendarScrollTip = false; 
+
+  Tips({
+    this.hasSeenGridCalendarScrollTip = false,
+  });
 }

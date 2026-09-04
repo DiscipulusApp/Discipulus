@@ -473,7 +473,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
     Widget buildContactTile(ValueNotifier<List<Contact>> contacts,
         {String title = "Ontvanger(s)", Widget? leading}) {
       return CustomCard(
-        elevation: 0,
+        
         child: SearchContactsButton(
           callback: setState, // Pass setState directly
           selectedContacts: contacts,
@@ -869,11 +869,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            // Wrap RichTextInput in a Card for consistent styling
-            child: CustomCard(
-                elevation: 0,
-                margin: EdgeInsets.zero, // Remove margin if padding handles it
-                child: _buildTextArea()),
+            child: _buildTextArea(),
           ),
           const BottomSheetBottomContentPadding() // Ensure consistent bottom padding
         ],
@@ -1092,7 +1088,7 @@ class _AttachmentTileState extends State<AttachmentTile> {
         child: InkWell(
           onTap: widget.onTap,
           child: CustomCard(
-            elevation: 0,
+            
             child: Tooltip(
               message: widget.name,
               child: Stack(

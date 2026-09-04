@@ -4,6 +4,7 @@ import 'package:discipulus/screens/assignments/assignment_details.dart';
 import 'package:discipulus/screens/bronnen/bron_tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
@@ -158,7 +159,7 @@ class _AssignmentTileState extends State<AssignmentTile> {
                               const BoxConstraints(minHeight: double.infinity),
                           onPressed: () => AssignmentDetailsScreen(
                             assignment: widget.assignment,
-                          ).push(context),
+                          ).pushSideView(context),
                           icon: const Icon(Icons.navigate_next),
                         ),
                       ),

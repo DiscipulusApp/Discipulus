@@ -171,16 +171,41 @@ class _GlobalSmoothScrollWrapperState extends State<_GlobalSmoothScrollWrapper>
       final position = _resolvePosition();
       if (position == null || !position.hasContentDimensions) return;
 
+      final isShift = HardwareKeyboard.instance.isShiftPressed;
       final isHorizontal = widget.details.direction == AxisDirection.left ||
           widget.details.direction == AxisDirection.right;
+
+      // When shift is pressed, vertical scrollables shouldn't scroll
+      if (!isHorizontal && isShift) return;
 
       final rawDelta = isHorizontal
           ? (event.scrollDelta.dx != 0
               ? event.scrollDelta.dx
-              : event.scrollDelta.dy)
+              : (isShift ? event.scrollDelta.dy : 0.0))
           : event.scrollDelta.dy;
 
       if (rawDelta == 0) return;
+
+      // If the controller is a PageController, handle page navigation cleanly
+      if (widget.details.controller is PageController) {
+        final pageController = widget.details.controller as PageController;
+        if (!_animator.isAnimating && pageController.hasClients) {
+          _animator.duration = Durations.medium2;
+          _animator.forward(from: 0.0);
+          if (rawDelta > 0) {
+            pageController.nextPage(
+              duration: Durations.medium2,
+              curve: Easing.emphasizedDecelerate,
+            );
+          } else {
+            pageController.previousPage(
+              duration: Durations.medium2,
+              curve: Easing.emphasizedDecelerate,
+            );
+          }
+        }
+        return;
+      }
 
       final scaledDelta = rawDelta * 1.8;
 

@@ -49,7 +49,7 @@ class _MessageTileState extends State<MessageTile> with SelectableListItem {
 
   void _handleTileTap() async {
     if (SelectableList.maybyOf(context)?.selectedItems.isEmpty ?? true) {
-      await MessageScreen(message: widget.bericht).push(context);
+      await MessageScreen(message: widget.bericht).pushSideView(context);
       if (widget.update != null) await widget.update!();
     } else {
       selection(context);

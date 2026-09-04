@@ -105,7 +105,7 @@ class _GradeInformationState extends State<GradeInformation> {
       ...[
         if (widget.grade.isArchived)
           CustomCard(
-            elevation: 0,
+            
             child: ListTile(
               leading: Icon(
                 Icons.inventory_2_outlined,
@@ -138,11 +138,11 @@ class _GradeInformationState extends State<GradeInformation> {
               leading: const Icon(Icons.access_time),
             ),
           ]
-              .map((e) => Expanded(child: CustomCard(elevation: 0, child: e)))
+              .map((e) => Expanded(child: CustomCard( child: e)))
               .toList(),
         ),
         CustomCard(
-            elevation: 0,
+            
             child: Column(
               children: [
                 if (widget.grade.weight != null)
@@ -174,14 +174,14 @@ class _GradeInformationState extends State<GradeInformation> {
           children: [
             Expanded(
               child: CustomCard(
-                elevation: 0,
+                
                 child: changeInAverage != null
                     ? ChangeInAverageCard(changeInAverage: changeInAverage!)
                     : const Center(child: Icon(Icons.error)),
               ),
             ),
             CustomCard(
-              elevation: 0,
+              
               child: VerticalAverageTile(
                 onTap: () => Navigator.push(
                     context,
@@ -199,7 +199,7 @@ class _GradeInformationState extends State<GradeInformation> {
           ],
         ),
         CustomCard(
-          elevation: 0,
+          
           child: ValueListenableBuilder(
             valueListenable: highlightGrade,
             builder: (context, value, child) {
@@ -220,7 +220,7 @@ class _GradeInformationState extends State<GradeInformation> {
             },
           ),
           builder: (context, snapshot) => CustomCard(
-            elevation: 0,
+            
             child: FilterChipList(
                 padding: const EdgeInsets.all(12), chips: snapshot.data ?? []),
           ),
@@ -238,7 +238,7 @@ class _GradeInformationState extends State<GradeInformation> {
                     snapshot.data! > widget.grade.grade &&
                     grades.findAllSync().average < appSettings.sufficientFrom)
                 ? CustomCard(
-                    elevation: 0,
+                    
                     child: ListTile(
                         leading: const Icon(Icons.auto_awesome_outlined),
                         title: const Text(
@@ -246,7 +246,7 @@ class _GradeInformationState extends State<GradeInformation> {
                         subtitle: Text(snapshot.data!.displayNumber())))
                 : const SizedBox()),
         CustomCard(
-            elevation: 0,
+            
             child: GradeCalculationCard(
                 toNewAverage: true,
                 ignoredGradeUUID: widget.grade.uuid,
@@ -259,7 +259,7 @@ class _GradeInformationState extends State<GradeInformation> {
                             customGrade: grade,
                             customWeight: weight)))),
         CustomCard(
-            elevation: 0,
+            
             child: GradeCalculationCard(
                 ignoredGradeUUID: widget.grade.uuid,
                 weight: widget.grade.weight,
@@ -275,7 +275,7 @@ class _GradeInformationState extends State<GradeInformation> {
           title: Text("Instellingen"),
         ),
         CustomCard(
-            elevation: 0,
+            
             child: Column(
               children: [
                 SwitchListTile(
@@ -481,7 +481,7 @@ class _GradeInformationState extends State<GradeInformation> {
           ]
             .map(
               (e) => CustomCard(
-                elevation: 0,
+                
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 child: e,
               ),

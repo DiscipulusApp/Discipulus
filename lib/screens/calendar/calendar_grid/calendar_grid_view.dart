@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+
+import 'package:flutter/gestures.dart';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/routes.dart';
@@ -95,6 +98,8 @@ class _CalendarGridViewState extends State<CalendarGridView> {
   CalendarGridDisplayMode get _defaultWeekMode =>
       appSettings.workWeek ? CalendarGridDisplayMode.workWeek : CalendarGridDisplayMode.week;
 
+  DateTime? _lastShiftPageTurnTime;
+
   @override
   void initState() {
     super.initState();
@@ -115,7 +120,48 @@ class _CalendarGridViewState extends State<CalendarGridView> {
     // Smart auto-scroll to optimal view showing events overview and now indicator
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToOptimalPosition();
+      _showDesktopScrollTipIfNeeded();
     });
+  }
+
+  void _showDesktopScrollTipIfNeeded() {
+    if (!PlatformExtension.isDesktop) return;
+    if (appSettings.tips.hasSeenGridCalendarScrollTip) return;
+
+    appSettings
+      ..tips.hasSeenGridCalendarScrollTip = true
+      ..save();
+
+    if (!mounted) return;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 6),
+        content: Row(
+          children: [
+            Icon(
+              Icons.mouse_outlined,
+              size: 20,
+              color: colorScheme.surface,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                "Tip: Scroll verticaal voor de uren. Houd Shift ingedrukt om horizontaal door dagen te scrollen",
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: "Begrepen",
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _scrollToOptimalPosition() async {
@@ -382,44 +428,74 @@ class _CalendarGridViewState extends State<CalendarGridView> {
                 }
                 return false;
               },
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: SizedBox(
-                  height: 24 * _hourHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sticky Left Hour Labels Axis
-                      HourAxis(
-                        hourHeight: _hourHeight,
-                        width: _timeColWidth,
-                      ),
-                      const SizedBox(width: 2),
-                      // Horizontal PageView of Day Columns
-                      Expanded(
-                        child: PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (pageIndex) {
-                            if (_lastReportedPage != pageIndex) {
-                              _lastReportedPage = pageIndex;
-                              HapticFeedback.selectionClick();
-                            }
-                          },
-                          itemBuilder: (context, pageIndex) {
-                            final days = _getDaysForPage(pageIndex, _mode);
-                            return GridDayColumnsPage(
-                              key: ValueKey("page_${_mode.name}_$pageIndex"),
-                              days: days,
-                              hourHeight: _hourHeight,
-                              onLoadingChanged: (loading) {
-                                _isFetchingNotifier.value = loading;
-                              },
-                            );
-                          },
+              child: Listener(
+                onPointerSignal: (event) {
+                  if (Platform.isMacOS &&
+                      event is PointerScrollEvent &&
+                      event.kind != PointerDeviceKind.trackpad &&
+                      HardwareKeyboard.instance.isShiftPressed) {
+                    final now = DateTime.now();
+                    if (_lastShiftPageTurnTime == null ||
+                        now.difference(_lastShiftPageTurnTime!) >
+                            const Duration(milliseconds: 250)) {
+                      _lastShiftPageTurnTime = now;
+                      if ((event.scrollDelta.dy > 0 ||
+                              event.scrollDelta.dx > 0) &&
+                          _pageController.hasClients) {
+                        _pageController.nextPage(
+                          duration: Durations.medium2,
+                          curve: Easing.emphasizedDecelerate,
+                        );
+                      } else if ((event.scrollDelta.dy < 0 ||
+                              event.scrollDelta.dx < 0) &&
+                          _pageController.hasClients) {
+                        _pageController.previousPage(
+                          duration: Durations.medium2,
+                          curve: Easing.emphasizedDecelerate,
+                        );
+                      }
+                    }
+                  }
+                },
+                child: SingleChildScrollView(
+                  controller: _verticalScrollController,
+                  child: SizedBox(
+                    height: 24 * _hourHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Sticky Left Hour Labels Axis
+                        HourAxis(
+                          hourHeight: _hourHeight,
+                          width: _timeColWidth,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
+                        const SizedBox(width: 2),
+                        // Horizontal PageView of Day Columns
+                        Expanded(
+                          child: PageView.builder(
+                            controller: _pageController,
+                            onPageChanged: (pageIndex) {
+                              if (_lastReportedPage != pageIndex) {
+                                _lastReportedPage = pageIndex;
+                                HapticFeedback.selectionClick();
+                              }
+                            },
+                            itemBuilder: (context, pageIndex) {
+                              final days = _getDaysForPage(pageIndex, _mode);
+                              return GridDayColumnsPage(
+                                key: ValueKey("page_${_mode.name}_$pageIndex"),
+                                days: days,
+                                hourHeight: _hourHeight,
+                                onLoadingChanged: (loading) {
+                                  _isFetchingNotifier.value = loading;
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
                   ),
                 ),
               ),
