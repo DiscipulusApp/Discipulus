@@ -89,7 +89,8 @@ extension on NotificationChannel {
       NotificationChannel.absences: NotificationChannelDetails(
         channelKey: "discipulus-absences",
         channelName: "Absenties",
-        channelDescription: "Krijg berichten wanneer er een absentie wordt geregistreerd",
+        channelDescription:
+            "Krijg berichten wanneer er een absentie wordt geregistreerd",
       ),
     };
     return channels[this]!;
@@ -123,9 +124,16 @@ class NotificationController {
       requestAlertPermission: false,
     );
 
-    const  LinuxInitializationSettings initializationSettingsLinux =
+    const LinuxInitializationSettings initializationSettingsLinux =
         LinuxInitializationSettings(
       defaultActionName: "Open Discipulus",
+    );
+
+    const WindowsInitializationSettings initializationSettingsWindows =
+        WindowsInitializationSettings(
+      appName: 'Discipulus',
+      appUserModelId: 'dev.harrydekat.discipulus_fxkeb4dgdm144!discipulus',
+      guid: '4e035da5-d7b4-4c0c-a5aa-76697298d069',
     );
 
     const InitializationSettings initializationSettings =
@@ -134,6 +142,7 @@ class NotificationController {
       iOS: initializationSettingsDarwin,
       macOS: initializationSettingsDarwin,
       linux: initializationSettingsLinux,
+      windows: initializationSettingsWindows,
     );
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
@@ -351,24 +360,26 @@ class Intents {
     final bool isDiscipulusLogin =
         uri.hasScheme && uri.scheme == "discipulus" && uri.host == "login";
     final bool isWebLogin = (uri.scheme == "http" || uri.scheme == "https") &&
-        (uri.host == "harrydekat.dev" || uri.host.endsWith(".harrydekat.dev")) &&
+        (uri.host == "harrydekat.dev" ||
+            uri.host.endsWith(".harrydekat.dev")) &&
         (uri.pathSegments.contains("login") ||
             uri.path == "/login" ||
             uri.path.endsWith("/login"));
 
     final bool isDiscipulusCalendar =
         uri.hasScheme && uri.scheme == "discipulus" && uri.host == "calendar";
-    final bool isWebCalendar = (uri.scheme == "http" || uri.scheme == "https") &&
-        (uri.host == "harrydekat.dev" || uri.host.endsWith(".harrydekat.dev")) &&
-        (uri.pathSegments.contains("calendar") ||
-            uri.path == "/calendar" ||
-            uri.path.endsWith("/calendar"));
+    final bool isWebCalendar =
+        (uri.scheme == "http" || uri.scheme == "https") &&
+            (uri.host == "harrydekat.dev" ||
+                uri.host.endsWith(".harrydekat.dev")) &&
+            (uri.pathSegments.contains("calendar") ||
+                uri.path == "/calendar" ||
+                uri.path.endsWith("/calendar"));
 
     if (isDiscipulusLogin || isWebLogin) {
       // Handle login to alternative service.
       try {
-        final AuthQrResult qrResult =
-            AuthQrResult.fromRawJson(uri.toString());
+        final AuthQrResult qrResult = AuthQrResult.fromRawJson(uri.toString());
 
         if (qrResult.requestId.isEmpty || qrResult.backendUrl.isEmpty) {
           return;
@@ -452,7 +463,8 @@ class Intents {
         // Deduplicate identical shared media events within 2 seconds
         if (_lastHandledShareContent == contentKey &&
             _lastHandledShareTime != null &&
-            now.difference(_lastHandledShareTime!) < const Duration(seconds: 2)) {
+            now.difference(_lastHandledShareTime!) <
+                const Duration(seconds: 2)) {
           return;
         }
         _lastHandledShareContent = contentKey;

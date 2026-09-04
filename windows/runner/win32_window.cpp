@@ -16,6 +16,22 @@ namespace {
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
 
+#ifndef DWMWA_SYSTEMBACKDROP_TYPE
+#define DWMWA_SYSTEMBACKDROP_TYPE 38
+#endif
+
+#ifndef DWMWA_MICA_EFFECT
+#define DWMWA_MICA_EFFECT 1029
+#endif
+
+#ifndef DWMWA_CAPTION_COLOR
+#define DWMWA_CAPTION_COLOR 35
+#endif
+
+#ifndef DWMWA_COLOR_NONE
+#define DWMWA_COLOR_NONE 0xFFFFFFFE
+#endif
+
 constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
 
 /// Registry key for app theme preference.
@@ -214,6 +230,7 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
 
     case WM_DWMCOLORIZATIONCOLORCHANGED:
+    case WM_SETTINGCHANGE:
       UpdateTheme(hwnd);
       return 0;
   }
@@ -273,16 +290,32 @@ void Win32Window::OnDestroy() {
 }
 
 void Win32Window::UpdateTheme(HWND const window) {
-  DWORD light_mode;
+  DWORD light_mode = 1;
   DWORD light_mode_size = sizeof(light_mode);
   LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,
                                kGetPreferredBrightnessRegValue,
                                RRF_RT_REG_DWORD, nullptr, &light_mode,
                                &light_mode_size);
 
-  if (result == ERROR_SUCCESS) {
-    BOOL enable_dark_mode = light_mode == 0;
-    DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
-                          &enable_dark_mode, sizeof(enable_dark_mode));
+  BOOL enable_dark_mode = (result == ERROR_SUCCESS && light_mode == 0);
+  DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                        &enable_dark_mode, sizeof(enable_dark_mode));
+
+  // Enable Mica system backdrop (Windows 11 22H2+ DWMSBT_MAINWINDOW = 2)
+  int backdrop_type = 2;
+  HRESULT hr = DwmSetWindowAttribute(window, DWMWA_SYSTEMBACKDROP_TYPE,
+                                     &backdrop_type, sizeof(backdrop_type));
+  if (FAILED(hr)) {
+    // Fallback for earlier Windows 11 builds (21H2)
+    BOOL enable_mica = TRUE;
+    DwmSetWindowAttribute(window, DWMWA_MICA_EFFECT, &enable_mica, sizeof(enable_mica));
   }
+
+  // Extend the frame into the client area so the backdrop covers the entire window
+  MARGINS margins = {-1, -1, -1, -1};
+  DwmExtendFrameIntoClientArea(window, &margins);
+
+  // Set caption color to DWMWA_COLOR_NONE so the header bar merges seamlessly with the backdrop
+  COLORREF caption_color = DWMWA_COLOR_NONE;
+  DwmSetWindowAttribute(window, DWMWA_CAPTION_COLOR, &caption_color, sizeof(caption_color));
 }

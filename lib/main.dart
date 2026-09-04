@@ -71,7 +71,7 @@ late final RootIsolateToken rootIsolateToken;
 Directory? storageDir;
 late final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
-void main(args) async {
+void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
@@ -273,6 +273,7 @@ class MainAppState extends State<MainApp> {
         }
 
         return MaterialApp(
+          title: "Discipulus",
           theme: getTheme(),
           navigatorKey: navKey,
           locale: const Locale("nl-NL"),

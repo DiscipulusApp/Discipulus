@@ -19,6 +19,7 @@ import 'package:discipulus/widgets/global/layout.dart';
 import 'package:flutter/material.dart';
 import 'package:discipulus/api/authentication.dart';
 import 'package:discipulus/models/account.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -59,51 +60,105 @@ Future<TokenSet?> showMagisterLoginDialog(
     // The package that is used has an issue with Linux where it closes the whole app instead of the webview window, so we will not do this for Linux either.
     // https://github.com/MixinNetwork/flutter-plugins/issues/457
 
+    LoginLogger.instance.step("Start inloggen via browser/webview");
+    LoginLogger.instance.info(
+        "noWebview: $noWebview, Platform: ${Platform.operatingSystem}",
+        category: "AUTH");
+
+    // Ensure we are listening for deep links in case external browser or OS protocol handler forwards m6loapp://
+    await browserLinkSub?.cancel();
+    browserLinkSub = appLinks.uriLinkStream.listen((uri) {
+      LoginLogger.instance.info("Deep link stream ontvangen: $uri",
+          category: "AUTH");
+      if (uri.scheme == "m6loapp" ||
+          uri.toString().contains("#code") ||
+          uri.toString().contains("?code")) {
+        redirectUrl.value = uri;
+      }
+    });
+
+    final loginUri = auth.generateLoginURL(tenant: tenant, username: username);
+
     if (!noWebview &&
         await WebviewWindow.isWebviewAvailable() &&
         !Platform.isMacOS &&
         !Platform.isLinux) {
-      WebviewWindow.clearAll();
-      final webview = await WebviewWindow.create(
-        configuration: CreateConfiguration(
-          windowWidth: 400,
-          windowHeight: 640,
-          title: 'Login met Magister',
-          titleBarTopPadding: Platform.isMacOS ? 30 : 0,
-          titleBarHeight: 0,
-          useWindowPositionAndSize: true,
-          userDataFolderWindows: (await getTemporaryDirectory()).path,
-        ),
-      );
-      webview
-        ..setOnUrlRequestCallback((requestUrl) {
-          final uri = Uri.parse(requestUrl);
-          print("PATH: ${uri.path}");
-          if (uri.scheme == "m6loapp") {
-            redirectUrl.value = uri;
+      try {
+        final webviewDataFolder = p.join(
+            (await getApplicationSupportDirectory()).path,
+            'discipulus_webview');
+
+        LoginLogger.instance.info(
+            "Initialiseren van webview popup venster...",
+            category: "AUTH");
+
+        final webview = await WebviewWindow.create(
+          configuration: CreateConfiguration(
+            windowWidth: 450,
+            windowHeight: 700,
+            title: 'Login met Magister',
+            titleBarTopPadding: Platform.isMacOS ? 30 : 0,
+            titleBarHeight: Platform.isWindows ? 0 : 40,
+            useWindowPositionAndSize: false,
+            userDataFolderWindows: webviewDataFolder,
+          ),
+        );
+
+        // If deep link stream triggers, make sure webview is closed
+        void onRedirect() {
+          try {
             webview.close();
-            return false;
-          } else if (uri.path.contains("account/login")) {
-            Dio().getUri(uri).then((value) => print(value.realUri));
-          }
-          return true;
-        })
-        ..launch(auth
-            .generateLoginURL(tenant: tenant, username: username)
-            .toString());
+          } catch (_) {}
+        }
+
+        redirectUrl.addListener(onRedirect);
+        webview.onClose.whenComplete(() {
+          redirectUrl.removeListener(onRedirect);
+        });
+
+        webview
+          ..setOnUrlRequestCallback((requestUrl) {
+            LoginLogger.instance.info("Webview URL opgevraagd: $requestUrl",
+                category: "AUTH");
+            final uri = Uri.parse(requestUrl);
+            if (uri.scheme == "m6loapp" ||
+                requestUrl.contains("#code") ||
+                requestUrl.contains("?code") ||
+                requestUrl.contains("oauth2redirect")) {
+              redirectUrl.value = uri;
+              try {
+                webview.close();
+              } catch (_) {}
+              return false;
+            }
+            return true;
+          })
+          ..launch(
+            loginUri.toString(),
+            triggerOnUrlRequestEvent: false,
+          );
+      } catch (e, s) {
+        LoginLogger.instance.error(
+            "Webview initialisatiefout, terugvallen naar externe browser",
+            error: e,
+            stackTrace: s);
+        await launchUrl(
+          loginUri,
+          mode: LaunchMode.externalApplication,
+          webViewConfiguration:
+              const WebViewConfiguration(enableDomStorage: false),
+        );
+      }
     } else {
+      LoginLogger.instance.info(
+          "Openen in externe standaardbrowser...",
+          category: "AUTH");
       await launchUrl(
-        auth.generateLoginURL(tenant: tenant, username: username),
+        loginUri,
         mode: LaunchMode.externalApplication,
         webViewConfiguration:
             const WebViewConfiguration(enableDomStorage: false),
       );
-      await browserLinkSub?.cancel();
-      browserLinkSub = appLinks.uriLinkStream.listen((uri) {
-        if (uri.scheme == "m6loapp" || uri.toString().contains("#code")) {
-          redirectUrl.value = uri;
-        }
-      });
     }
   }
 

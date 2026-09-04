@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "dev.harrydekat" "\0"
-            VALUE "FileDescription", "discipulus" "\0"
+            VALUE "FileDescription", "Discipulus" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "discipulus" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 dev.harrydekat. All rights reserved." "\0"
             VALUE "OriginalFilename", "discipulus.exe" "\0"
-            VALUE "ProductName", "discipulus" "\0"
+            VALUE "ProductName", "Discipulus" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

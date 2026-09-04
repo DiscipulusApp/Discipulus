@@ -150,7 +150,8 @@ class LayoutState extends State<Layout>
       transitionsBuilder: (context, animation, secAnimation, child) {
         return SharedAxisTransition(
           fillColor:
-              (screen.key == const ValueKey("TRANSPARENT")) && Platform.isMacOS
+              (screen.key == const ValueKey("TRANSPARENT")) &&
+                      (Platform.isMacOS || Platform.isWindows)
                   ? Colors.transparent
                   : null,
           animation: animation,
@@ -283,8 +284,9 @@ class LayoutState extends State<Layout>
   // The border radius that is used
   BorderRadius borderRadius = const BorderRadius.all(Radius.circular(16));
 
-  // On macOS we would like the window to be semi-transparent
-  int get alpha => (255 * (Platform.isMacOS ? 0.5 : 1)).toInt();
+  // On macOS and Windows we would like the window to be semi-transparent
+  int get alpha =>
+      (255 * ((Platform.isMacOS || Platform.isWindows) ? 0.5 : 1)).toInt();
 
   Color? get backgroundColor => ElevationOverlay.applySurfaceTint(
           Theme.of(context).colorScheme.surface,
@@ -434,7 +436,9 @@ class LayoutState extends State<Layout>
       // not do anything
       return Theme(
         data: Theme.of(context).copyWith(
-          canvasColor: Platform.isMacOS ? Colors.transparent : null,
+          canvasColor: (Platform.isMacOS || Platform.isWindows)
+              ? Colors.transparent
+              : null,
         ),
         child: widget.child,
       );
@@ -460,8 +464,9 @@ class LayoutState extends State<Layout>
           hasSecondaryPane || Breakpoints.medium.isActive(context);
 
       return Scaffold(
-        backgroundColor:
-            Platform.isMacOS ? Colors.transparent : backgroundColor,
+        backgroundColor: (Platform.isMacOS || Platform.isWindows)
+            ? Colors.transparent
+            : backgroundColor,
         body: Column(
           children: [
             Expanded(
