@@ -310,7 +310,8 @@ class LayoutState extends State<Layout>
 
   /// Returns whether the current layout context can host a 3-pane supporting side pane
   bool canShowSecondaryPane(BuildContext context) {
-    if (widget.child.key == const ValueKey("NO_DRAWER") ||
+    if (!(appSettings.useSideView ?? true) ||
+        widget.child.key == const ValueKey("NO_DRAWER") ||
         !_showDrawer ||
         appSettings.activeProfileUuid == null) {
       return false;
@@ -453,8 +454,9 @@ class LayoutState extends State<Layout>
       }
       final screenWidth = MediaQuery.of(context).size.width;
       final isWideForSecondaryPane = screenWidth >= secondaryPaneMinWidth;
-      final bool hasSecondaryPane =
-          _activeSecondaryPane != null && isWideForSecondaryPane;
+      final bool hasSecondaryPane = (appSettings.useSideView ?? true) &&
+          _activeSecondaryPane != null &&
+          isWideForSecondaryPane;
       final double? dynamicBodyRatio = hasSecondaryPane
           ? (1.0 - (420.0 / (screenWidth - (persistantDrawer ? 80.0 : 0.0))))
               .clamp(0.5, 0.75)

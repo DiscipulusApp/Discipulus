@@ -138,6 +138,24 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             });
           },
         ),
+        SwitchListTile(
+          value: appSettings.useSideView ?? true,
+          secondary: const Icon(Icons.vertical_split_rounded),
+          title: const Text("Zijweergave gebruiken"),
+          subtitle: const Text(
+              "Open details en instellingen in een zijpaneel op brede schermen"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..useSideView = value
+                ..save();
+              if (!value) {
+                Layout.of(context)?.closeSecondaryPane();
+              }
+              Layout.of(context)?.update();
+            });
+          },
+        ),
         ListTile(
           title: const Text("Startpagina"),
           leading: const Icon(Icons.brightness_auto),

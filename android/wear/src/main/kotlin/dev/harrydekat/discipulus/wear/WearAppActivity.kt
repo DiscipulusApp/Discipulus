@@ -3,6 +3,7 @@ package dev.harrydekat.discipulus.wear
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.collectAsState
@@ -29,6 +30,7 @@ import dev.harrydekat.discipulus.wear.viewmodel.WearViewModel
 
 class WearAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {

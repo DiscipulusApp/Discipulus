@@ -32,6 +32,7 @@ class Settings {
   int? activeProfileUuidWidgets;
   bool drawerOnBack = true;
   bool drawerOpenOnRight = false;
+  bool? useSideView;
   @ignore
   double get sufficientFrom {
     try {

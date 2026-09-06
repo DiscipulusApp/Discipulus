@@ -203,18 +203,23 @@ const SettingsSchema = CollectionSchema(
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
-    r'useTimeGridCalendar': PropertySchema(
+    r'useSideView': PropertySchema(
       id: 36,
+      name: r'useSideView',
+      type: IsarType.bool,
+    ),
+    r'useTimeGridCalendar': PropertySchema(
+      id: 37,
       name: r'useTimeGridCalendar',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 37,
+      id: 38,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 38,
+      id: 39,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -319,9 +324,10 @@ void _settingsSerialize(
   writer.writeBool(offsets[33], object.useHandoff);
   writer.writeBool(offsets[34], object.useLocalAI);
   writer.writeBool(offsets[35], object.useMaterialYou);
-  writer.writeBool(offsets[36], object.useTimeGridCalendar);
-  writer.writeBool(offsets[37], object.workWeek);
-  writer.writeBool(offsets[38], object.zoomLineGraph);
+  writer.writeBool(offsets[36], object.useSideView);
+  writer.writeBool(offsets[37], object.useTimeGridCalendar);
+  writer.writeBool(offsets[38], object.workWeek);
+  writer.writeBool(offsets[39], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -391,9 +397,10 @@ Settings _settingsDeserialize(
   object.useHandoff = reader.readBool(offsets[33]);
   object.useLocalAI = reader.readBool(offsets[34]);
   object.useMaterialYou = reader.readBoolOrNull(offsets[35]);
-  object.useTimeGridCalendar = reader.readBool(offsets[36]);
-  object.workWeek = reader.readBool(offsets[37]);
-  object.zoomLineGraph = reader.readBool(offsets[38]);
+  object.useSideView = reader.readBoolOrNull(offsets[36]);
+  object.useTimeGridCalendar = reader.readBool(offsets[37]);
+  object.workWeek = reader.readBool(offsets[38]);
+  object.zoomLineGraph = reader.readBool(offsets[39]);
   return object;
 }
 
@@ -499,10 +506,12 @@ P _settingsDeserializeProp<P>(
     case 35:
       return (reader.readBoolOrNull(offset)) as P;
     case 36:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 37:
       return (reader.readBool(offset)) as P;
     case 38:
+      return (reader.readBool(offset)) as P;
+    case 39:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2185,6 +2194,33 @@ extension SettingsQueryFilter
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> useSideViewIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'useSideView',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      useSideViewIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'useSideView',
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition> useSideViewEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'useSideView',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
       useTimeGridCalendarEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
@@ -2649,6 +2685,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseMaterialYouDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useMaterialYou', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseSideView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useSideView', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseSideViewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useSideView', Sort.desc);
     });
   }
 
@@ -3119,6 +3167,18 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseSideView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useSideView', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseSideViewDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useSideView', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseTimeGridCalendar() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useTimeGridCalendar', Sort.asc);
@@ -3378,6 +3438,12 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct> distinctByUseSideView() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'useSideView');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByUseTimeGridCalendar() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'useTimeGridCalendar');
@@ -3634,6 +3700,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool?, QQueryOperations> useMaterialYouProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'useMaterialYou');
+    });
+  }
+
+  QueryBuilder<Settings, bool?, QQueryOperations> useSideViewProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'useSideView');
     });
   }
 
