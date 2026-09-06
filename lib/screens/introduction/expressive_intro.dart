@@ -24,13 +24,13 @@ class ExpressiveIntroductionScreen extends StatefulWidget {
 class _ExpressiveIntroductionScreenState
     extends State<ExpressiveIntroductionScreen> {
   final ExpressiveIntroController _introController = ExpressiveIntroController();
-  static const int _totalPages = 5;
+  static const int _totalPages = 6;
   bool _agreeToMagisterTOS = false;
   bool _agreeToDiscipulusTOS = false;
 
   bool get _allTOSAccepted => _agreeToMagisterTOS && _agreeToDiscipulusTOS;
 
-  int get _accessiblePages => _allTOSAccepted ? _totalPages : 4;
+  int get _accessiblePages => _allTOSAccepted ? _totalPages : 5;
 
   bool get _isApple {
     if (kIsWeb) return false;
@@ -49,7 +49,7 @@ class _ExpressiveIntroductionScreenState
   void _onBothTOSAccepted() {
     Future.delayed(const Duration(milliseconds: 250), () {
       if (mounted && _allTOSAccepted) {
-        _introController.animateToPage(4);
+        _introController.animateToPage(5);
       }
     });
   }
@@ -141,18 +141,24 @@ class _ExpressiveIntroductionScreenState
     return ExpressiveIntroScaffold(
       controller: _introController,
       title: "Welkom bij Discipulus",
+      hasOpeningSlide: true,
+      openingWidget: ExpressiveLogoCard(
+        onTap: () => _introController.nextPage(),
+      ),
       itemCount: _accessiblePages,
       itemBuilder: (context, index) {
         switch (index) {
           case 0:
-            return _buildGradesCard();
+            return _buildOpeningCard();
           case 1:
-            return _buildArchivedGradesCard();
+            return _buildGradesCard();
           case 2:
-            return _buildPlatformFeatureCard();
+            return _buildArchivedGradesCard();
           case 3:
-            return _buildTermsOfServiceCard();
+            return _buildPlatformFeatureCard();
           case 4:
+            return _buildTermsOfServiceCard();
+          case 5:
           default:
             return _buildFinalActionCard();
         }
@@ -161,6 +167,15 @@ class _ExpressiveIntroductionScreenState
   }
 
   // --- CARDS ---
+
+  /// Opening Slide: transparent placeholder slot in PageView while logo sits stationary in window center
+  Widget _buildOpeningCard() {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => _introController.nextPage(),
+      child: const SizedBox.expand(),
+    );
+  }
 
   /// Cijfers & Gemiddelden
   Widget _buildGradesCard() {

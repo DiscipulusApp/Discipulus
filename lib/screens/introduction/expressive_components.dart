@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:discipulus/screens/calendar/calendar_statistics/widgets/appie_receipt_export.dart';
+import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +71,8 @@ class ExpressiveIntroScaffold extends StatefulWidget {
   final ExpressiveIntroController? controller;
   final ValueChanged<int>? onPageChanged;
   final int initialPage;
+  final bool hasOpeningSlide;
+  final Widget? openingWidget;
 
   const ExpressiveIntroScaffold({
     super.key,
@@ -78,6 +82,8 @@ class ExpressiveIntroScaffold extends StatefulWidget {
     this.controller,
     this.onPageChanged,
     this.initialPage = 0,
+    this.hasOpeningSlide = false,
+    this.openingWidget,
   });
 
   @override
@@ -88,6 +94,7 @@ class ExpressiveIntroScaffold extends StatefulWidget {
 class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
   late PageController _pageController;
   late int _currentPage;
+  late final ValueNotifier<double> _scrollProgress;
   DateTime _lastScrollTime = DateTime.now();
 
   bool get _isDesktop {
@@ -95,15 +102,46 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
     return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   }
 
+  bool get _useTransparency {
+    if (kIsWeb) return false;
+    return Platform.isMacOS || Platform.isWindows;
+  }
+
+  double get _platformTopCornerRadius {
+    if (kIsWeb) return 0.0;
+    if (Platform.isWindows)
+      return 8.0; // Windows 11 default window corner radius
+    if (Platform.isMacOS) return 10.0; // macOS default window corner radius
+    return 0.0;
+  }
+
   @override
   void initState() {
     super.initState();
     _currentPage = widget.initialPage;
+    _scrollProgress = ValueNotifier<double>(
+      (widget.hasOpeningSlide && widget.initialPage == 0) ? 0.0 : 1.0,
+    );
     _pageController = PageController(
       viewportFraction: 0.86,
       initialPage: _currentPage,
-    );
+    )..addListener(_onScroll);
     widget.controller?._attach(this);
+  }
+
+  void _onScroll() {
+    if (!mounted || !widget.hasOpeningSlide) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.hasOpeningSlide) return;
+      if (_pageController.hasClients &&
+          _pageController.position.hasContentDimensions) {
+        final clamped =
+            (_pageController.page ?? _currentPage.toDouble()).clamp(0.0, 1.0);
+        if ((_scrollProgress.value - clamped).abs() > 0.002) {
+          _scrollProgress.value = clamped;
+        }
+      }
+    });
   }
 
   @override
@@ -118,7 +156,9 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
   @override
   void dispose() {
     widget.controller?._detach();
+    _pageController.removeListener(_onScroll);
     _pageController.dispose();
+    _scrollProgress.dispose();
     super.dispose();
   }
 
@@ -157,11 +197,14 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
         width > 700 ? (480.0 / width).clamp(0.28, 0.86) : 0.86;
     if ((_pageController.viewportFraction - targetFraction).abs() > 0.02) {
       final old = _pageController;
+      old.removeListener(_onScroll);
       _pageController = PageController(
         viewportFraction: targetFraction,
         initialPage: _currentPage,
-      );
-      old.dispose();
+      )..addListener(_onScroll);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        old.dispose();
+      });
     }
   }
 
@@ -171,63 +214,241 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            _updateViewportFraction(constraints.maxWidth);
+    final topRadius = _platformTopCornerRadius;
 
-            return Column(
-              children: [
-                const SizedBox(height: 8),
-                // Header Area
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0,
-                    vertical: 12.0,
-                  ),
-                  child: Text(
-                    widget.title,
-                    style: textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: colorScheme.primary,
-                      letterSpacing: -0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(topRadius),
+          topRight: Radius.circular(topRadius),
+        ),
+        child: Stack(
+          children: [
+            // Background Color fill reacting to scroll progress with platform-appropriate top rounding
+            Positioned.fill(
+              child: ValueListenableBuilder<double>(
+                valueListenable: _scrollProgress,
+                builder: (context, progress, _) {
+                  final Color backgroundColor = (widget.hasOpeningSlide &&
+                          _useTransparency)
+                      ? colorScheme.surface.withAlpha((255 * progress).toInt())
+                      : colorScheme.surface;
+                  if (topRadius > 0.0) {
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(topRadius),
+                          topRight: Radius.circular(topRadius),
+                        ),
+                      ),
+                    );
+                  }
+                  return ColoredBox(color: backgroundColor);
+                },
+              ),
+            ),
+            // Centered Opening Widget in the whole window
+            if (widget.hasOpeningSlide && widget.openingWidget != null)
+              Positioned.fill(
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _scrollProgress,
+                  builder: (context, progress, _) {
+                    final double opacity =
+                        (1.0 - progress * 1.25).clamp(0.0, 1.0);
+                    if (opacity <= 0.0) return const SizedBox.shrink();
+                    final double scale =
+                        (1.0 - progress * 0.12).clamp(0.8, 1.0);
+                    return IgnorePointer(
+                      ignoring: progress > 0.05,
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Transform.scale(
+                          scale: scale,
+                          child: Center(
+                            child: widget.openingWidget!,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 10),
-                // Carousel View
-                Expanded(
-                  child: Listener(
-                    onPointerSignal: _handleWheelScroll,
-                    child: PageView.builder(
-                      scrollBehavior: const MaterialScrollBehavior()
-                          .copyWith(overscroll: false),
-                      controller: _pageController,
-                      padEnds: true,
-                      itemCount: widget.itemCount,
-                      onPageChanged: (index) {
-                        setState(() {
-                          _currentPage = index;
-                        });
-                        widget.onPageChanged?.call(index);
-                      },
-                      itemBuilder: widget.itemBuilder,
-                    ),
-                  ),
-                ),
-                // Desktop-only Navigation Dots Row
-                if (_isDesktop) ...[
-                  const SizedBox(height: 6),
-                  _buildDesktopNavigationRow(),
-                  const SizedBox(height: 6),
-                ] else
-                  const SizedBox(height: 8),
-              ],
-            );
-          },
+              ),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  _updateViewportFraction(constraints.maxWidth);
+
+                  return Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      // Header Area - smoothly fades in as user leaves the opening slide
+                      ValueListenableBuilder<double>(
+                        valueListenable: _scrollProgress,
+                        builder: (context, progress, _) {
+                          return Opacity(
+                            opacity: widget.hasOpeningSlide ? progress : 1.0,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20.0,
+                                vertical: 12.0,
+                              ),
+                              child: Text(
+                                widget.title,
+                                style: textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: colorScheme.primary,
+                                  letterSpacing: -0.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      // Carousel View with drawer-matching feather at the sides
+                      Expanded(
+                        child: ClipRect(
+                          child: ShaderMask(
+                            shaderCallback: (Rect bounds) {
+                              return LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.white,
+                                  Colors.white,
+                                  Colors.transparent,
+                                ],
+                                stops: [
+                                  0.0,
+                                  20 / MediaQuery.of(context).size.width,
+                                  1 - 20 / MediaQuery.of(context).size.width,
+                                  1.0,
+                                ],
+                              ).createShader(bounds);
+                            },
+                            blendMode: BlendMode.dstIn,
+                            child: Listener(
+                              onPointerSignal: _handleWheelScroll,
+                              child: NotificationListener<ScrollNotification>(
+                                onNotification: (notification) {
+                                  if (widget.hasOpeningSlide &&
+                                      notification
+                                          .metrics.hasContentDimensions) {
+                                    double page = 0.0;
+                                    if (notification.metrics is PageMetrics) {
+                                      page =
+                                          (notification.metrics as PageMetrics)
+                                                  .page ??
+                                              (_pageController.hasClients
+                                                  ? _pageController.page ?? 0.0
+                                                  : 0.0);
+                                    } else if (notification
+                                            .metrics.viewportDimension >
+                                        0) {
+                                      page = notification.metrics.pixels /
+                                          notification
+                                              .metrics.viewportDimension;
+                                    }
+                                    final clamped = page.clamp(0.0, 1.0);
+                                    if ((_scrollProgress.value - clamped)
+                                            .abs() >
+                                        0.002) {
+                                      _scrollProgress.value = clamped;
+                                    }
+                                  }
+                                  return false;
+                                },
+                                child: PageView.builder(
+                                  scrollBehavior: const MaterialScrollBehavior()
+                                      .copyWith(overscroll: false),
+                                  controller: _pageController,
+                                  padEnds: true,
+                                  itemCount: widget.itemCount,
+                                  onPageChanged: (index) {
+                                    setState(() {
+                                      _currentPage = index;
+                                    });
+                                    if (widget.hasOpeningSlide) {
+                                      if (index >= 1 &&
+                                          _scrollProgress.value < 1.0) {
+                                        _scrollProgress.value = 1.0;
+                                      } else if (index == 0 &&
+                                          _scrollProgress.value > 0.0) {
+                                        _scrollProgress.value = 0.0;
+                                      }
+                                    }
+                                    widget.onPageChanged?.call(index);
+                                  },
+                                  itemBuilder: (context, index) {
+                                    final child =
+                                        widget.itemBuilder(context, index);
+                                    if (child == null) return null;
+                                    if (widget.hasOpeningSlide && index >= 1) {
+                                      final double normalVisible =
+                                          (constraints.maxWidth -
+                                                  (constraints.maxWidth *
+                                                      _pageController
+                                                          .viewportFraction)) /
+                                              2.0;
+                                      final double desiredPeek =
+                                          constraints.maxWidth > 700
+                                              ? 80.0
+                                              : 14.0;
+                                      final double maxExtraOffset =
+                                          (normalVisible - desiredPeek)
+                                              .clamp(0.0, 180.0);
+
+                                      return ValueListenableBuilder<double>(
+                                        valueListenable: _scrollProgress,
+                                        builder: (context, progress, child) {
+                                          final double factor =
+                                              (1.0 - progress).clamp(0.0, 1.0);
+                                          final double extraOffset =
+                                              factor * maxExtraOffset;
+                                          if (extraOffset == 0.0) {
+                                            return child!;
+                                          }
+                                          return Transform.translate(
+                                            offset: Offset(extraOffset, 0),
+                                            child: child,
+                                          );
+                                        },
+                                        child: child,
+                                      );
+                                    }
+                                    return child;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Desktop-only Navigation Dots Row - fades in alongside content
+                      if (_isDesktop) ...[
+                        const SizedBox(height: 6),
+                        ValueListenableBuilder<double>(
+                          valueListenable: _scrollProgress,
+                          builder: (context, progress, _) {
+                            return Opacity(
+                              opacity: widget.hasOpeningSlide ? progress : 1.0,
+                              child: _buildDesktopNavigationRow(),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 6),
+                      ] else
+                        const SizedBox(height: 8),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -243,17 +464,29 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
             mainAxisSize: MainAxisSize.min,
             children: List.generate(widget.itemCount, (index) {
               final isSelected = index == _currentPage;
-              return AnimatedContainer(
-                duration: Durations.medium1,
-                curve: Easing.standard,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: isSelected ? 20 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(3),
+              return GestureDetector(
+                onTap: () {
+                  _pageController.animateToPage(
+                    index,
+                    duration: Durations.long1,
+                    curve: Easing.emphasizedDecelerate,
+                  );
+                },
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: AnimatedContainer(
+                    duration: Durations.medium1,
+                    curve: Easing.standard,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: isSelected ? 20 : 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
                 ),
               );
             }),
@@ -360,8 +593,8 @@ class ExpressiveSplitCard extends StatelessWidget {
                   ),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: bottomColor,
                       borderRadius: const BorderRadius.only(
@@ -371,32 +604,52 @@ class ExpressiveSplitCard extends StatelessWidget {
                         bottomRight: Radius.circular(30),
                       ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: onBottomColor,
-                                    letterSpacing: -0.3,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SizedBox(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: constraints.maxWidth,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: onBottomColor,
+                                          letterSpacing: -0.3,
+                                        ),
+                                    textAlign: TextAlign.center,
                                   ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          description,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: onBottomColor.withAlpha(230),
-                                    height: 1.2,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    description,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: onBottomColor.withAlpha(230),
+                                          height: 1.2,
+                                        ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                          textAlign: TextAlign.center,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -505,6 +758,59 @@ class ExpressiveLinkCard extends StatelessWidget {
   }
 }
 
+/// Opening slide card displaying the official Discipulus logo in the center of the screen.
+class ExpressiveLogoCard extends StatelessWidget {
+  final VoidCallback? onTap;
+  final double size;
+
+  const ExpressiveLogoCard({
+    super.key,
+    this.onTap,
+    this.size = 130,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Tooltip(
+        message: "Klik om te beginnen",
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(36),
+          splashColor: colorScheme.primary.withAlpha(25),
+          highlightColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: AppearAnimation(
+                duration: Durations.long2,
+                curve: Easing.emphasizedDecelerate,
+                child: (animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale:
+                        Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                    child: CustomPaint(
+                      size: Size(size, size),
+                      painter: DiscipulusLogoPainter(
+                        primaryColor: colorScheme.primary,
+                        secondaryColor: colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Reusable action card combining [ExpressiveMorphButton] with title text.
 class ExpressiveActionCard extends StatelessWidget {
   final String title;
@@ -530,28 +836,41 @@ class ExpressiveActionCard extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ExpressiveMorphButton(
-              onTap: onTap,
-              onLongPress: onLongPress,
-              icon: icon,
-              color: buttonColor,
-              iconColor: iconColor,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
-                    letterSpacing: -0.3,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ExpressiveMorphButton(
+                      onTap: onTap,
+                      onLongPress: onLongPress,
+                      icon: icon,
+                      color: buttonColor,
+                      iconColor: iconColor,
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: colorScheme.onSurface,
+                            letterSpacing: -0.3,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
