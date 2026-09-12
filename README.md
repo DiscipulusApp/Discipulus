@@ -1,3 +1,32 @@
+
+## Web branch notes:
+
+Discipulus currently does not run on the web, which was by design initially. It has become apparent though that this is a feature that some people do really want. In the past this was not something that Flutter supported well, but it seems to have matured, as a not completely functioning draft of Discipulus on web proved. This transition does require a few things to be handled, namely the storage component, the authentication and the CORS issues. 
+
+I'd rather not run this app on a server somewhere due to costs and server maintenance, so the decision was made to make it an extension. This means that it is not something that can be used on mobile devices, but this should not be an issue considering mobile devices can just as easily use the normal app. For certain desktop systems, in particular the ones used in schools, it can be a little more frustrating to reinstall Discipulus every time or in some cases not even possible. This friction should be improved by the extension. 
+
+The extension also solves the CORS problem, the third-party-server-that-Magister-does-not-like problem, and the authentication flow, as we can just use the normal sign-in screen. It also means Discipulus still runs on-device, which should make it a lot snappier than even the web version of Magister. 
+
+### TODO
+
+- **Storage & Database:**
+  - [ ] Migrate from Isar to Drift (SQLite via WASM & IndexedDB for web, native SQLite for mobile/desktop).
+  - [ ] Abstract filesystem storage (`dart:io` `File` and `path_provider`) to use web-compatible alternatives (IndexedDB / Blobs / in-memory URLs) for file downloads, attachments, profile pictures, and exports.
+- **Platform & Native Compatibility:**
+  - [ ] Remove all web invalid calls to packages/native functions (i.e. replace `Platform.*` with web-safe `AppPlatform`).
+  - [ ] Guard and stub native-only background tasks (`AndroidAlarmManager`, `workmanager`, `BackgroundRefresh`).
+  - [ ] Guard and stub device/OS-specific plugins (`flutter_apple_spotlight`, `flutter_apple_handoff`, `watch_connectivity`, `home_widget`, `dnd_manager`, `google_mobile_ads`, `app_tracking_transparency`).
+  - [ ] Provide web fallbacks for native desktop/mobile drag-and-drop, context menus, and file sharing (`super_drag_and_drop`, `open_file`, `share_plus`).
+- **Browser Extension Architecture & Manifest:**
+  - [ ] Setup Manifest V3 (`manifest.json`) configuration, background service worker, and permissions (`*://*.magister.net/*`).
+  - [ ] Intercept login??
+  - [ ] Replace `discipulus.harrydekat.dev` locally with extention, otherwise download page
+  - [ ] Packaging & build automation pipeline for Chrome &  Firefox (Lord knows of Safari is also possible?)
+- **Authentication & Network (CORS):**
+  - [ ] Utilize extension background permissions / `declarativeNetRequest` to bypass Magister CORS restrictions.
+
+---
+
 <div align="center">
   <!-- <a href="https://github.com/HarryDeKat/Discipulus">
     <img src="./android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png" alt="Logo" width="120" height="120">
