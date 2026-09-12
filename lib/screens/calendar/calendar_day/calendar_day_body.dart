@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:discipulus/utils/platform.dart';
 import 'package:collection/collection.dart';
 import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
@@ -128,8 +129,33 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
           .findFirst();
 
   Future<DateTime?> nextLessonDate(DateTime dateFrom) async {
+    if (AppPlatform.isWeb) {
+      return (await activeProfile.calendarEvents
+              .filter()
+              .startGreaterThan(dateFrom)
+              .duurtHeleDagEqualTo(false)
+              .optional(
+                !appSettings.showAutoCancelledEvents,
+                (q) => q
+                    .not()
+                    .statusEqualTo(Status.automaticallyCanceled)
+                    .and()
+                    .not()
+                    .statusEqualTo(Status.manuallyCanceled),
+              )
+              .optional(
+                appSettings.hideEventswithoutHours,
+                (q) => q.lesuurVanIsNotNull(),
+              )
+              .sortByStart()
+              .findFirst())
+          ?.start;
+    }
     return CustomIsolates<DateTime?>().createisolate((data) async {
-      BackgroundIsolateBinaryMessenger.ensureInitialized(data.rootIsolateToken);
+      if (data.rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(
+            data.rootIsolateToken!);
+      }
       await initIsar(true);
       data.sendPort.send((await activeProfile.calendarEvents
               .filter()

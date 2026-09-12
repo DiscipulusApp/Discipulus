@@ -113,6 +113,7 @@ class NativeNotification {
 
 class NotificationController {
   static Future<void> init() async {
+    if (AppPlatform.isWeb) return;
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
     const DarwinInitializationSettings initializationSettingsDarwin =
@@ -213,6 +214,7 @@ class NotificationController {
     NativeNotification content, {
     DateTime? time,
   }) async {
+    if (AppPlatform.isWeb) return;
     if (time != null && DateTime.now().isAfter(time)) {
       return;
     }

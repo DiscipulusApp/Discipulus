@@ -37,26 +37,31 @@ Future<TokenSet?> showMagisterLoginDialog(
   }
 
   //Settings for the webview (iOS & Android only)
-  late final WebViewController webViewController = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setNavigationDelegate(
-      NavigationDelegate(
-        onNavigationRequest: (NavigationRequest request) {
-          if (request.url.contains("#code")) {
-            redirectUrl.value = Uri.parse(request.url);
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-      ),
-    )
-    ..loadRequest(auth.generateLoginURL(tenant: tenant, username: username));
+  late final WebViewController webViewController;
+  if (!AppPlatform.isWeb &&
+      (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS)) {
+    webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            if (request.url.contains("#code")) {
+              redirectUrl.value = Uri.parse(request.url);
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(auth.generateLoginURL(tenant: tenant, username: username));
+  }
 
   bool hasReturned = false;
   StreamSubscription? browserLinkSub;
 
   Future<void> loginWithBrowser({bool noWebview = false}) async {
     if (!noWebview &&
+        !AppPlatform.isWeb &&
         await WebviewWindow.isWebviewAvailable() &&
         !AppPlatform.isMacOS) {
       WebviewWindow.clearAll();
@@ -126,8 +131,7 @@ Future<TokenSet?> showMagisterLoginDialog(
             title: const Text("Inloggen"),
             actions: (AppPlatform.isAndroid ||
                     AppPlatform.isIOS ||
-                    Platform
-                        .isMacOS) //Only iOS, macOS & Android are supported for logging in with a webview
+                    AppPlatform.isMacOS) //Only iOS, macOS & Android are supported for logging in with a webview
                 ? [
                     IconButton(
                         onPressed: () => webViewController.loadRequest(

@@ -30,12 +30,14 @@ class WatchService with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!AppPlatform.isMobile) return;
     if (state == AppLifecycleState.resumed) {
       _syncAll();
     }
   }
 
   void init() {
+    if (!AppPlatform.isMobile) return;
     if (_initialized) return;
     _initialized = true;
 
@@ -81,6 +83,7 @@ class WatchService with WidgetsBindingObserver {
   Future<void> syncAll() => _syncAll();
 
   Future<void> _syncAll() async {
+    if (!AppPlatform.isMobile) return;
     final profile = activeProfileNullable;
     if (profile == null) return;
     await Future.wait([

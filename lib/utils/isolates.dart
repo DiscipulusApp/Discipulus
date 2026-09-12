@@ -1,6 +1,7 @@
 import 'dart:isolate';
 
 import 'package:discipulus/main.dart';
+import 'package:discipulus/utils/platform.dart';
 import 'package:flutter/services.dart';
 
 class CustomIsolates<T> {
@@ -12,6 +13,9 @@ class CustomIsolates<T> {
     void Function(IsoLateData<T> data) entryPoint, {
     dynamic message,
   }) async {
+    if (AppPlatform.isWeb) {
+      throw UnsupportedError("Isolates are not supported on web");
+    }
     ReceivePort receivePort = ReceivePort();
     IsoLateData<T> data = IsoLateData<T>(
       data: message,
@@ -32,6 +36,9 @@ class IsarIsolate<T> extends CustomIsolates {
     void Function(IsoLateData<T> data) entryPoint, {
     dynamic message,
   }) async {
+    if (AppPlatform.isWeb) {
+      throw UnsupportedError("Isolates are not supported on web");
+    }
     ReceivePort receivePort = ReceivePort();
     IsoLateData<T> data = IsoLateData<T>(
       data: entryPoint,
@@ -40,7 +47,9 @@ class IsarIsolate<T> extends CustomIsolates {
     );
 
     Isolate isolate = await Isolate.spawn<IsoLateData<T>>((data) async {
-      BackgroundIsolateBinaryMessenger.ensureInitialized(data.rootIsolateToken);
+      if (data.rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(data.rootIsolateToken!);
+      }
       await initIsar(true);
       data.data();
       isar.close();
@@ -50,13 +59,14 @@ class IsarIsolate<T> extends CustomIsolates {
 }
 
 class IsoLateData<T> {
-  RootIsolateToken rootIsolateToken;
+  RootIsolateToken? rootIsolateToken;
   SendPort sendPort;
   dynamic data;
 
   IsoLateData({
-    required this.rootIsolateToken,
+    this.rootIsolateToken,
     this.data,
     required this.sendPort,
   });
 }
+

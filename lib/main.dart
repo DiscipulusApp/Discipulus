@@ -66,7 +66,7 @@ part 'core/isar.dart';
 
 List<FlutterErrorDetails> errors = [];
 late final AppLinks appLinks;
-late final RootIsolateToken rootIsolateToken;
+RootIsolateToken? rootIsolateToken;
 Directory? storageDir;
 late final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
@@ -78,7 +78,9 @@ void main(args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   appLinks = AppLinks();
-  rootIsolateToken = RootIsolateToken.instance!;
+  if (!AppPlatform.isWeb) {
+    rootIsolateToken = RootIsolateToken.instance;
+  }
 
   //Expand app behind navigation bar
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -110,7 +112,9 @@ void main(args) async {
     }
   }
 
-  await NotificationController.init();
+  if (!AppPlatform.isWeb) {
+    await NotificationController.init();
+  }
 
   if (AppPlatform.isAndroid) await AndroidAlarmManager.initialize();
   if (AppPlatform.isIOS || AppPlatform.isAndroid) WatchService().init();

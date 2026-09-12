@@ -1,4 +1,5 @@
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:discipulus/utils/platform.dart';
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
@@ -272,6 +273,7 @@ class AndroidAlarm {
   });
 
   static Future<void> cancelAll() async {
+    if (!AppPlatform.isAndroid) return;
     await Future.wait([
       for (var alarm in appSettings.alarms) AndroidAlarmManager.cancel(alarm.id)
     ]);

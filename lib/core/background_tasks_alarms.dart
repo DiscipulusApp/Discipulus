@@ -4,6 +4,7 @@ part of '../main.dart';
 /// It also keeps track of the active alarms in the app settings
 extension AlarmExtension on AndroidAlarm {
   Future<bool> schedule() async {
+    if (!AppPlatform.isAndroid) return false;
     bool sucess = await AndroidAlarmManager.oneShotAt(
       time!,
       id,
@@ -26,6 +27,7 @@ extension AlarmExtension on AndroidAlarm {
   }
 
   Future<bool> cancel() async {
+    if (!AppPlatform.isAndroid) return false;
     bool sucess = await AndroidAlarmManager.cancel(id);
     if (sucess) {
       appSettings
@@ -93,6 +95,7 @@ Future<void> toggleDND(int scheduleId, dynamic params) async {
 class BackgroundScheduler {
   /// Schedules background tasks if needed
   static Future<void> scheduler() async {
+    if (!AppPlatform.isAndroid) return;
     Future<void> schedule(Profile profile) async {
       List<List<CalendarEvent>> events = (await profile.calendarEvents
               .filter()

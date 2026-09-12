@@ -4,6 +4,7 @@ part of '../main.dart';
 /// It also contains the logic for refreshing data and sending notifications.
 class BackgroundRefresh {
   static Future<void> init() async {
+    if (!AppPlatform.isMobile) return;
     Workmanager().initialize(backgroundSync, isInDebugMode: !kReleaseMode);
 
     if (AppPlatform.isAndroid) {
