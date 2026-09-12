@@ -1,0 +1,64 @@
+{
+  "name": "Discipulus",
+  "description": "Gelukkig geen onderdeel van Magister 🙌",
+  "version": "0.2.5",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Discipulus",
+    "default_icon": {
+      "16": "icons/Icon-16.png",
+      "32": "icons/Icon-32.png",
+      "48": "icons/Icon-48.png",
+      "128": "icons/Icon-128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://discipulus.harrydekat.dev/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "*"
+      ],
+      "matches": [
+        "*://discipulus.harrydekat.dev/*"
+      ]
+    }
+  ],
+  "icons": {
+    "16": "icons/Icon-16.png",
+    "32": "icons/Icon-32.png",
+    "48": "icons/Icon-48.png",
+    "128": "icons/Icon-128.png",
+    "192": "icons/Icon-192.png",
+    "512": "icons/Icon-512.png"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "*://*.magister.net/*",
+    "*://discipulus.harrydekat.dev/*"
+  ]
+}
