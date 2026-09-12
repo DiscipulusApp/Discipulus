@@ -96,6 +96,12 @@ class Schoolyear {
       return;
     }
 
+    if (!(profile.value!.account.value?.permissions
+            .hasPermissions(PermissionType.cijfers) ??
+        false)) {
+      return;
+    }
+
     var res = (await profile.value!.account.value!.api.dio.get(
             "personen/${profile.value!.id}/aanmeldingen/$id/cijfers/cijferoverzichtvooraanmelding?actievePerioden=false&alleenBerekendeKolommen=false&alleenPTAKolommen=false&peildatum=${einde.toIso8601String()}"))
         .data;
