@@ -6,14 +6,14 @@ class BackgroundRefresh {
   static Future<void> init() async {
     Workmanager().initialize(backgroundSync, isInDebugMode: !kReleaseMode);
 
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       Workmanager().registerPeriodicTask(
         "discipulusQuickrefresh",
         "discipulusQuickrefresh",
         constraints: Constraints(networkType: NetworkType.connected),
         frequency: const Duration(minutes: 30),
       );
-    } else if (Platform.isIOS) {
+    } else if (AppPlatform.isIOS) {
       Workmanager().registerProcessingTask(
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
@@ -113,7 +113,7 @@ class BackgroundRefresh {
     if (profile == null) return;
     int profileUUID =
         appSettings.activeProfileUuidWidgets ?? profile.uuid;
-    if ((Platform.isIOS || Platform.isMacOS)) {
+    if ((AppPlatform.isIOS || AppPlatform.isMacOS)) {
       final targetProfile = await isar.profiles
           .filter()
           .uuidEqualTo(profileUUID)
@@ -162,7 +162,7 @@ class BackgroundRefresh {
 Future<void> refreshWidgetColorscheme(
     {required ColorScheme lightColorScheme,
     required ColorScheme darkColorScheme}) async {
-  if (Platform.isIOS || Platform.isMacOS) {
+  if (AppPlatform.isIOS || AppPlatform.isMacOS) {
     await HomeWidget.saveWidgetData<Map<String, int>>("colors", {
       "background": lightColorScheme.surface.toARGB32(),
       "primary": lightColorScheme.primary.toARGB32(),

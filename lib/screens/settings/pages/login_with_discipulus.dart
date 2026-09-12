@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
@@ -416,7 +415,7 @@ class _LoginWithDiscipulusPageState extends State<LoginWithDiscipulusPage> {
         ],
       ),
       children: [
-        if (Platform.isMacOS)
+        if (AppPlatform.isMacOS)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: CustomCard(

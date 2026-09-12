@@ -93,12 +93,12 @@ void main(args) async {
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
 
-  if (Platform.isIOS || Platform.isAndroid || Platform.isMacOS) {
+  if (AppPlatform.isIOS || AppPlatform.isAndroid || AppPlatform.isMacOS) {
     // Init background refresh for iOS and Android.
-    if (!Platform.isMacOS) await BackgroundRefresh.init();
+    if (!AppPlatform.isMacOS) await BackgroundRefresh.init();
 
     // Init handoff and widgets for darwin
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isIOS || AppPlatform.isMacOS) {
       FlutterAppleHandoff.onActivityChanged = onNewUserActivity;
       await HomeWidget.setAppGroupId(
           'group.DUGUWCFH8P.dev.harrydekat.discipulus');
@@ -112,8 +112,8 @@ void main(args) async {
 
   await NotificationController.init();
 
-  if (Platform.isAndroid) await AndroidAlarmManager.initialize();
-  if (Platform.isIOS || Platform.isAndroid) WatchService().init();
+  if (AppPlatform.isAndroid) await AndroidAlarmManager.initialize();
+  if (AppPlatform.isIOS || AppPlatform.isAndroid) WatchService().init();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -286,11 +286,11 @@ class MainAppState extends State<MainApp> {
             data: MediaQuery.of(context).copyWith(
               padding: MediaQuery.of(context).padding.copyWith(
                     top: MediaQuery.of(context).padding.top +
-                        (Platform.isMacOS ? 28 : 0),
+                        (AppPlatform.isMacOS ? 28 : 0),
                   ),
             ),
             child: ScrollConfiguration(
-              behavior: Platform.isIOS || Platform.isMacOS
+              behavior: AppPlatform.isIOS || AppPlatform.isMacOS
                   ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
                   : const MaterialScrollBehavior(),
               child: Layout(child: child!),
@@ -300,7 +300,7 @@ class MainAppState extends State<MainApp> {
             if (appSettings.activeProfileUuid == null &&
                 isar.profiles.countSync() == 0) {
               // No profile was found, so we will show the introduction screen
-              if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+              if (!kIsWeb && (AppPlatform.isAndroid || AppPlatform.isIOS)) {
                 return const ExpressiveIntroductionScreen();
               }
               return const VerticalIntroductionScreen();

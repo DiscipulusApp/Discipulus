@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+export 'package:discipulus/utils/platform.dart';
+import 'package:discipulus/utils/platform.dart';
+
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
@@ -249,10 +252,10 @@ extension ColorExtension on Color {
   }
 }
 
+
 extension PlatformExtension on Platform {
-  static bool isApple = Platform.isIOS || Platform.isMacOS;
-  static bool isDesktop =
-      Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  static bool get isApple => AppPlatform.isApple;
+  static bool get isDesktop => AppPlatform.isDesktop;
 }
 
 extension ContactListExtension on Iterable<Contact> {

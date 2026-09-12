@@ -38,7 +38,7 @@ Future<void> initIsar([disableInspector = false]) async {
       print("Isar was initiated on path \"${storageDir?.path}\"");
     }
 
-    if (Platform.isLinux && Abi.current() == Abi.linuxArm64) {
+    if (AppPlatform.isLinux && Abi.current() == Abi.linuxArm64) {
       final isarFile = File('${storageDir!.path}/libisar.so');
       try {
         final byteData =

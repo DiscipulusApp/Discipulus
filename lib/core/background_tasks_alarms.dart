@@ -128,7 +128,7 @@ class BackgroundScheduler {
 extension BackgroundSchedulerExt on Iterable<CalendarEvent> {
   /// Schedules a workmanager task for Android
   Future<void> schedueleAutoDND() async {
-    if (!Platform.isAndroid) return;
+    if (!AppPlatform.isAndroid) return;
 
     if (last.einde.difference(first.start).inSeconds > 30) {
       final int firstId = first.start.millisecondsSinceEpoch;
@@ -371,7 +371,7 @@ extension SmartAlarmScheduler on Profile {
   }
 
   Future<void> scheduleSmartAlarm() async {
-    if (!settings.smartAlarmEnabled || !Platform.isAndroid) return;
+    if (!settings.smartAlarmEnabled || !AppPlatform.isAndroid) return;
 
     final (alarmTime, _) = await calculateSmartAlarmTime();
 

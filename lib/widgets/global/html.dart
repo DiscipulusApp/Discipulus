@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/gemini/summarizer.dart';
@@ -160,13 +160,13 @@ class HTMLDisplay extends StatelessWidget {
                   ));
             },
           ),
-          if (Platform.isAndroid || Platform.isIOS)
+          if (AppPlatform.isAndroid || AppPlatform.isIOS)
             IframeHtmlExtension(
               navigationDelegate: NavigationDelegate(
                 onNavigationRequest: (request) => NavigationDecision.navigate,
               ),
             ),
-          if (!(Platform.isAndroid || Platform.isIOS))
+          if (!(AppPlatform.isAndroid || AppPlatform.isIOS))
             TagExtension(
               tagsToExtend: {"iframe"},
               builder: (ext) => FilledButton.icon(

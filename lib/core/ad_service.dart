@@ -1,5 +1,5 @@
+import 'package:discipulus/utils/platform.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
@@ -15,7 +15,7 @@ class AdService {
       return;
     }
 
-    if (Platform.isIOS) {
+    if (AppPlatform.isIOS) {
       final completer = Completer<void>();
 
       final params = ConsentRequestParameters();
@@ -58,7 +58,7 @@ class AdService {
       );
 
       return completer.future;
-    } else if (Platform.isAndroid) {
+    } else if (AppPlatform.isAndroid) {
       // For now, only basic initialization for Android.
       await MobileAds.instance.initialize();
     }
@@ -66,7 +66,7 @@ class AdService {
 
   /// Requests App Tracking Transparency authorization if it hasn't been determined yet.
   static Future<void> _requestATTIfNeeded() async {
-    if (Platform.isIOS) {
+    if (AppPlatform.isIOS) {
       if (await AppTrackingTransparency.trackingAuthorizationStatus ==
           TrackingStatus.notDetermined) {
         await AppTrackingTransparency.requestTrackingAuthorization();

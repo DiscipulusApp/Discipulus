@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:discipulus/core/ad_service.dart';
@@ -30,7 +29,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
 
   bool get _isDesktop {
     if (kIsWeb) return true;
-    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+    return AppPlatform.isMacOS || AppPlatform.isWindows || AppPlatform.isLinux;
   }
 
   @override

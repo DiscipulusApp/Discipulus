@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -93,7 +93,7 @@ class _RefreshableCustomScrollViewState
           parent: widget.onRefresh != null
               ? const AlwaysScrollableScrollPhysics()
               : null,
-          decelerationRate: Platform.isAndroid
+          decelerationRate: AppPlatform.isAndroid
               ? ScrollDecelerationRate.fast
               : ScrollDecelerationRate.normal),
       slivers: [
@@ -106,9 +106,9 @@ class _RefreshableCustomScrollViewState
               builder: (context, value, child) {
                 return widget.appBar!.call(
                   value != 0,
-                  (Platform.isLinux ||
-                          Platform.isWindows ||
-                          Platform.isMacOS ||
+                  (AppPlatform.isLinux ||
+                          AppPlatform.isWindows ||
+                          AppPlatform.isMacOS ||
                           isRefreshing.value == 2)
                       ? [_getRefreshButton()]
                       : [],

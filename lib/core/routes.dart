@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 
 import 'package:discipulus/api/models/permissions.dart';
 import 'package:discipulus/main.dart';
@@ -329,7 +329,7 @@ void updateMenuBar({required List<DestinationSegement> destinations}) async {
   ];
 
   // This is only supported on macOS
-  if (Platform.isMacOS) {
+  if (AppPlatform.isMacOS) {
     WidgetsBinding.instance.platformMenuDelegate.setMenus(platformMenu);
   }
 }

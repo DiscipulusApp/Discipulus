@@ -36,12 +36,12 @@ class _ExpressiveIntroductionScreenState
 
   bool get _isDesktop {
     if (kIsWeb) return true;
-    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+    return AppPlatform.isMacOS || AppPlatform.isWindows || AppPlatform.isLinux;
   }
 
   bool get _isApple {
     if (kIsWeb) return false;
-    return Platform.isIOS || Platform.isMacOS;
+    return AppPlatform.isIOS || AppPlatform.isMacOS;
   }
 
   final ValueNotifier<HighlightGrade?> _highlightGrade =
@@ -93,7 +93,7 @@ class _ExpressiveIntroductionScreenState
                         ),
                   ),
                 ),
-                if (!kIsWeb && !Platform.isMacOS)
+                if (!kIsWeb && !AppPlatform.isMacOS)
                   CustomCard(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

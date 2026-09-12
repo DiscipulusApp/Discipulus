@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/messages.dart';
@@ -429,8 +428,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
       shortcuts: {
         // Save on Ctrl + S
         SingleActivator(
-            meta: Platform.isIOS || Platform.isMacOS,
-            control: !(Platform.isIOS || Platform.isMacOS),
+            meta: AppPlatform.isIOS || AppPlatform.isMacOS,
+            control: !(AppPlatform.isIOS || AppPlatform.isMacOS),
             LogicalKeyboardKey.keyS): const CalendarSaveIntent()
       },
       child: Actions(

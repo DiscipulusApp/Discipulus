@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
@@ -61,21 +60,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: const Icon(Icons.work_outline),
       page: const MagisterSettingsPage(),
     ),
-    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+    if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS)
       SettingsPage(
         name: "Notificaties & Achtergrond",
         desc: "Berichten over nieuwe cijfers/evenementen",
         icon: const Icon(Icons.notifications_none_rounded),
         page: const NotificationSettingsPage(),
       ),
-    if (Platform.isIOS || Platform.isMacOS)
+    if (AppPlatform.isIOS || AppPlatform.isMacOS)
       SettingsPage(
         name: "Apple specifiek",
         desc: "Widgets, Handoff & Spotlight",
         icon: const Icon(Icons.apple_rounded),
         page: const AppleSettingsPage(),
       ),
-    if (Platform.isAndroid)
+    if (AppPlatform.isAndroid)
       SettingsPage(
         name: "Android specifiek",
         desc: "Automatische stille modus",
@@ -106,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: const Icon(Icons.file_copy_outlined),
       page: const BronnenSettingsPage(),
     ),
-    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+    if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS)
       SettingsPage(
         name: "Login met Discipulus",
         desc: "Log in op alternatieve applicaties",

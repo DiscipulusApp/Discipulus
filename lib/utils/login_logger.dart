@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,7 +58,7 @@ class LoginLogger {
     _sessionStart = DateTime.now();
     _entries.clear();
     info("Sessie gestart: $sessionName", category: "SESSION");
-    info("Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}", category: "DEVICE");
+    info("Platform: ${AppPlatform.operatingSystem} ${AppPlatform.operatingSystemVersion}", category: "DEVICE");
     info("Debug mode: $kDebugMode", category: "DEVICE");
   }
 
@@ -149,7 +149,7 @@ class LoginLogger {
     buffer.writeln("=== DISCIPULUS LOGIN DIAGNOSTISCH RAPPORT ===");
     buffer.writeln("Sessie: $_sessionName");
     buffer.writeln("Tijdstip: ${_sessionStart ?? DateTime.now()}");
-    buffer.writeln("Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}");
+    buffer.writeln("Platform: ${AppPlatform.operatingSystem} ${AppPlatform.operatingSystemVersion}");
     buffer.writeln("==============================================\n");
 
     if (_entries.isEmpty) {

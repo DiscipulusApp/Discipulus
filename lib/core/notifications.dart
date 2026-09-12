@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/grades.dart';
@@ -145,14 +144,14 @@ class NotificationController {
   }
 
   static Future<bool> get isAllowed async {
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       // Check android
       return (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
                   AndroidFlutterLocalNotificationsPlugin>()!
               .areNotificationsEnabled()) ??
           false;
-    } else if (Platform.isIOS) {
+    } else if (AppPlatform.isIOS) {
       // Check iOS
       return (await flutterLocalNotificationsPlugin
                   .resolvePlatformSpecificImplementation<
@@ -160,7 +159,7 @@ class NotificationController {
                   .checkPermissions())
               ?.isEnabled ??
           false;
-    } else if (Platform.isMacOS) {
+    } else if (AppPlatform.isMacOS) {
       // Check macOS
       return (await flutterLocalNotificationsPlugin
                   .resolvePlatformSpecificImplementation<
@@ -175,14 +174,14 @@ class NotificationController {
   }
 
   static Future<bool> requestPermissions() async {
-    if (Platform.isAndroid) {
+    if (AppPlatform.isAndroid) {
       // Request android
       return (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
                   AndroidFlutterLocalNotificationsPlugin>()!
               .requestNotificationsPermission()) ??
           false;
-    } else if (Platform.isIOS) {
+    } else if (AppPlatform.isIOS) {
       // Request iOS
       return (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
@@ -193,7 +192,7 @@ class NotificationController {
                 sound: true,
               )) ??
           false;
-    } else if (Platform.isMacOS) {
+    } else if (AppPlatform.isMacOS) {
       // Request macOS
       return (await flutterLocalNotificationsPlugin
               .resolvePlatformSpecificImplementation<
@@ -439,7 +438,7 @@ class Intents {
 
   /// Initializes share intent handling with deduplication
   static void initShareHandler() {
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (AppPlatform.isAndroid || AppPlatform.isIOS) {
       final handler = ShareHandlerPlatform.instance;
 
       void handleMedia(SharedMedia? media) {

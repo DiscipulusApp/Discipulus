@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
@@ -20,7 +19,7 @@ class WeekHeatmap extends StatefulWidget {
 }
 
 class _WeekHeatmapState extends State<WeekHeatmap> {
-  bool showWeekend = !(Platform.isIOS || Platform.isAndroid);
+  bool showWeekend = !(AppPlatform.isIOS || AppPlatform.isAndroid);
 
   /// Gets the date from which we will start. This is always on a monday
   DateTime startDate = DateTime.now().dayOnly.subtract(

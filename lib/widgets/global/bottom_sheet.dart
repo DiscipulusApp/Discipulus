@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 import 'dart:ui';
 
 import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
@@ -40,7 +40,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
 
   if (modelSheet) {
     // Set activity
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isIOS || AppPlatform.isMacOS) {
       activity?.becomeCurrent();
     }
 
@@ -70,7 +70,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
     );
 
     // Remove the activity
-    if (activity != null && (Platform.isIOS || Platform.isMacOS)) {
+    if (activity != null && (AppPlatform.isIOS || AppPlatform.isMacOS)) {
       await FlutterAppleHandoff.updateActivity(null);
     }
 

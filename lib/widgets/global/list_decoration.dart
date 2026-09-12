@@ -1,5 +1,5 @@
+import 'package:discipulus/utils/platform.dart';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
@@ -228,7 +228,7 @@ extension DoubleExtention on double {
     return isNaN
         ? "-"
         : NumberFormat.decimalPatternDigits(
-                locale: Platform.localeName, decimalDigits: decimalDigits)
+                locale: AppPlatform.localeName, decimalDigits: decimalDigits)
             .format(decimalDigits != null
                 ? num.parse(toStringAsFixed(decimalDigits))
                 : (this * precisionWithPow10).round() / precisionWithPow10);

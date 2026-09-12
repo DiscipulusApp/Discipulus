@@ -1,5 +1,3 @@
-import 'dart:io';
-
 // Models
 import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
@@ -18,6 +16,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/layout.dart';
+import 'package:discipulus/utils/platform.dart';
 
 // Screens
 import 'package:discipulus/screens/activities/activities.dart';
@@ -294,7 +293,7 @@ class HandoffFocus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (activity != null && (Platform.isIOS || Platform.isMacOS)) {
+    if (activity != null && (AppPlatform.isIOS || AppPlatform.isMacOS)) {
       return FocusOnIt(
         onForegroundGained: onForegroundGained,
         onFocus: () async {

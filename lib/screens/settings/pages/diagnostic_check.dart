@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
@@ -98,7 +98,7 @@ class _DiagnosticCheckPageState extends State<DiagnosticCheckPage> {
     _log("Tijd: ${DateTime.now().toLocal()}");
     _log("Profiel: [VERBORGEN]");
     _log(
-        "Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}");
+        "Platform: ${AppPlatform.operatingSystem} ${AppPlatform.operatingSystemVersion}");
     _log("App Versie: 1.0.0 (Diagnostics)");
 
     if (profile.isOffline ||

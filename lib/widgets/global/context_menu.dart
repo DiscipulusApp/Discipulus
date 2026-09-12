@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 
 import 'package:flutter/material.dart';
 import 'package:super_context_menu/super_context_menu.dart';
@@ -24,10 +24,10 @@ class CustomContextMenuWidget extends ContextMenuWidget {
     //    needs to be customized because the native context menu's are ugly.
     //
 
-    if (Platform.isIOS ||
-        Platform.isMacOS ||
-        Platform.isWindows ||
-        Platform.isLinux) {
+    if (AppPlatform.isIOS ||
+        AppPlatform.isMacOS ||
+        AppPlatform.isWindows ||
+        AppPlatform.isLinux) {
       return super.build(context);
     }
     return SizedBox(

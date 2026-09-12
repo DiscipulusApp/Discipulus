@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:discipulus/api/models/schoolyears.dart';
@@ -143,7 +142,7 @@ class LayoutState extends State<Layout>
       transitionsBuilder: (context, animation, secAnimation, child) {
         return SharedAxisTransition(
           fillColor:
-              (screen.key == const ValueKey("TRANSPARENT")) && Platform.isMacOS
+              (screen.key == const ValueKey("TRANSPARENT")) && AppPlatform.isMacOS
                   ? Colors.transparent
                   : null,
           animation: animation,
@@ -156,7 +155,7 @@ class LayoutState extends State<Layout>
       },
     );
 
-    if (Platform.isIOS && !makeFirst) {
+    if (AppPlatform.isIOS && !makeFirst) {
       // On iOS we would like to be able to show the previous page by swiping
       // from the side, so we will be using [CupertinoPageRoute] instead.
       newPage = CupertinoPageRoute(
@@ -269,7 +268,7 @@ class LayoutState extends State<Layout>
 
   EdgeInsets get padding => const EdgeInsets.all(24).copyWith(
         top: 24 +
-            (Platform.isMacOS ? 4 : 0), // The title bar is hidden in macOS,
+            (AppPlatform.isMacOS ? 4 : 0), // The title bar is hidden in macOS,
         // so we have to add some extra padding on top of the normal padding.
       );
 
@@ -277,7 +276,7 @@ class LayoutState extends State<Layout>
   BorderRadius borderRadius = const BorderRadius.all(Radius.circular(16));
 
   // On macOS we would like the window to be semi-transparent
-  int get alpha => (255 * (Platform.isMacOS ? 0.5 : 1)).toInt();
+  int get alpha => (255 * (AppPlatform.isMacOS ? 0.5 : 1)).toInt();
 
   Color? get backgroundColor => ElevationOverlay.applySurfaceTint(
           Theme.of(context).colorScheme.surface,
@@ -343,14 +342,14 @@ class LayoutState extends State<Layout>
       // not do anything
       return Theme(
         data: Theme.of(context).copyWith(
-          canvasColor: Platform.isMacOS ? Colors.transparent : null,
+          canvasColor: AppPlatform.isMacOS ? Colors.transparent : null,
         ),
         child: widget.child,
       );
     } else {
       return Scaffold(
         backgroundColor:
-            Platform.isMacOS ? Colors.transparent : backgroundColor,
+            AppPlatform.isMacOS ? Colors.transparent : backgroundColor,
         body: Column(
           children: [
             Expanded(
@@ -433,7 +432,7 @@ class LayoutState extends State<Layout>
     return RepaintBoundary(
       child: AdvancedDrawer(
         rtlOpening: appSettings.drawerOpenOnRight,
-        disabledGestures: Platform.isAndroid ? appSettings.drawerOnBack : false,
+        disabledGestures: AppPlatform.isAndroid ? appSettings.drawerOnBack : false,
         controller: drawerController,
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),

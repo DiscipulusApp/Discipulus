@@ -32,7 +32,7 @@ Future<TokenSet?> showMagisterLoginDialog(
   Authentication auth = Authentication();
 
   //The cookies have to be cleared otherwise you will not be able to login multiple times.
-  if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+  if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS) {
     WebViewCookieManager().clearCookies();
   }
 
@@ -58,14 +58,14 @@ Future<TokenSet?> showMagisterLoginDialog(
   Future<void> loginWithBrowser({bool noWebview = false}) async {
     if (!noWebview &&
         await WebviewWindow.isWebviewAvailable() &&
-        !Platform.isMacOS) {
+        !AppPlatform.isMacOS) {
       WebviewWindow.clearAll();
       final webview = await WebviewWindow.create(
         configuration: CreateConfiguration(
           windowWidth: 400,
           windowHeight: 640,
           title: 'Login met Magister',
-          titleBarTopPadding: Platform.isMacOS ? 30 : 0,
+          titleBarTopPadding: AppPlatform.isMacOS ? 30 : 0,
           titleBarHeight: 0,
           useWindowPositionAndSize: true,
           userDataFolderWindows: (await getTemporaryDirectory()).path,
@@ -101,7 +101,7 @@ Future<TokenSet?> showMagisterLoginDialog(
     }
   }
 
-  if (!Platform.isAndroid && !Platform.isIOS && !Platform.isMacOS) {
+  if (!AppPlatform.isAndroid && !AppPlatform.isIOS && !AppPlatform.isMacOS) {
     loginWithBrowser();
   }
 
@@ -124,8 +124,8 @@ Future<TokenSet?> showMagisterLoginDialog(
         child: Scaffold(
           appBar: AppBar(
             title: const Text("Inloggen"),
-            actions: (Platform.isAndroid ||
-                    Platform.isIOS ||
+            actions: (AppPlatform.isAndroid ||
+                    AppPlatform.isIOS ||
                     Platform
                         .isMacOS) //Only iOS, macOS & Android are supported for logging in with a webview
                 ? [
@@ -150,7 +150,7 @@ Future<TokenSet?> showMagisterLoginDialog(
                   return const Center(child: CircleLoaderLoopWidget());
                 }
                 // Waiting for redirectUrl
-                if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+                if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS) {
                   return WebViewWidget(controller: webViewController);
                 } else {
                   return AlertDialog(
@@ -162,7 +162,7 @@ Future<TokenSet?> showMagisterLoginDialog(
                         icon: const Icon(Icons.open_in_browser),
                         label: const Text("Openen in browser"),
                       ),
-                      if (!Platform.isMacOS) // This does not work in macOS.
+                      if (!AppPlatform.isMacOS) // This does not work in macOS.
                         FilledButton.icon(
                           onPressed: () => loginWithBrowser(),
                           icon: const Icon(Icons.open_in_new),

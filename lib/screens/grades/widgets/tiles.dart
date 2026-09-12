@@ -7,7 +7,6 @@ import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:haptic_kit/haptic_kit.dart';
@@ -391,7 +390,7 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
   Future<void> _playHapticRevealPattern() async {
     try {
       await Vibration.cancel();
-      if (Platform.isAndroid) {
+      if (AppPlatform.isAndroid) {
         await Vibration.vibrateWaveform(
           timings: const [
             // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
@@ -429,7 +429,7 @@ class Profile {
       assignment.profile.value = this;
     }
 
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isIOS || AppPlatform.isMacOS) {
       await CoreSpotlight.instance.indexSearchableItems([
         for (Assignment assignment in newAssignments) assignment.spotlightItem
       ].nonNulls);

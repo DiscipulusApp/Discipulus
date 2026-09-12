@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/magister_api_dart.dart';
@@ -585,7 +584,7 @@ class MessagesFolder {
         ..mapId = e.id.isNegative ? currentMessage?.mapId ?? e.mapId : e.mapId;
     });
 
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isIOS || AppPlatform.isMacOS) {
       await CoreSpotlight.instance.indexSearchableItems([
         for (Bericht message in newMessages) message.spotlightItem
       ].nonNulls);

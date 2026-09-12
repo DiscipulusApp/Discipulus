@@ -13,7 +13,7 @@ The extension also solves the CORS problem, the third-party-server-that-Magister
   - [ ] Migrate from Isar to Drift (SQLite via WASM & IndexedDB for web, native SQLite for mobile/desktop).
   - [ ] Abstract filesystem storage (`dart:io` `File` and `path_provider`) to use web-compatible alternatives (IndexedDB / Blobs / in-memory URLs) for file downloads, attachments, profile pictures, and exports.
 - **Platform & Native Compatibility:**
-  - [ ] Remove all web invalid calls to packages/native functions (i.e. replace `Platform.*` with web-safe `AppPlatform`).
+  - [X] Remove all web invalid calls to packages/native functions (i.e. replace `Platform.*` with web-safe `AppPlatform`).
   - [ ] Guard and stub native-only background tasks (`AndroidAlarmManager`, `workmanager`, `BackgroundRefresh`).
   - [ ] Guard and stub device/OS-specific plugins (`flutter_apple_spotlight`, `flutter_apple_handoff`, `watch_connectivity`, `home_widget`, `dnd_manager`, `google_mobile_ads`, `app_tracking_transparency`).
   - [ ] Provide web fallbacks for native desktop/mobile drag-and-drop, context menus, and file sharing (`super_drag_and_drop`, `open_file`, `share_plus`).

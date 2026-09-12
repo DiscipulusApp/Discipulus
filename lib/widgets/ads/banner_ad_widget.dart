@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -23,7 +23,7 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   // Use test ID for iOS banner in debug mode.
-  final String adUnitId = Platform.isIOS
+  final String adUnitId = AppPlatform.isIOS
       ? (kDebugMode
           ? 'ca-app-pub-3940256099942544/2934735716'
           : 'ca-app-pub-8698376572242605/3132367970')
@@ -38,7 +38,7 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final profile = activeProfileNullable;
-    if (Platform.isIOS && _bannerAd == null && (profile == null || !profile.isUnderage)) {
+    if (AppPlatform.isIOS && _bannerAd == null && (profile == null || !profile.isUnderage)) {
       _loadAd();
     }
   }
@@ -91,7 +91,7 @@ class BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   Widget build(BuildContext context) {
     final profile = activeProfileNullable;
-    if (!Platform.isIOS || _bannerAd == null || !_isLoaded || (profile != null && profile.isUnderage)) {
+    if (!AppPlatform.isIOS || _bannerAd == null || !_isLoaded || (profile != null && profile.isUnderage)) {
       return const SizedBox.shrink();
     }
 

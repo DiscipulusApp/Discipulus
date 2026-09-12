@@ -232,7 +232,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
   /// Gets triggered after the content of a field changes (or debounced Fleather change)
   void onChange() {
     // Update handoff (can still happen frequently, but setState is the main cost)
-    if (Platform.isMacOS || Platform.isIOS) updateActivity();
+    if (AppPlatform.isMacOS || AppPlatform.isIOS) updateActivity();
     // This setState rebuilds the widget, ensure widget is still mounted
     if (mounted) {
       setState(() {});

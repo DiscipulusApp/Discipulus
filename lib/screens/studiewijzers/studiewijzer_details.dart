@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/api/models/calendar.dart';
@@ -195,8 +194,8 @@ class _StudieWijzerScreenState extends State<StudieWijzerScreen>
                         ),
                       ),
                     ),
-                  if (Platform.isAndroid ||
-                      Platform.isIOS ||
+                  if (AppPlatform.isAndroid ||
+                      AppPlatform.isIOS ||
                       _controller.text.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.all(12).copyWith(top: 0),

@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/models/settings.dart';
@@ -75,16 +74,16 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Table(
         columnWidths: [
-          if (!(Platform.isAndroid || Platform.isIOS))
+          if (!(AppPlatform.isAndroid || AppPlatform.isIOS))
             const FixedColumnWidth(52),
           const FlexColumnWidth(),
-          if (!(Platform.isAndroid || Platform.isIOS))
+          if (!(AppPlatform.isAndroid || AppPlatform.isIOS))
             const FixedColumnWidth(52)
         ].asMap(),
         children: [
           TableRow(
             children: [
-              if (!(Platform.isAndroid || Platform.isIOS))
+              if (!(AppPlatform.isAndroid || AppPlatform.isIOS))
                 TableCell(
                   verticalAlignment: TableCellVerticalAlignment.fill,
                   child: Padding(
@@ -102,7 +101,7 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
                 constraints: const BoxConstraints(maxHeight: 80),
                 child: pageviewBuilder(context),
               ),
-              if (!(Platform.isAndroid || Platform.isIOS))
+              if (!(AppPlatform.isAndroid || AppPlatform.isIOS))
                 TableCell(
                   verticalAlignment: TableCellVerticalAlignment.fill,
                   child: Padding(

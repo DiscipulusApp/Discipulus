@@ -253,13 +253,13 @@ extension BronLocalExtension on Bron {
   /// Opens the file and tries to set the activity
   Future<void> openFile() async {
     // Get current activity
-    NSUserActivity? activityBefore = (Platform.isIOS || Platform.isMacOS)
+    NSUserActivity? activityBefore = (AppPlatform.isIOS || AppPlatform.isMacOS)
         ? await FlutterAppleHandoff.getCurrentActivity
         : null;
 
     // When the bron actually has a file.
     if (savedPath != null) {
-      if (Platform.isIOS || Platform.isMacOS) {
+      if (AppPlatform.isIOS || AppPlatform.isMacOS) {
         await HandoffActivity.construct(
           title: naam,
           screenType: Bron,
@@ -273,7 +273,7 @@ extension BronLocalExtension on Bron {
       }
 
       // Open the file
-      if (Platform.isLinux) {
+      if (AppPlatform.isLinux) {
         // Without an Isolate the application will hang in Linux, making it
         // impossible to open multiple files.
         await Isolate.spawn(
@@ -283,7 +283,7 @@ extension BronLocalExtension on Bron {
       }
 
       // Revert the activity to the activity before.
-      if (Platform.isIOS || Platform.isMacOS) {
+      if (AppPlatform.isIOS || AppPlatform.isMacOS) {
         await FlutterAppleHandoff.updateActivity(activityBefore);
       }
     }
@@ -463,7 +463,7 @@ extension BronDragExtension on Bron {
       // Android is not really a fan of having fileUri exposed, so it throws an
       // exception. To circumvent this android will only support certain file
       // types.
-      item.add(Platform.isAndroid && format != null
+      item.add(AppPlatform.isAndroid && format != null
           ? format.call(localFile!.readAsBytesSync())
           : Formats.fileUri.call(localFile!.uri));
       return item;

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/api/models/studiewijzers.dart';
 import 'package:discipulus/core/routes.dart';
@@ -22,7 +21,7 @@ mixin SpotlightSearchElementMixin {
   SpotlightSearchElement? get spotlightItem;
 
   Future<void> removeFromSpotlight() async {
-    if (spotlightItem != null && (Platform.isMacOS || Platform.isIOS)) {
+    if (spotlightItem != null && (AppPlatform.isMacOS || AppPlatform.isIOS)) {
       await CoreSpotlight.instance
           .deleteAll(identifier: [spotlightItem!.uniqueIdentifier!]);
     }
@@ -30,7 +29,7 @@ mixin SpotlightSearchElementMixin {
 
   /// Updates the current item in spotlight.
   Future<void> updateSpotlight() async {
-    if (spotlightItem != null && (Platform.isMacOS || Platform.isIOS)) {
+    if (spotlightItem != null && (AppPlatform.isMacOS || AppPlatform.isIOS)) {
       removeFromSpotlight();
       await CoreSpotlight.instance.indexSearchableItems([spotlightItem!]);
     }
@@ -48,7 +47,7 @@ class SpotlightSearchElement extends CoreSpotlightItem {
   }) : super();
 }
 
-void initSpotlight() => (Platform.isMacOS || Platform.isIOS)
+void initSpotlight() => (AppPlatform.isMacOS || AppPlatform.isIOS)
     ? CoreSpotlight.instance.init(
         callback: (item) async {
           switch (item.uniqueIdentifier.split("_").first) {

@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/screens/settings/pages/discipulus_settings.dart';
@@ -13,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
 
-bool useTransparency = Platform.isMacOS;
+bool useTransparency = AppPlatform.isMacOS;
 
 class VerticalIntroductionScreen extends StatefulWidget {
   const VerticalIntroductionScreen({super.key});
@@ -91,7 +90,7 @@ class _VerticalIntroductionScreenState
           child: Wrap(
             children: [
               for (var tile in [
-                if (!Platform.isMacOS)
+                if (!AppPlatform.isMacOS)
                   ListTile(
                     leading: const Icon(Icons.qr_code_scanner),
                     title: const Text("Login met Discipulus QR-code"),
@@ -442,22 +441,22 @@ class _VerticalIntroductionScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (Platform.isMacOS || Platform.isIOS) ...[
+          if (AppPlatform.isMacOS || AppPlatform.isIOS) ...[
             Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 16),
               child: Text(
-                "Zien we daar ${Platform.isMacOS ? "macOS" : "iOS"} 👀",
+                "Zien we daar ${AppPlatform.isMacOS ? "macOS" : "iOS"} 👀",
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Text(
-                  "Met Discipulus op ${Platform.isMacOS ? "macOS" : "iOS"} haal je het maximale uit je apparaat met exclusieve functies."),
+                  "Met Discipulus op ${AppPlatform.isMacOS ? "macOS" : "iOS"} haal je het maximale uit je apparaat met exclusieve functies."),
             ),
             ...iOSBulletPoints.dislayCards,
           ],
-          if (Platform.isIOS && hasAppleWatch) ...[
+          if (AppPlatform.isIOS && hasAppleWatch) ...[
             Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 16),
               child: Text(
@@ -472,7 +471,7 @@ class _VerticalIntroductionScreenState
             ),
             ...watchOSBulletPoints.dislayCards,
           ],
-          if (Platform.isAndroid) ...[
+          if (AppPlatform.isAndroid) ...[
             Padding(
               padding: const EdgeInsets.only(top: 24, bottom: 16),
               child: Text(
@@ -660,7 +659,7 @@ class _VerticalIntroductionScreenState
                           delay: Durations.medium2,
                           duration: Durations.medium3,
                           child: (animation) => TextButton(
-                            onPressed: (!Platform.isMacOS)
+                            onPressed: (!AppPlatform.isMacOS)
                                 ? _showAlternativeLogins
                                 : null,
                             child: FadeTransition(
