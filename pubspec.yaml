@@ -1,7 +1,7 @@
 name: discipulus
 description: "Gelukkig geen onderdeel van Magister 🙌"
 publish_to: "none"
-version: 0.2.5+29
+version: 0.2.7+33
 
 environment:
   sdk: ">=3.1.0 <4.0.0"
@@ -105,6 +105,7 @@ dependencies:
   network_info_plus: ^7.0.0
   haptic_kit: ^1.0.1
   package_info_plus: ^9.0.1
+  mcp_dart: ^2.4.2
 
   # Unused
   # flutter_carousel_widget: ^2.2.0

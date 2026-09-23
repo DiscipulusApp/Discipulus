@@ -2,7 +2,7 @@ import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/api/routes/messages.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/summarizer.dart';
+import 'package:discipulus/screens/ai/summarizer.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
@@ -11,6 +11,7 @@ import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/filters/messages_filter.dart';
 import 'package:discipulus/widgets/global/html.dart';
+import 'package:discipulus/widgets/global/layout.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:discipulus/screens/bronnen/bron_tiles.dart';
@@ -40,7 +41,11 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
   void initState() {
     pageController = PageController(keepPage: false);
     super.initState();
-    if (!widget.message.isGelezen) widget.message.markAsRead();
+    if (!widget.message.isGelezen) {
+      widget.message.markAsRead().then((_) {
+        if (mounted) context.setNormalWindowState();
+      });
+    }
   }
 
   @override
@@ -202,7 +207,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
 
   List<Widget> _messageChips() {
     return [
-      if ((appSettings.useLocalAI || appSettings.openRouterAPIKey != null) && widget.message.inhoud != null)
+      if (appSettings.isAiConfigured && widget.message.inhoud != null)
         ActionChip(
           side: BorderSide(
               color: Theme.of(context).colorScheme.tertiaryContainer),
@@ -238,6 +243,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
             await widget.message.markAsRead(read: !widget.message.isGelezen);
             isLoadingExternally.value = false;
             setState(() {});
+            if (mounted) context.setNormalWindowState();
           },
           child: (isLoading, onTap) => ActionChip(
             avatar: isLoading
@@ -288,7 +294,10 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
           );
           if (folder != null) {
             await widget.message.moveToFolder(folder.id);
-            if (mounted) setState(() {});
+            if (mounted) {
+              setState(() {});
+              context.setNormalWindowState();
+            }
           }
         },
       ),
@@ -330,6 +339,7 @@ class _MessageScreenState extends State<MessageScreen> with ExternalRefresh {
           if (shouldDelete == true) {
             await widget.message.remove();
             if (!mounted) return;
+            context.setNormalWindowState();
             Navigator.of(context).pop();
           }
         },

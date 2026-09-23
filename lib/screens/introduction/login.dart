@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:desktop_webview_window/desktop_webview_window.dart';
-import 'package:dio/dio.dart';
 import 'package:discipulus/api/dummy_magister_api_dart.dart';
 import 'package:discipulus/api/magister_api_dart.dart';
 import 'package:discipulus/api/models/account.dart';

@@ -1,7 +1,7 @@
-import 'package:discipulus/screens/gemini/ai_service.dart';
-import 'package:discipulus/screens/gemini/chat_screen.dart';
-import 'package:discipulus/screens/gemini/functions/ai_models.dart';
-import 'package:discipulus/screens/gemini/instructions.dart';
+import 'package:discipulus/screens/ai/ai_models.dart';
+import 'package:discipulus/screens/ai/ai_service.dart';
+import 'package:discipulus/screens/ai/chat_screen.dart';
+import 'package:discipulus/screens/ai/instructions.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 class EmailGenerationScreen extends StatefulWidget {
   const EmailGenerationScreen({super.key, this.customSystemInstruction});
 
-  final AIContent? customSystemInstruction;
+  final AIChatMessage? customSystemInstruction;
 
   @override
   State<EmailGenerationScreen> createState() => _EmailGenerationScreenState();
@@ -28,7 +28,7 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
     try {
       final prompt = _inputController.text;
       final response = await AIService.sendMessage(
-        history: [AIContent.user(prompt)],
+        history: [AIChatMessage.user(prompt)],
         systemInstruction: widget.customSystemInstruction ?? GeminiInstructions.emailWriter,
       );
       setState(() {
@@ -92,7 +92,7 @@ class _EmailGenerationScreenState extends State<EmailGenerationScreen> {
 }
 
 Future<String?> showGenerationDialog(BuildContext context, String? currentEmail,
-    {AIContent? customSystemInstruction}) {
+    {AIChatMessage? customSystemInstruction}) {
   return showDialog<String>(
     useSafeArea: false,
     context: context,
@@ -106,7 +106,7 @@ Future<String> generateEmailSubject(String htmlBody) async {
 
   try {
     return await AIService.sendMessage(
-      history: [AIContent.user(htmlBody)],
+      history: [AIChatMessage.user(htmlBody)],
       systemInstruction: GeminiInstructions.emailSubjectWriter(htmlBody),
     );
   } catch (e) {

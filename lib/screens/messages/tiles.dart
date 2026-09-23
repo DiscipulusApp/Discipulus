@@ -49,7 +49,13 @@ class _MessageTileState extends State<MessageTile> with SelectableListItem {
 
   void _handleTileTap() async {
     if (SelectableList.maybyOf(context)?.selectedItems.isEmpty ?? true) {
-      await MessageScreen(message: widget.bericht).pushSideView(context);
+      await MessageScreen(message: widget.bericht).pushSideView(
+        context,
+        onUpdateNormalWindow: ([fn]) {
+          fn?.call();
+          widget.update?.call();
+        },
+      );
       if (widget.update != null) await widget.update!();
     } else {
       selection(context);
@@ -581,5 +587,48 @@ class _FolderTileState extends State<FolderTile> {
         ),
       ),
     );
+  }
+}
+
+/// I cannot find any docs on this, but there is a good chance
+/// that I am just dumb and do not know what the name is, so
+/// here is a custom crafted thing that is supposed to mimic this.
+///
+/// The idea: A list, of which the first and last items have a different
+/// border radius, and the items in between have a little bit of a
+/// border radius on the top and bottom.
+extension Material3ListExtension on List<CustomCard> {
+  List<Widget> toMaterial3List({
+    Radius inbetweenBorderRadius = const Radius.circular(4),
+    Radius endsBorderRadius = const Radius.circular(12),
+    EdgeInsets? overridemargin,
+    double? seperation,
+  }) {
+    return [
+      for (int i = 0; i < length; i++) ...[
+        // Add a seperation between the cards
+        if (i != 0 && seperation != null) SizedBox(height: seperation),
+
+        CustomCard(
+          shape: // First and last card
+              RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: i == 0
+                  ? endsBorderRadius
+                  : inbetweenBorderRadius, // First card
+              bottom: i == length - 1
+                  ? endsBorderRadius
+                  : inbetweenBorderRadius, // Last card
+            ),
+          ),
+          color: this[i].color,
+          elevation: this[i].elevation,
+          surfaceTintColor: this[i].surfaceTintColor,
+          margin: overridemargin ?? this[i].margin,
+          clipBehavior: this[i].clipBehavior,
+          child: this[i].child,
+        ),
+      ]
+    ];
   }
 }

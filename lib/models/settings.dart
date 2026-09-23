@@ -106,9 +106,24 @@ class Settings {
   /// This contains the active message filters, this value won't be saved.
   static List<MessageFilter> activeMessageFilters = [];
 
-  String? openRouterAPIKey;
-  String openRouterModel = "google/gemini-2.0-flash-lite:free";
-  bool useLocalAI = false;
+  @enumerated
+  AIProvider aiProvider = AIProvider.none;
+  bool hasConfiguredAi = false;
+  String aiBaseUrl = "https://api.openai.com/v1/";
+  String? aiApiKey;
+  String aiModel = "gpt-5.6-luna";
+
+  bool get isAiConfigured {
+    switch (aiProvider) {
+      case AIProvider.none:
+        return false;
+      case AIProvider.openAI:
+        return (aiApiKey != null && aiApiKey!.isNotEmpty) ||
+            aiBaseUrl.isNotEmpty;
+      case AIProvider.systemLocalAI:
+        return true;
+    }
+  }
 
   DateTime? dndTurnedOnTime;
 
@@ -125,6 +140,12 @@ class Settings {
   Tips tips = Tips();
 
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
+}
+
+enum AIProvider {
+  none,
+  openAI,
+  systemLocalAI,
 }
 
 enum ThemeBrightness { system, dark, light }

@@ -3,6 +3,7 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/chips/chip_filter.dart';
@@ -29,9 +30,8 @@ void showGradeDetailSheet(
       modelSheet: modelSheet,
       builder: (p0, p1, scrollcontroller) {
         return ListView(
-            controller: scrollcontroller,
-            children: [gradeInformation],
-
+          controller: scrollcontroller,
+          children: [gradeInformation],
         );
       },
     );
@@ -105,7 +105,6 @@ class _GradeInformationState extends State<GradeInformation> {
       ...[
         if (widget.grade.isArchived)
           CustomCard(
-            
             child: ListTile(
               leading: Icon(
                 Icons.inventory_2_outlined,
@@ -137,34 +136,39 @@ class _GradeInformationState extends State<GradeInformation> {
               ),
               leading: const Icon(Icons.access_time),
             ),
-          ]
-              .map((e) => Expanded(child: CustomCard( child: e)))
-              .toList(),
+          ].map((e) => Expanded(child: CustomCard(child: e))).toList(),
         ),
-        CustomCard(
-            
-            child: Column(
-              children: [
-                if (widget.grade.weight != null)
-                  ListTile(
+        Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: Column(
+            children: <CustomCard>[
+              if (widget.grade.weight != null)
+                CustomCard(
+                  child: ListTile(
                     title: const Text("Weging"),
                     subtitle: Text(widget.grade.weight!.displayNumber()),
                     leading: const Icon(Icons.balance),
                   ),
-                ListTile(
+                ),
+              CustomCard(
+                child: ListTile(
                   title: const Text("Periode"),
                   subtitle: Text(
                       "${widget.grade.period.value?.naam} (${widget.grade.period.value?.schoolyear.value?.groep.code})"),
                   leading: const Icon(Icons.calendar_month),
                 ),
-                if (widget.grade.docent != null)
-                  ListTile(
+              ),
+              if (widget.grade.docent != null)
+                CustomCard(
+                  child: ListTile(
                     title: const Text("Docent"),
                     subtitle: Text(widget.grade.docent!),
                     leading: const Icon(Icons.supervisor_account),
                   ),
-              ],
-            )),
+                ),
+            ].toMaterial3List(overridemargin: EdgeInsets.zero, seperation: 2),
+          ),
+        ),
         const ListTile(
           leading: Icon(Icons.analytics_outlined),
           title: Text("Verandering van gemiddelde"),
@@ -174,14 +178,12 @@ class _GradeInformationState extends State<GradeInformation> {
           children: [
             Expanded(
               child: CustomCard(
-                
                 child: changeInAverage != null
                     ? ChangeInAverageCard(changeInAverage: changeInAverage!)
                     : const Center(child: Icon(Icons.error)),
               ),
             ),
             CustomCard(
-              
               child: VerticalAverageTile(
                 onTap: () => Navigator.push(
                     context,
@@ -199,7 +201,6 @@ class _GradeInformationState extends State<GradeInformation> {
           ],
         ),
         CustomCard(
-          
           child: ValueListenableBuilder(
             valueListenable: highlightGrade,
             builder: (context, value, child) {
@@ -220,7 +221,6 @@ class _GradeInformationState extends State<GradeInformation> {
             },
           ),
           builder: (context, snapshot) => CustomCard(
-            
             child: FilterChipList(
                 padding: const EdgeInsets.all(12), chips: snapshot.data ?? []),
           ),
@@ -238,7 +238,6 @@ class _GradeInformationState extends State<GradeInformation> {
                     snapshot.data! > widget.grade.grade &&
                     grades.findAllSync().average < appSettings.sufficientFrom)
                 ? CustomCard(
-                    
                     child: ListTile(
                         leading: const Icon(Icons.auto_awesome_outlined),
                         title: const Text(
@@ -246,7 +245,6 @@ class _GradeInformationState extends State<GradeInformation> {
                         subtitle: Text(snapshot.data!.displayNumber())))
                 : const SizedBox()),
         CustomCard(
-            
             child: GradeCalculationCard(
                 toNewAverage: true,
                 ignoredGradeUUID: widget.grade.uuid,
@@ -259,7 +257,6 @@ class _GradeInformationState extends State<GradeInformation> {
                             customGrade: grade,
                             customWeight: weight)))),
         CustomCard(
-            
             child: GradeCalculationCard(
                 ignoredGradeUUID: widget.grade.uuid,
                 weight: widget.grade.weight,
@@ -275,100 +272,98 @@ class _GradeInformationState extends State<GradeInformation> {
           title: Text("Instellingen"),
         ),
         CustomCard(
-            
             child: Column(
-              children: [
-                SwitchListTile(
-                    secondary: const Icon(Icons.manage_history_rounded),
-                    title: const Text("Reken met cijfers na dit cijfer"),
-                    subtitle: Text(
-                        "Neem de cijfers die na ${widget.grade.datumIngevoerd?.formattedDate} zijn gehaald mee in de berekeningen"),
-                    value: includeFuture,
-                    onChanged: (value) => setState(() {
-                          includeFuture = value;
-                          setChangeInAverge();
-                        })),
-                SwitchListTile(
-                    secondary: const Icon(Icons.book_outlined),
-                    title: const Text("Reken met vak specifieke cijfers"),
-                    subtitle: Text(
-                        "Kijk alleen naar cijfers voor ${widget.grade.subject.value!.naam}"),
-                    value: onlyUseSubjectGradesInCalc,
-                    onChanged: (value) => setState(() {
-                          onlyUseSubjectGradesInCalc = value;
-                          setChangeInAverge();
-                        })),
-                if (widget.setStateTop != null)
-                  SwitchListTile(
-                      secondary: const Icon(Icons.numbers_rounded),
-                      title: const Text("Gebruik dit cijfer"),
-                      subtitle:
-                          const Text("Zet dit specifieke cijfer uit of aan"),
-                      value: widget.grade.isEnabled,
-                      onChanged: (value) => setState(() {
-                            if (widget.setStateTop != null) {
-                              widget.setStateTop!(() {});
-                            }
-                            isar.writeTxnSync(() => isar.grades
-                                .putSync(widget.grade..isEnabled = value));
-                          })),
-                if (widget.grade.isArchived) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(
-                      Icons.delete_outline_rounded,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    title: Text(
-                      "Gearchiveerd cijfer definitief wissen",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      "Wis dit cijfer permanent als het terecht is verwijderd door je school",
-                    ),
-                    onTap: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Cijfer definitief wissen?"),
-                          content: Text(
-                            "Weet je zeker dat je dit cijfer (${widget.grade.cijferStr} voor ${widget.grade.subject.value?.naam ?? 'vak'}) definitief wilt verwijderen?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Annuleren"),
-                            ),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor:
-                                    Theme.of(context).colorScheme.error,
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.onError,
-                              ),
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Wissen"),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirmed == true && mounted) {
-                        isar.writeTxnSync(() {
-                          isar.grades.deleteSync(widget.grade.uuid);
-                          widget.grade.schoolyear.value?.grades.saveSync();
-                        });
+          children: [
+            SwitchListTile(
+                secondary: const Icon(Icons.manage_history_rounded),
+                title: const Text("Reken met cijfers na dit cijfer"),
+                subtitle: Text(
+                    "Neem de cijfers die na ${widget.grade.datumIngevoerd?.formattedDate} zijn gehaald mee in de berekeningen"),
+                value: includeFuture,
+                onChanged: (value) => setState(() {
+                      includeFuture = value;
+                      setChangeInAverge();
+                    })),
+            SwitchListTile(
+                secondary: const Icon(Icons.book_outlined),
+                title: const Text("Reken met vak specifieke cijfers"),
+                subtitle: Text(
+                    "Kijk alleen naar cijfers voor ${widget.grade.subject.value!.naam}"),
+                value: onlyUseSubjectGradesInCalc,
+                onChanged: (value) => setState(() {
+                      onlyUseSubjectGradesInCalc = value;
+                      setChangeInAverge();
+                    })),
+            if (widget.setStateTop != null)
+              SwitchListTile(
+                  secondary: const Icon(Icons.numbers_rounded),
+                  title: const Text("Gebruik dit cijfer"),
+                  subtitle: const Text("Zet dit specifieke cijfer uit of aan"),
+                  value: widget.grade.isEnabled,
+                  onChanged: (value) => setState(() {
                         if (widget.setStateTop != null) {
                           widget.setStateTop!(() {});
                         }
-                        Navigator.pop(context);
-                      }
-                    },
+                        isar.writeTxnSync(() => isar.grades
+                            .putSync(widget.grade..isEnabled = value));
+                      })),
+            if (widget.grade.isArchived) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  "Gearchiveerd cijfer definitief wissen",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                ],
-              ],
-            )),
+                ),
+                subtitle: const Text(
+                  "Wis dit cijfer permanent als het terecht is verwijderd door je school",
+                ),
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Cijfer definitief wissen?"),
+                      content: Text(
+                        "Weet je zeker dat je dit cijfer (${widget.grade.cijferStr} voor ${widget.grade.subject.value?.naam ?? 'vak'}) definitief wilt verwijderen?",
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Annuleren"),
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onError,
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("Wissen"),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && mounted) {
+                    isar.writeTxnSync(() {
+                      isar.grades.deleteSync(widget.grade.uuid);
+                      widget.grade.schoolyear.value?.grades.saveSync();
+                    });
+                    if (widget.setStateTop != null) {
+                      widget.setStateTop!(() {});
+                    }
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ],
+          ],
+        )),
       ].map((e) => Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16), child: e)),
       const BottomSheetBottomContentPadding()
@@ -481,7 +476,6 @@ class _GradeInformationState extends State<GradeInformation> {
           ]
             .map(
               (e) => CustomCard(
-                
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 child: e,
               ),

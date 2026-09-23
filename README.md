@@ -13,7 +13,7 @@
 
 <p align="center" style="display:flex; justify-content: space-between;">
   <a href="https://flutter.dev/"><img style="border-radius: 4px;" src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&amp;logo=flutter&amp;logoColor=white"></a>
-  <a href="https://apps.apple.com/us/app/discipulus/id6478711986"><img style="border-radius: 4px;"src="https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&amp;logo=app-store&amp;logoColor=white"></a>
+  <a href="https://apps.apple.com/nl/app/discipulus/id6478711986"><img style="border-radius: 4px;"src="https://img.shields.io/badge/App_Store-0D96F6?style=for-the-badge&amp;logo=app-store&amp;logoColor=white"></a>
   <!-- <a href="https://testflight.apple.com/join/xgStFP2X"><img style="border-radius: 4px;"src="https://img.shields.io/badge/Testflight-0D96F6?style=for-the-badge&amp;logo=app-store&amp;logoColor=white"></a> -->
   <a href="https://play.google.com/store/apps/details?id=dev.harrydekat.discipulus"><img style="border-radius: 4px;" src="https://img.shields.io/badge/Google_Play-414141?style=for-the-badge&amp;logo=google-play&amp;logoColor=white"></a>
   <!-- <a href="https://play.google.com/store/apps/details?id=dev.harrydekat.Discipulus"><img style="border-radius: 4px;" src="https://img.shields.io/badge/Microsoft Store-0078D6?style=for-the-badge&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDIzIDIzIiB3aWR0aD0iMjMiIGhlaWdodD0iMjMiPjxkZWZzPjxpbWFnZSAgd2lkdGg9IjIxIiBoZWlnaHQ9IjIxIiBpZD0iaW1nMSIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFCVUFBQUFWQWdNQUFBRFVlVTBGQUFBQUFYTlNSMElCMmNrc2Z3QUFBQWxRVEZSRi8vLy8vLy8vLy8vL2prcmwvZ0FBQUFOMFVrNVQvLzRBenRFOEFBQUFBQ05KUkVGVWVKeGpaR0NRZU1IZ3dFZ3VGY3JBOG9maE5lTXFCaUM0UnJZcEtJWUJBT0FwSEphd0JaaXNBQUFBQUVsRlRrU3VRbUNDIi8+PC9kZWZzPjxzdHlsZT48L3N0eWxlPjx1c2UgIGhyZWY9IiNpbWcxIiB4PSIxIiB5PSIxIi8+PC9zdmc+
@@ -94,6 +94,23 @@ Blijf verbonden, zelfs zonder je telefoon. De Discipulus Apple Watch-app is ontw
 - **Complicaties & Smart Stack**: Voeg Discipulus toe aan je wijzerplaat of gebruik de Smart Stack (watchOS 10+) om je rooster in één oogopslag te zien.
 
 <img src=".readme_assets/banner_watchos.png" alt="Apple Watch">
+
+### Model Context Protocol (MCP) Server
+
+Discipulus bevat een ingebouwde [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server waarmee LLMs (zoals Claude Desktop, Cursor, etc.) direct inzicht kunnen krijgen in je rooster, cijfers, huiswerk en berichten. Het is ook mogelijk om een LLM op deze manier zelf de planning - die ergens in een vaag document in je studiewijzer zit te verstoffen - automatisch in te plannen als huiswerk onder de juiste lessen! 
+
+Dit is een voorbeeld van een `mcp_config.json` voor macOS:
+
+```json
+{
+  "mcpServers": {
+    "discipulus": {
+      "command": "/Applications/Discipulus.app/Contents/MacOS/discipulus",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
 
 ## Installatie
 

@@ -8,6 +8,7 @@ import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/api/models/studiewijzers.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/app_info.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
@@ -93,13 +94,14 @@ class _DiagnosticCheckPageState extends State<DiagnosticCheckPage> {
 
     final profile = activeProfile;
     final api = profile.account.value?.api;
+    final appVersion = await AppInfo.version;
 
     _log("=== DISCIPULUS DIAGNOSTISCHE CHECK ===");
     _log("Tijd: ${DateTime.now().toLocal()}");
     _log("Profiel: [VERBORGEN]");
     _log(
         "Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}");
-    _log("App Versie: 1.0.0 (Diagnostics)");
+    _log("App Versie: $appVersion");
 
     if (profile.isOffline ||
         profile.account.value?.tokenSet == null ||

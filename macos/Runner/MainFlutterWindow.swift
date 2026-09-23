@@ -26,7 +26,19 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
 
+    let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+      ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+      ?? "Discipulus"
+    self.title = appName
+
     RegisterGeneratedPlugins(registry: flutterViewController)
+
+    if CommandLine.arguments.contains("--mcp") {
+      self.setIsVisible(false)
+      self.orderOut(nil)
+      self.close()
+      return
+    }
 
     super.awakeFromNib()
   }

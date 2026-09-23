@@ -149,11 +149,10 @@ class LayoutState extends State<Layout>
       // When the slidable is used we want the transition in a diffrent axis
       transitionsBuilder: (context, animation, secAnimation, child) {
         return SharedAxisTransition(
-          fillColor:
-              (screen.key == const ValueKey("TRANSPARENT")) &&
-                      (Platform.isMacOS || Platform.isWindows)
-                  ? Colors.transparent
-                  : null,
+          fillColor: (screen.key == const ValueKey("TRANSPARENT")) &&
+                  (Platform.isMacOS || Platform.isWindows)
+              ? Colors.transparent
+              : null,
           animation: animation,
           secondaryAnimation: secAnimation,
           transitionType: persistantDrawer
@@ -256,6 +255,7 @@ class LayoutState extends State<Layout>
     _setupGradeListener();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkForNewGradesToReveal();
+      checkAccountPermissions();
     });
   }
 
@@ -276,8 +276,11 @@ class LayoutState extends State<Layout>
   //
 
   EdgeInsets get padding => const EdgeInsets.all(24).copyWith(
-        top: 24 +
-            (Platform.isMacOS ? 4 : 0), // The title bar is hidden in macOS,
+        top: (0 +
+                (Platform.isMacOS ? 4 : 0) +
+                MediaQuery.of(context).padding.top)
+            .toDouble()
+            .clamp(24, double.infinity), // The title bar is hidden in macOS,
         // so we have to add some extra padding on top of the normal padding.
       );
 
@@ -329,6 +332,7 @@ class LayoutState extends State<Layout>
     bool isDismissible = true,
     bool showHeader = true,
     NSUserActivity? activity,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow,
   }) {
     if (_activeSecondaryPane != null) {
       if (!_activeSecondaryPane!.completer.isCompleted) {
@@ -348,6 +352,7 @@ class LayoutState extends State<Layout>
       isDismissible: isDismissible,
       showHeader: showHeader,
       activity: activity,
+      onUpdateNormalWindow: onUpdateNormalWindow,
     );
 
     setState(() {
@@ -372,6 +377,28 @@ class LayoutState extends State<Layout>
       });
       if (!entry.completer.isCompleted) {
         entry.completer.complete(result);
+      }
+    }
+  }
+
+  /// Triggers a rebuild/setState in the normal (main) window.
+  /// If [fn] is provided, it is executed before triggering the rebuild.
+  void setNormalWindowState([VoidCallback? fn]) {
+    if (_activeSecondaryPane?.onUpdateNormalWindow != null) {
+      _activeSecondaryPane!.onUpdateNormalWindow!(fn);
+    } else {
+      fn?.call();
+      if (navKey.currentContext != null && navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
       }
     }
   }
@@ -511,7 +538,10 @@ class LayoutState extends State<Layout>
                         persistantDrawer = true;
                         return Padding(
                           padding: padding.copyWith(
-                            right: hasSecondaryPane ? 12 : 24,
+                            right: (hasSecondaryPane ? 12 : 24)
+                                .clamp(MediaQuery.of(context).viewPadding.right,
+                                    double.infinity)
+                                .toDouble(),
                             left: isSmall ? 0 : padding.left,
                           ),
                           child: RepaintBoundary(
@@ -568,11 +598,8 @@ class LayoutState extends State<Layout>
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
         childDecoration: BoxDecoration(borderRadius: borderRadius),
-        drawer: Padding(
-          padding: padding.copyWith(left: 0, right: 0),
-          child: const RepaintBoundary(
-            child: BigDrawerBase(),
-          ),
+        drawer: const RepaintBoundary(
+          child: BigDrawerBase(),
         ),
         child: ScaffoldMessenger(child: widget.child),
       ),
@@ -623,6 +650,7 @@ class LayoutState extends State<Layout>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       checkForNewGradesToReveal();
+      checkAccountPermissions();
     }
   }
 
@@ -682,164 +710,168 @@ class BigDrawerBase extends StatelessWidget {
             ((width - 140.0) / (304.0 - 140.0)).clamp(0.0, 1.0);
 
         return ClipRect(
-          child: SizedBox(
-            width: width,
-            child: ShaderMask(
-              shaderCallback: (Rect bounds) {
-                return const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent, 
-                    Colors.white, 
-                    Colors.white, 
-                    Colors.transparent, 
-                  ],
-                  stops: [
-                    0.0,
-                    0.05,
-                    0.95,
-                    1.0
-                  ],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(
-                  scrollbars: false,
-                  physics: const ClampingScrollPhysics(),
-                ),
-                child: ValueListenableBuilder(
-                  valueListenable: Layout.of(context)!._desinations,
-                  builder: (context, desinations, child) {
-                    return ValueListenableBuilder(
-                      valueListenable: Layout.of(context)!.selectedIndex,
-                      builder: (context, index, child) {
-                        return NavigationDrawer(
-                          backgroundColor: Colors.transparent,
-                          indicatorColor: Layout.of(context)!.alpha == 255
-                              ? null
-                              : Layout.of(context)!
-                                  .backgroundColor
-                                  ?.withAlpha(255),
-                          onDestinationSelected:
-                              Layout.of(context)!.goToPageFromIndex,
-                          selectedIndex: Layout.of(context)!._getIndex(index),
-                          elevation: 0,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: 26.0 + 2.0 * progress,
-                                top: 16.0 +
-                                    24, // 24 is added by global padding in the layout class,
-                                bottom: 16.0,
-                              ),
-                              child: Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SizedBox(
+                width: width,
+                child: ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, (MediaQuery.of(context).viewPadding.top * 2 / constraints.maxHeight).clamp(0.05, 1.0), 0.95, 1.0],
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      scrollbars: false,
+                      physics: const ClampingScrollPhysics(),
+                    ),
+                    child: ValueListenableBuilder(
+                      valueListenable: Layout.of(context)!._desinations,
+                      builder: (context, desinations, child) {
+                        return ValueListenableBuilder(
+                          valueListenable: Layout.of(context)!.selectedIndex,
+                          builder: (context, index, child) {
+                            return MediaQuery.removePadding(
+                              context: context,
+                              removeTop: true,
+                              child: NavigationDrawer(
+                                backgroundColor: Colors.transparent,
+                                indicatorColor: Layout.of(context)!.alpha == 255
+                                    ? null
+                                    : Layout.of(context)!
+                                        .backgroundColor
+                                        ?.withAlpha(255),
+                                onDestinationSelected:
+                                    Layout.of(context)!.goToPageFromIndex,
+                                selectedIndex: Layout.of(context)!._getIndex(index),
+                                elevation: 0,
                                 children: [
-                                  CustomPaint(
-                                    size: const Size(28, 28),
-                                    painter: DiscipulusLogoPainter(
-                                      primaryColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      secondaryColor: Theme.of(context)
-                                          .colorScheme
-                                          .secondary,
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                      left: 26.0 + 2.0 * progress,
+                                      top: 16.0 +
+                                          24 + MediaQuery.of(context).padding.top, // 24 is added by global padding in the layout class,
+                                      bottom: 16.0,
                                     ),
-                                  ),
-                                  if (width >= 120) ...[
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Opacity(
-                                        opacity: textOpacity,
-                                        child: Text(
-                                          "Discipulus",
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          overflow: TextOverflow.clip,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                letterSpacing: -0.3,
-                                              ),
+                                    child: Row(
+                                      children: [
+                                        CustomPaint(
+                                          size: const Size(28, 28),
+                                          painter: DiscipulusLogoPainter(
+                                            primaryColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            secondaryColor: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ...[
-                              for (DestinationSegement segment in desinations)
-                                [
-                                  if (segment.name != null && width >= 140)
-                                    Opacity(
-                                      opacity: textOpacity,
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            16, 16, 16, 10),
-                                        child: Text(
-                                          segment.name!,
-                                          maxLines: 1,
-                                          softWrap: false,
-                                          overflow: TextOverflow.clip,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall,
-                                        ),
-                                      ),
-                                    ),
-                                  for (Destination destination
-                                      in segment.destinations)
-                                    NavigationDrawerDestination(
-                                      selectedIcon: destination.filledIcon,
-                                      icon: destination.icon,
-                                      label: width < 120
-                                          ? const SizedBox.shrink()
-                                          : Opacity(
+                                        if (width >= 120) ...[
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Opacity(
                                               opacity: textOpacity,
                                               child: Text(
-                                                destination.label,
+                                                "Discipulus",
                                                 maxLines: 1,
                                                 softWrap: false,
                                                 overflow: TextOverflow.clip,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineSmall
+                                                    ?.copyWith(
+                                                      fontWeight: FontWeight.w800,
+                                                      letterSpacing: -0.3,
+                                                    ),
                                               ),
                                             ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
-                                ]
-                            ].intersperse([
-                              Divider(
-                                indent: 16.0 + 12.0 * progress,
-                                endIndent: 16.0 + 12.0 * progress,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ...[
+                                    for (DestinationSegement segment in desinations)
+                                      [
+                                        if (segment.name != null && width >= 140)
+                                          Opacity(
+                                            opacity: textOpacity,
+                                            child: Padding(
+                                              padding: const EdgeInsets.fromLTRB(
+                                                  16, 16, 16, 10),
+                                              child: Text(
+                                                segment.name!,
+                                                maxLines: 1,
+                                                softWrap: false,
+                                                overflow: TextOverflow.clip,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall,
+                                              ),
+                                            ),
+                                          ),
+                                        for (Destination destination
+                                            in segment.destinations)
+                                          NavigationDrawerDestination(
+                                            selectedIcon: destination.filledIcon,
+                                            icon: destination.icon,
+                                            label: width < 120
+                                                ? const SizedBox.shrink()
+                                                : Opacity(
+                                                    opacity: textOpacity,
+                                                    child: Text(
+                                                      destination.label,
+                                                      maxLines: 1,
+                                                      softWrap: false,
+                                                      overflow: TextOverflow.clip,
+                                                    ),
+                                                  ),
+                                          ),
+                                      ]
+                                  ].intersperse([
+                                    Divider(
+                                      indent: 16.0 + 12.0 * progress,
+                                      endIndent: 16.0 + 12.0 * progress,
+                                    ),
+                                  ]).expand((element) => element),
+                                  if (isar.profiles.countSync() > 1)
+                                    CustomCard(
+                                      margin:
+                                          const EdgeInsets.symmetric(horizontal: 0),
+                                      child: ProfileChangeWidget(
+                                        vertical: isSmall,
+                                        showAddProfileButton: false,
+                                        showName: progress > 0.6,
+                                        updateState: (fn) => navKey.currentContext!
+                                            .findAncestorStateOfType<LayoutState>()!
+                                            .updateShownPage(),
+                                      ),
+                                    ),
+                                  Padding(
+                                      padding: EdgeInsets.only(
+                                          bottom:
+                                              24)), // 24 is added by global padding in the layout class
+                                ],
                               ),
-                            ]).expand((element) => element),
-                            if (isar.profiles.countSync() > 1)
-                              CustomCard(
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 0),
-                                child: ProfileChangeWidget(
-                                  vertical: isSmall,
-                                  showAddProfileButton: false,
-                                  showName: progress > 0.6,
-                                  updateState: (fn) => navKey.currentContext!
-                                      .findAncestorStateOfType<LayoutState>()!
-                                      .updateShownPage(),
-                                ),
-                              ),
-                            Padding(
-                                padding: EdgeInsets.only(
-                                    bottom:
-                                        24)), // 24 is added by global padding in the layout class
-                          ],
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            }
           ),
         );
       },
@@ -860,6 +892,7 @@ class SecondaryPaneEntry<T> {
   final NSUserActivity? activity;
   final ScrollController scrollController;
   final GlobalKey<NavigatorState> navigatorKey;
+  final void Function([VoidCallback? fn])? onUpdateNormalWindow;
 
   SecondaryPaneEntry({
     required this.builder,
@@ -868,6 +901,7 @@ class SecondaryPaneEntry<T> {
     this.isDismissible = true,
     this.showHeader = true,
     this.activity,
+    this.onUpdateNormalWindow,
     ScrollController? scrollController,
     GlobalKey<NavigatorState>? navigatorKey,
   })  : scrollController = scrollController ?? ScrollController(),
@@ -925,66 +959,106 @@ class _SecondaryPaneContentState extends State<SecondaryPaneContent> {
           },
           child: FocusScope(
             autofocus: true,
-            child: Navigator(
-              key: widget.entry.navigatorKey,
-              initialRoute: '/',
-              onGenerateInitialRoutes: (navigator, initialRoute) {
-                final activeRoute = MaterialPageRoute(
-                  settings: const RouteSettings(name: 'secondary_pane_root'),
-                  builder: (paneContext) {
-                    final content = PrimaryScrollController(
-                      controller: widget.entry.scrollController,
-                      child: StatefulBuilder(
-                        builder: (ctx, paneSetState) {
-                          return widget.entry.builder(
-                            paneContext,
-                            paneSetState,
-                            widget.entry.scrollController,
-                          );
-                        },
-                      ),
-                    );
-
-                    if (!widget.entry.showHeader) {
-                      return content;
-                    }
-
-                    return Scaffold(
-                      backgroundColor: Colors.transparent,
-                      appBar: widget.entry.isDismissible
-                          ? AppBar(
-                              leading: IconButton(
-                                icon: const Icon(Icons.arrow_back),
-                                onPressed: () => widget.onClose(),
-                              ),
-                              title: const Text(""),
-                              elevation: 0,
-                              backgroundColor: Colors.transparent,
-                            )
-                          : null,
-                      body: content,
-                    );
-                  },
-                );
-
-                // Listen to when this route is popped (e.g. via Navigator.pop(paneContext, result))
-                activeRoute.popped.then((result) {
-                  widget.onClose(result);
-                });
-
-                return [
-                  // Base placeholder route so that activeRoute can be popped without exhausting navigator history
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    transitionDuration: Duration.zero,
-                  ),
-                  activeRoute,
-                ];
+            child: SecondaryPaneScope(
+              entry: widget.entry,
+              close: widget.onClose,
+              setNormalWindowState: ([fn]) {
+                Layout.of(context)?.setNormalWindowState(fn);
               },
+              child: Navigator(
+                key: widget.entry.navigatorKey,
+                initialRoute: '/',
+                onGenerateInitialRoutes: (navigator, initialRoute) {
+                  final activeRoute = MaterialPageRoute(
+                    settings: const RouteSettings(name: 'secondary_pane_root'),
+                    builder: (paneContext) {
+                      final content = PrimaryScrollController(
+                        controller: widget.entry.scrollController,
+                        child: StatefulBuilder(
+                          builder: (ctx, paneSetState) {
+                            return widget.entry.builder(
+                              paneContext,
+                              paneSetState,
+                              widget.entry.scrollController,
+                            );
+                          },
+                        ),
+                      );
+
+                      if (!widget.entry.showHeader) {
+                        return content;
+                      }
+
+                      return Scaffold(
+                        backgroundColor: Colors.transparent,
+                        appBar: widget.entry.isDismissible
+                            ? AppBar(
+                                leading: IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () => widget.onClose(),
+                                ),
+                                title: const Text(""),
+                                elevation: 0,
+                                backgroundColor: Colors.transparent,
+                              )
+                            : null,
+                        body: content,
+                      );
+                    },
+                  );
+
+                  // Listen to when this route is popped (e.g. via Navigator.pop(paneContext, result))
+                  activeRoute.popped.then((result) {
+                    widget.onClose(result);
+                  });
+
+                  return [
+                    // Base placeholder route so that activeRoute can be popped without exhausting navigator history
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      transitionDuration: Duration.zero,
+                    ),
+                    activeRoute,
+                  ];
+                },
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class SecondaryPaneScope extends InheritedWidget {
+  final SecondaryPaneEntry entry;
+  final VoidCallback? close;
+  final void Function([VoidCallback? fn]) setNormalWindowState;
+
+  const SecondaryPaneScope({
+    super.key,
+    required this.entry,
+    required this.setNormalWindowState,
+    this.close,
+    required super.child,
+  });
+
+  static SecondaryPaneScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SecondaryPaneScope>();
+
+  @override
+  bool updateShouldNotify(SecondaryPaneScope oldWidget) =>
+      entry != oldWidget.entry;
+}
+
+extension NormalWindowStateExtension on BuildContext {
+  /// Calls setState or triggers a refresh on the normal (main) window from a subscreen
+  /// (e.g. from inside the SecondaryPane on desktop or a pushed subscreen).
+  void setNormalWindowState([VoidCallback? fn]) {
+    if (SecondaryPaneScope.of(this) != null) {
+      SecondaryPaneScope.of(this)!.setNormalWindowState(fn);
+    } else {
+      Layout.of(this)?.setNormalWindowState(fn);
+    }
   }
 }

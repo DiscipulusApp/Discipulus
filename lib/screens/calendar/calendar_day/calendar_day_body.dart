@@ -5,20 +5,17 @@ import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/handoff.dart';
-import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
-import 'package:discipulus/utils/isolates.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:isar/isar.dart';
 
 class CalendarDayViewBody extends StatefulWidget {
@@ -128,31 +125,26 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
           .findFirst();
 
   Future<DateTime?> nextLessonDate(DateTime dateFrom) async {
-    return CustomIsolates<DateTime?>().createisolate((data) async {
-      BackgroundIsolateBinaryMessenger.ensureInitialized(data.rootIsolateToken);
-      await initIsar(true);
-      data.sendPort.send((await activeProfile.calendarEvents
-              .filter()
-              .startGreaterThan(dateFrom)
-              .duurtHeleDagEqualTo(false)
-              .optional(
-                !appSettings.showAutoCancelledEvents,
-                (q) => q
-                    .not()
-                    .statusEqualTo(Status.automaticallyCanceled)
-                    .and()
-                    .not()
-                    .statusEqualTo(Status.manuallyCanceled),
-              )
-              .optional(
-                appSettings.hideEventswithoutHours,
-                (q) => q.lesuurVanIsNotNull(),
-              )
-              .sortByStart()
-              .findFirst())
-          ?.start);
-      await isar.close();
-    });
+    return (await activeProfile.calendarEvents
+            .filter()
+            .startGreaterThan(dateFrom)
+            .duurtHeleDagEqualTo(false)
+            .optional(
+              !appSettings.showAutoCancelledEvents,
+              (q) => q
+                  .not()
+                  .statusEqualTo(Status.automaticallyCanceled)
+                  .and()
+                  .not()
+                  .statusEqualTo(Status.manuallyCanceled),
+            )
+            .optional(
+              appSettings.hideEventswithoutHours,
+              (q) => q.lesuurVanIsNotNull(),
+            )
+            .sortByStart()
+            .findFirst())
+        ?.start;
   }
 
   Future<void> refresh() async {

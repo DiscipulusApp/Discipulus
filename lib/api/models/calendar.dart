@@ -9,6 +9,7 @@ import 'package:discipulus/api/models/bronnen.dart';
 import 'package:discipulus/api/models/studiewijzers.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
+import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 
 part 'calendar.g.dart';
@@ -18,7 +19,13 @@ part 'calendar.g.dart';
 class CalendarEvent {
   final profile = IsarLink<Profile>();
   final subject = IsarLink<Subject>();
-  Id get uuid => "${profile.value!.uuid}$id".hashCode;
+  Id get uuid {
+    if (profile.value == null && profile.isAttached) {
+      profile.loadSync();
+    }
+    final pUuid = profile.value?.uuid ?? activeProfileNullable?.uuid ?? '';
+    return "$pUuid$id".hashCode;
+  }
 
   /// The uuid of the user in Magister. This is used for the new calendar endpoint.
   String? magisterUuid;
@@ -347,6 +354,7 @@ class CalendarEvent {
     isar.writeTxnSync(() {
       isar.brons.putAllSync(bronnen.toList());
       isar.calendarEvents.putSync(newEvent);
+      newEvent.profile.saveSync();
       bronnen.saveSync();
     });
   }

@@ -8,6 +8,9 @@ import 'package:discipulus/widgets/global/layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_apple_handoff/flutter_apple_handoff.dart';
 
+export 'package:discipulus/widgets/global/layout.dart'
+    show SecondaryPaneScope, NormalWindowStateExtension;
+
 Future<T?> showScrollableModalBottomSheet<T>(
     {required BuildContext context,
     NSUserActivity? activity,
@@ -20,11 +23,35 @@ Future<T?> showScrollableModalBottomSheet<T>(
       void Function(void Function()) setState,
       ScrollController scrollController,
     ) builder,
-    Color? backgroundColor}) async {
+    Color? backgroundColor,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow}) async {
   final layoutState = Layout.of(context) ??
       (navKey.currentContext != null
           ? Layout.of(navKey.currentContext!)
           : null);
+
+  void effectiveUpdateNormalWindow([VoidCallback? fn]) {
+    if (onUpdateNormalWindow != null) {
+      onUpdateNormalWindow(fn);
+    } else {
+      fn?.call();
+      if (context.mounted) {
+        (context as Element).markNeedsBuild();
+      } else if (navKey.currentContext != null &&
+          navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
+      }
+    }
+  }
 
   if (useSidePane &&
       modelSheet &&
@@ -36,6 +63,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
       backgroundColor: backgroundColor,
       isDismissible: isDismissible,
       activity: activity,
+      onUpdateNormalWindow: effectiveUpdateNormalWindow,
     );
   }
 
@@ -168,11 +196,35 @@ Future<T?> showSideView<T>({
   Color? backgroundColor,
   bool isDismissible = true,
   NSUserActivity? activity,
+  void Function([VoidCallback? fn])? onUpdateNormalWindow,
 }) async {
   final layoutState = Layout.of(context) ??
       (navKey.currentContext != null
           ? Layout.of(navKey.currentContext!)
           : null);
+
+  void effectiveUpdateNormalWindow([VoidCallback? fn]) {
+    if (onUpdateNormalWindow != null) {
+      onUpdateNormalWindow(fn);
+    } else {
+      fn?.call();
+      if (context.mounted) {
+        (context as Element).markNeedsBuild();
+      } else if (navKey.currentContext != null &&
+          navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
+      }
+    }
+  }
 
   if (layoutState != null && layoutState.canShowSecondaryPane(context)) {
     return await layoutState.showSecondaryPane<T>(
@@ -181,11 +233,14 @@ Future<T?> showSideView<T>({
       backgroundColor: backgroundColor,
       isDismissible: isDismissible,
       activity: activity,
+      onUpdateNormalWindow: effectiveUpdateNormalWindow,
     );
   } else {
-    return await Navigator.of(context).push<T>(
+    final result = await Navigator.of(context).push<T>(
       MaterialPageRoute(builder: (context) => child),
     );
+    effectiveUpdateNormalWindow();
+    return result;
   }
 }
 
@@ -197,6 +252,7 @@ extension SideViewWidgetExtension on Widget {
     Color? backgroundColor,
     bool isDismissible = true,
     NSUserActivity? activity,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow,
   }) =>
       showSideView<T>(
         context: context ?? navKey.currentContext!,
@@ -204,6 +260,7 @@ extension SideViewWidgetExtension on Widget {
         backgroundColor: backgroundColor,
         isDismissible: isDismissible,
         activity: activity,
+        onUpdateNormalWindow: onUpdateNormalWindow,
       );
 }
 

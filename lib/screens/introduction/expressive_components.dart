@@ -774,30 +774,35 @@ class ExpressiveLogoCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Center(
-      child: Tooltip(
-        message: "Klik om te beginnen",
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(36),
-          splashColor: colorScheme.primary.withAlpha(25),
-          highlightColor: Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: AppearAnimation(
-                duration: Durations.long2,
-                curve: Easing.emphasizedDecelerate,
-                child: (animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale:
-                        Tween<double>(begin: 0.85, end: 1.0).animate(animation),
-                    child: CustomPaint(
-                      size: Size(size, size),
-                      painter: DiscipulusLogoPainter(
-                        primaryColor: colorScheme.primary,
-                        secondaryColor: colorScheme.secondary,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: "Klik om te beginnen",
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(36),
+              splashColor: colorScheme.primary.withAlpha(25),
+              highlightColor: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AppearAnimation(
+                    duration: Durations.long2,
+                    curve: Easing.emphasizedDecelerate,
+                    child: (animation) => FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.85, end: 1.0)
+                            .animate(animation),
+                        child: CustomPaint(
+                          size: Size(size, size),
+                          painter: DiscipulusLogoPainter(
+                            primaryColor: colorScheme.primary,
+                            secondaryColor: colorScheme.secondary,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -805,7 +810,33 @@ class ExpressiveLogoCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+          AppearAnimation(
+            delay: Durations.medium1,
+            duration: Durations.medium3,
+            curve: Easing.emphasizedDecelerate,
+            child: (animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.2),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Easing.emphasizedDecelerate,
+                  ),
+                ),
+                child: FilledButton.icon(
+                  onPressed: onTap,
+                  // iconAlignment: IconAlignment.end, // idk, what looks better here, I have to be honest.
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text("Beginnen"),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

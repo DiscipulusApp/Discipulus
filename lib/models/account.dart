@@ -84,6 +84,33 @@ class DiscipulusAccount {
   /// This will save the current values to the database
   void save() => isar.writeTxnSync(() => isar.discipulusAccounts.putSync(this));
 
+  /// Fetches the latest permissions from Magister and updates the account in the database.
+  /// Returns true if permissions have changed.
+  Future<bool> refreshPermissions() async {
+    if (tokenSet == null) return false;
+    try {
+      ApiAccount apiAccount = await api.account;
+      List<Permission> newPermissions =
+          apiAccount.groep.expand((g) => g.privileges).toList();
+
+      // Check if permissions have changed
+      bool hasChanged = permissions.length != newPermissions.length ||
+          !newPermissions.every((np) => permissions.any((p) =>
+              p.type == np.type &&
+              p.statuses.length == np.statuses.length &&
+              p.statuses.toSet().containsAll(np.statuses)));
+
+      if (hasChanged) {
+        permissions = newPermissions;
+        save();
+        return true;
+      }
+    } catch (_) {
+      // Ignored if offline or server is unreachable
+    }
+    return false;
+  }
+
   Future<void> fill() async {
     // Construct account
     ApiAccount apiAccount = await api.account;
@@ -395,9 +422,9 @@ class Profile {
     await isar.calendarEvents.removeChecker(
       localUUIDs: calendarEvents
           .filter()
-          .startGreaterThan(range.start)
+          .startGreaterThan(range.start, include: true)
           .and()
-          .eindeLessThan(range.end)
+          .eindeLessThan(range.end, include: true)
           .uuidProperty()
           .findAll(),
       newUUIDs: Future.value([for (CalendarEvent event in events) event.uuid]),
@@ -405,10 +432,13 @@ class Profile {
     );
 
     isar.writeTxnSync(() {
-      for (var e in events) {
-        e.subject.saveSync();
-      }
       isar.calendarEvents.putAllSync(events);
+      for (var e in events) {
+        e.profile.saveSync();
+        if (e.subject.value != null) {
+          e.subject.saveSync();
+        }
+      }
     });
     return events;
   }

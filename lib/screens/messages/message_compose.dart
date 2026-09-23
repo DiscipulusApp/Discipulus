@@ -8,7 +8,7 @@ import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/email_generation.dart';
+import 'package:discipulus/screens/ai/email_generation.dart';
 import 'package:discipulus/screens/grades/widgets/text_input.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/settings/pages/mail_settings.dart';
@@ -627,7 +627,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
             icon: const Icon(Icons.edit_document),
           ),
         ),
-        if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null)
+        if (appSettings.isAiConfigured)
           FilledButton.tonalIcon(
             onPressed: () async {
               String? email = await showGenerationDialog(context, "");
@@ -734,8 +734,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               });
             },
           ),
-          if (appSettings.useLocalAI ||
-              appSettings.openRouterAPIKey != null) ...[
+          if (appSettings.isAiConfigured) ...[
             const SizedBox(width: 8), // Spacing
             _buildSubjectGenerationButton()
           ]

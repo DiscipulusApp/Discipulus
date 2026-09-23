@@ -11,8 +11,6 @@ import home_widget
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, NSUserActivityDelegate {
-  let engines = FlutterEngineGroup(name: "SharedEngine", project: nil)
-
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -27,7 +25,7 @@ import home_widget
     }
     UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60 * 30))
 
-    //  Notifications
+      // Notifications
       if #available(iOS 10.0, *) {
         UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
       }

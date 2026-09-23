@@ -124,11 +124,11 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
               },
             ),
             _sortingChip(),
-            // ToggleChip(
-            //   label: const Text("Afgerond"),
-            //   onChanged: (value) => setState(() => rounded = value),
-            //   initalValue: rounded,
-            // ),
+            ToggleChip(
+              label: const Text("Afgerond"),
+              onChanged: (value) => setState(() => rounded = value),
+              initalValue: rounded,
+            ),
             // ToggleChip(
             //   label: const Text("Maandelijkse trend"),
             //   icon: const Icon(Icons.trending_up),

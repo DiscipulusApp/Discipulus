@@ -193,7 +193,7 @@ class _GradesLineChartState extends State<GradesLineChart> {
         isStrokeCapRound: !appSettings.pietjePrecies,
         isStrokeJoinRound: !appSettings.pietjePrecies,
         isCurved: appSettings.pietjePrecies ? false : appSettings.curvedGraphs,
-        showingIndicators: [3],
+        showingIndicators: const [],
         aboveBarData: BarAreaData(
             show: drawBackground,
             applyCutOffY: true,
@@ -206,7 +206,7 @@ class _GradesLineChartState extends State<GradesLineChart> {
             color: elevatedColor(addElevation: 0)),
         color: color ?? Theme.of(context).colorScheme.primary,
         dotData: FlDotData(
-          show: appSettings.pietjePrecies,
+          show: appSettings.pietjePrecies || widget.highlightGrade != null,
           getDotPainter: (spot, percent, barData, index) {
             Grade? grade = spotToGrade(spot.x.toInt());
             final isHighlighted = widget.highlightGrade != null &&

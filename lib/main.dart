@@ -26,6 +26,9 @@ import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/core/ad_service.dart';
 import 'package:discipulus/core/watch_service.dart';
+import 'package:discipulus/mcp/local_ipc.dart';
+import 'package:discipulus/mcp/mcp_server.dart';
+import 'package:discipulus/screens/ai/ai_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -78,6 +81,20 @@ void main(List<String> args) async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (args.contains('--mcp')) {
+    await runZoned(
+      () async {
+        await runMcpServer();
+      },
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {
+          stderr.writeln(line);
+        },
+      ),
+    );
+    return;
+  }
+
   appLinks = AppLinks();
   rootIsolateToken = RootIsolateToken.instance!;
 
@@ -90,6 +107,7 @@ void main(List<String> args) async {
   );
 
   await initIsar();
+  await AIService.checkAndEnableLocalAi();
 
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
@@ -115,6 +133,10 @@ void main(List<String> args) async {
 
   if (Platform.isAndroid) await AndroidAlarmManager.initialize();
   if (Platform.isIOS || Platform.isAndroid) WatchService().init();
+  if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
+    LocalIpcServer().init();
+  }
+
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -156,6 +178,8 @@ class MainAppState extends State<MainApp> {
     Future(() async {
       await AccountMigration.checkAndMigrateAccounts();
       await AdService.initialize();
+      await checkAccountPermissions();
+      await AIService.checkAndEnableLocalAi();
     });
   }
 

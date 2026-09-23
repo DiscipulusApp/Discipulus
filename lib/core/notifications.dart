@@ -427,9 +427,12 @@ class Intents {
               profile.processCalendarEvent(
                   DateTimeRange(start: newEvent.start, end: newEvent.einde),
                   newEvent);
-              isar.writeTxnSync(() async {
-                newEvent.subject.saveSync();
+              isar.writeTxnSync(() {
                 isar.calendarEvents.putSync(newEvent);
+                newEvent.profile.saveSync();
+                if (newEvent.subject.value != null) {
+                  newEvent.subject.saveSync();
+                }
               });
               event = newEvent;
             }

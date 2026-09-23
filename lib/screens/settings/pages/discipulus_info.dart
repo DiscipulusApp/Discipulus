@@ -1,5 +1,6 @@
 import 'package:discipulus/screens/settings/pages/debug_settings.dart';
 import 'package:discipulus/screens/settings/pages/diagnostic_check.dart';
+import 'package:discipulus/utils/app_info.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,16 @@ class InfoSettingsPage extends StatefulWidget {
 }
 
 class _InfoSettingsPageState extends State<InfoSettingsPage> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    AppInfo.version.then((v) {
+      if (mounted) setState(() => _version = v);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldSkeleton(
@@ -27,18 +38,23 @@ class _InfoSettingsPageState extends State<InfoSettingsPage> {
           title: const Text("Bekijk Licenties"),
           subtitle: const Text("Licenties van alle gebruikte externe code"),
           trailing: const Icon(Icons.navigate_next),
-          onTap: () => showLicensePage(
-            context: context,
-            applicationIcon: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Icon(
-                Icons.query_stats_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 64,
+          onTap: () async {
+            final version = _version ?? await AppInfo.version;
+            if (!context.mounted) return;
+            showLicensePage(
+              context: context,
+              applicationIcon: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(
+                  Icons.query_stats_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 64,
+                ),
               ),
-            ),
-            applicationName: "Discipulus",
-          ),
+              applicationName: "Discipulus",
+              applicationVersion: version,
+            );
+          },
           onLongPress: () => const DebugSettingsPage().push(context),
         ),
         ListTile(
@@ -77,7 +93,19 @@ class _InfoSettingsPageState extends State<InfoSettingsPage> {
             Uri(scheme: "mailto", path: "harry@harrydekat.dev"),
             mode: LaunchMode.externalApplication,
           ),
-        )
+        ),
+        if (_version != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0),
+            child: Center(
+              child: Text(
+                "Discipulus v$_version",
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ),
+          ),
       ],
     );
   }
