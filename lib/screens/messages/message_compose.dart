@@ -8,7 +8,7 @@ import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/email_generation.dart';
+import 'package:discipulus/screens/ai/email_generation.dart';
 import 'package:discipulus/screens/grades/widgets/text_input.dart';
 import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/settings/pages/mail_settings.dart';
@@ -473,7 +473,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
     Widget buildContactTile(ValueNotifier<List<Contact>> contacts,
         {String title = "Ontvanger(s)", Widget? leading}) {
       return CustomCard(
-        elevation: 0,
+        
         child: SearchContactsButton(
           callback: setState, // Pass setState directly
           selectedContacts: contacts,
@@ -627,7 +627,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
             icon: const Icon(Icons.edit_document),
           ),
         ),
-        if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null)
+        if (appSettings.isAiConfigured)
           FilledButton.tonalIcon(
             onPressed: () async {
               String? email = await showGenerationDialog(context, "");
@@ -734,8 +734,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
               });
             },
           ),
-          if (appSettings.useLocalAI ||
-              appSettings.openRouterAPIKey != null) ...[
+          if (appSettings.isAiConfigured) ...[
             const SizedBox(width: 8), // Spacing
             _buildSubjectGenerationButton()
           ]
@@ -869,11 +868,7 @@ class _ComposeMessageScreenState extends State<_ComposeMessageScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            // Wrap RichTextInput in a Card for consistent styling
-            child: CustomCard(
-                elevation: 0,
-                margin: EdgeInsets.zero, // Remove margin if padding handles it
-                child: _buildTextArea()),
+            child: _buildTextArea(),
           ),
           const BottomSheetBottomContentPadding() // Ensure consistent bottom padding
         ],
@@ -1092,7 +1087,7 @@ class _AttachmentTileState extends State<AttachmentTile> {
         child: InkWell(
           onTap: widget.onTap,
           child: CustomCard(
-            elevation: 0,
+            
             child: Tooltip(
               message: widget.name,
               child: Stack(

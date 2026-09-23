@@ -2,6 +2,7 @@ import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/html.dart';
 import 'package:flutter/material.dart';
@@ -116,7 +117,7 @@ class ActivityCard extends StatelessWidget {
                             const BoxConstraints(minHeight: double.infinity),
                         onPressed: () =>
                             ActivityDetailScreen(activity: activity)
-                                .push(context),
+                                .pushSideView(context),
                         icon: const Icon(Icons.navigate_next),
                       ),
                     ),

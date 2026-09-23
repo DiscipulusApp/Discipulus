@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
 
-bool useTransparency = Platform.isMacOS;
+bool useTransparency = Platform.isMacOS || Platform.isWindows;
 
 class VerticalIntroductionScreen extends StatefulWidget {
   const VerticalIntroductionScreen({super.key});
@@ -72,8 +72,10 @@ class _VerticalIntroductionScreenState
     _controller.addListener(() {
       _offset.value = _controller.offset;
     });
-    Future(() async => hasAppleWatch = await WatchConnectivity().isPaired)
+    if (Platform.isIOS) {
+      Future(() async => hasAppleWatch = await WatchConnectivity().isPaired)
         .then((_) => setState(() {}));
+    }
   }
 
   @override

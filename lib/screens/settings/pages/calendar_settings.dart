@@ -3,6 +3,9 @@ import 'package:discipulus/api/models/schoolyears.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_header.dart';
+import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_header.dart';
+import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_hour_axis.dart';
+import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_page.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
@@ -23,10 +26,62 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
   bool _isSyncing = false;
   String _syncStatus = "";
 
+  late final ValueNotifier<int> _previewWeekNotifier =
+      ValueNotifier(DateTime.now().weekNumber);
+  late final ValueNotifier<bool> _previewFetchingNotifier =
+      ValueNotifier(false);
+  late final PageController _previewHeaderController = PageController();
+
   @override
   void dispose() {
     date.dispose();
+    _previewWeekNotifier.dispose();
+    _previewFetchingNotifier.dispose();
+    _previewHeaderController.dispose();
     super.dispose();
+  }
+
+  List<DateTime> _getPreviewDays() {
+    if (appSettings.timeGridDefaultDayView) {
+      return [date.value];
+    }
+    final monday =
+        date.value.dayOnly.subtract(Duration(days: date.value.weekday - 1));
+    final count = appSettings.workWeek ? 5 : 7;
+    return [for (int i = 0; i < count; i++) monday.add(Duration(days: i))];
+  }
+
+  List<CalendarEvent> _getAllExampleEvents() {
+    final monday =
+        date.value.dayOnly.subtract(Duration(days: date.value.weekday - 1));
+    return [
+      ...exampleEvents,
+      for (int i = 0; i < (appSettings.workWeek ? 5 : 7); i++)
+        if (monday.add(Duration(days: i)).dayOnly != date.value.dayOnly) ...[
+          CalendarEvent(
+            lesuurVan: 1,
+            omschrijving: i % 2 == 0 ? "Geschiedenis" : "Biologie",
+            start: monday.add(Duration(days: i, hours: 8, minutes: 30)),
+            einde: monday.add(Duration(days: i, hours: 9, minutes: 30)),
+            id: -100 - i,
+            afgerond: false,
+            rawInfoType: InfoType.homework,
+            rawLokatie: "10${i + 1}",
+            type: CalendarType.general,
+          ),
+          CalendarEvent(
+            lesuurVan: 3,
+            omschrijving: i % 2 == 0 ? "Aardrijkskunde" : "Natuurkunde",
+            start: monday.add(Duration(days: i, hours: 10, minutes: 30)),
+            einde: monday.add(Duration(days: i, hours: 11, minutes: 30)),
+            id: -200 - i,
+            afgerond: false,
+            rawInfoType: i == 1 ? InfoType.test : InfoType.none,
+            rawLokatie: "20${i + 1}",
+            type: CalendarType.general,
+          ),
+        ],
+    ];
   }
 
   void changeSetting(Settings Function(Settings settings) settings) =>
@@ -65,10 +120,8 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
     });
 
     try {
-      final schoolyears = await activeProfile.schoolyears
-          .filter()
-          .sortByBeginDesc()
-          .findAll();
+      final schoolyears =
+          await activeProfile.schoolyears.filter().sortByBeginDesc().findAll();
 
       final total = schoolyears.length;
       for (int i = 0; i < total; i++) {
@@ -121,57 +174,105 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
         title: const Text("Kalender instellingen"),
       ),
       children: [
-        BottomDaySelectHeader(
-          selectedDay: date,
+        AnimatedSwitcher(
+          duration: Durations.short3,
+          child: !appSettings.useTimeGridCalendar
+              ? BottomDaySelectHeader(
+                  key: ValueKey("bottom_day_header_${appSettings.workWeek}"),
+                  selectedDay: date,
+                )
+              : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Material(
+                  color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainer,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: CalendarGridHeader(
+                        key: ValueKey(
+                            "grid_header_${appSettings.timeGridDefaultDayView}_${appSettings.workWeek}"),
+                        unifiedBackground:
+                            Theme.of(context).colorScheme.surfaceContainer,
+                        timeColWidth: 48.0,
+                        weekNumberNotifier: _previewWeekNotifier,
+                        isFetchingNotifier: _previewFetchingNotifier,
+                        headerPageController: _previewHeaderController,
+                        getDaysForPage: (_) => _getPreviewDays(),
+                        onDayTap: (_) {},
+                      ),
+                  ),
+                ),
+              ),
         ),
-        SwitchListTile(
-          value: appSettings.useTimeGridCalendar,
-          secondary: const Icon(Icons.calendar_view_week),
-          title: const Text("Tijdroosterweergave"),
-          subtitle: const Text(
-              "Gebruik het multi-kolom tijdrooster als standaard kalender"),
-          onChanged: (value) => setState(() {
-            appSettings
-              ..useTimeGridCalendar = value
-              ..save();
-          }),
-        ),
-        if (appSettings.useTimeGridCalendar)
-          ListTile(
-            leading: const Icon(Icons.view_agenda_outlined),
-            title: const Text("Standaardweergave"),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(appSettings.timeGridDefaultDayView
-                    ? "Dagoverzicht"
-                    : (appSettings.workWeek
-                        ? "Werkweek (5 dagen)"
-                        : "Volledige week (7 dagen)")),
-                const SizedBox(height: 8),
-                SegmentedButton<bool>(
+        ListTile(
+          leading: const Icon(Icons.calendar_month_outlined),
+          title: const Text("Kalenderweergave"),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                !appSettings.useTimeGridCalendar
+                    ? "Klassieke lijstweergave"
+                    : (appSettings.timeGridDefaultDayView
+                        ? "Tijdrooster (dagoverzicht)"
+                        : (appSettings.workWeek
+                            ? "Tijdrooster (werkweek, 5 dagen)"
+                            : "Tijdrooster (volledige week, 7 dagen)")),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<int>(
                   segments: const [
                     ButtonSegment(
-                      value: true,
+                      value: 0,
+                      label: Text("Lijst"),
+                      icon: Icon(Icons.view_agenda_outlined),
+                    ),
+                    ButtonSegment(
+                      value: 1,
                       label: Text("Dag"),
                       icon: Icon(Icons.calendar_view_day),
                     ),
                     ButtonSegment(
-                      value: false,
+                      value: 2,
                       label: Text("Week"),
                       icon: Icon(Icons.calendar_view_week),
                     ),
                   ],
-                  selected: {appSettings.timeGridDefaultDayView},
+                  selected: {
+                    if (!appSettings.useTimeGridCalendar)
+                      0
+                    else if (appSettings.timeGridDefaultDayView)
+                      1
+                    else
+                      2,
+                  },
                   onSelectionChanged: (selected) => setState(() {
-                    appSettings
-                      ..timeGridDefaultDayView = selected.first
-                      ..save();
+                    switch (selected.first) {
+                      case 0:
+                        appSettings
+                          ..useTimeGridCalendar = false
+                          ..save();
+                      case 1:
+                        appSettings
+                          ..useTimeGridCalendar = true
+                          ..timeGridDefaultDayView = true
+                          ..save();
+                      case 2:
+                        appSettings
+                          ..useTimeGridCalendar = true
+                          ..timeGridDefaultDayView = false
+                          ..save();
+                    }
                   }),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
         SwitchListTile(
           value: !appSettings.workWeek,
           secondary: const Icon(Icons.date_range),
@@ -199,25 +300,64 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
           height: 300,
           child: CustomCard(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  SliverOverlapAbsorber(
-                    handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                        context),
-                    sliver: const SliverToBoxAdapter(),
-                  )
-                ];
-              },
-              body: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: CalendarDayViewBody(
-                  key: ValueKey(
-                      "example_${appSettings.combineDoublePeriods}_${appSettings.showEmptySpaceBetweenLessons}_${appSettings.hideEventswithoutHours}_${appSettings.coloredFinishedTests}_${appSettings.showAutoCancelledEvents}"),
-                  day: DateTime.now(),
-                  exampleEvents: exampleEvents,
-                ),
-              ),
+            child: AnimatedSwitcher(
+              duration: Durations.short3,
+              child: !appSettings.useTimeGridCalendar
+                  ? NestedScrollView(
+                      key: ValueKey(
+                          "example_list_${appSettings.combineDoublePeriods}_${appSettings.showEmptySpaceBetweenLessons}_${appSettings.hideEventswithoutHours}_${appSettings.coloredFinishedTests}_${appSettings.showAutoCancelledEvents}"),
+                      headerSliverBuilder: (context, innerBoxIsScrolled) {
+                        return [
+                          SliverOverlapAbsorber(
+                            handle:
+                                NestedScrollView.sliverOverlapAbsorberHandleFor(
+                                    context),
+                            sliver: const SliverToBoxAdapter(),
+                          )
+                        ];
+                      },
+                      body: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: CalendarDayViewBody(
+                          day: date.value,
+                          exampleEvents: exampleEvents,
+                        ),
+                      ),
+                    )
+                  : Builder(
+                      key: ValueKey(
+                          "example_grid_${appSettings.timeGridDefaultDayView}_${appSettings.workWeek}_${appSettings.combineDoublePeriods}_${appSettings.hideEventswithoutHours}_${appSettings.coloredFinishedTests}"),
+                      builder: (context) {
+                        const double hourHeight = 48.0;
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SingleChildScrollView(
+                            controller: ScrollController(
+                              initialScrollOffset: 7.5 * hourHeight,
+                            ),
+                            child: SizedBox(
+                              height: 24 * hourHeight,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const HourAxis(
+                                    hourHeight: hourHeight,
+                                    width: 36.0,
+                                  ),
+                                  Expanded(
+                                    child: GridDayColumnsPage(
+                                      days: _getPreviewDays(),
+                                      hourHeight: hourHeight,
+                                      exampleEvents: _getAllExampleEvents(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
         ),

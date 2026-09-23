@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
@@ -119,6 +120,9 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
+    _overlayEntry?.remove();
+    _overlayEntry = null;
     _animationController.dispose();
     super.dispose();
   }
@@ -131,7 +135,7 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
           .toList()
           .indexOf(widget.currentValue!.item);
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void _handleScroll(PointerScrollEvent event) {
@@ -155,9 +159,11 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
   }
 
   void _showOverlay(BuildContext context) {
+    if (_items == null || _items!.isEmpty) return;
     HapticFeedback.lightImpact();
-    final RenderBox renderBox =
-        _chipKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox? renderBox =
+        _chipKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
@@ -255,14 +261,15 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
   }
 
   void _handleTouchMove(Offset globalPosition) {
-    if (_overlayEntry != null) {
-      final RenderBox renderBox =
-          _chipKey.currentContext!.findRenderObject() as RenderBox;
+    if (_overlayEntry != null && _items != null && _items!.isNotEmpty) {
+      final RenderBox? renderBox =
+          _chipKey.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) return;
       final localPosition = renderBox.globalToLocal(globalPosition);
       final itemHeight = renderBox.size.height;
       final index = ((localPosition.dy - itemHeight) / itemHeight)
           .floor()
-          .clamp(0, (_items?.length ?? 1) - 1);
+          .clamp(0, _items!.length - 1);
       if (_hoverIndex != index) {
         HapticFeedback.selectionClick();
         setState(() {
@@ -295,14 +302,25 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onLongPressStart: (details) {
-              _showOverlay(context);
-              _handleTouchMove(details.globalPosition);
+              if (Platform.isAndroid || !PlatformExtension.isDesktop) {
+                _showOverlay(context);
+                _handleTouchMove(details.globalPosition);
+              }
             },
             onLongPressMoveUpdate: (details) {
-              _handleTouchMove(details.globalPosition);
+              if (_overlayEntry != null) {
+                _handleTouchMove(details.globalPosition);
+              }
             },
             onLongPressEnd: (details) {
-              _handleTouchEnd(details.globalPosition);
+              if (_overlayEntry != null) {
+                _handleTouchEnd(details.globalPosition);
+              }
+            },
+            onLongPressCancel: () {
+              if (_overlayEntry != null) {
+                _hideOverlay();
+              }
             },
             child: Listener(
               behavior: HitTestBehavior.opaque,
@@ -327,7 +345,13 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
                     ),
                     filled: widget.currentValue != null,
                     icon: widget.currentValue?.icon ?? widget.defaultIcon,
-                    onPressed: () async => await _showSelectionSheet(context),
+                    onPressed: () async {
+                      if (PlatformExtension.isDesktop) {
+                        await _showContextMenu();
+                      } else {
+                        await _showSelectionSheet(context);
+                      }
+                    },
                   ),
                 ),
               ),
@@ -336,6 +360,103 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
         ),
       ),
     );
+  }
+
+  Future<void> _showContextMenu() async {
+    final items = await widget.items();
+    if (!mounted) return;
+
+    final RenderBox? renderBox =
+        (_chipKey.currentContext?.findRenderObject() ??
+            context.findRenderObject()) as RenderBox?;
+    if (renderBox == null) return;
+
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        renderBox.localToGlobal(Offset.zero, ancestor: overlay),
+        renderBox.localToGlobal(
+          renderBox.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    final result = await showMenu<_MenuItemWrapper<T>>(
+      context: context,
+      position: position,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      items: [
+        if (widget.emptySelectionAllowed)
+          PopupMenuItem<_MenuItemWrapper<T>>(
+            value: const _MenuItemWrapper(null, isClear: true),
+            child: Row(
+              children: [
+                if (widget.currentValue == null)
+                  Icon(Icons.check_rounded, size: 18, color: primaryColor)
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 8),
+                Text(
+                  "Geen",
+                  style: TextStyle(
+                    fontWeight: widget.currentValue == null
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        for (final item in items)
+          PopupMenuItem<_MenuItemWrapper<T>>(
+            value: _MenuItemWrapper(item),
+            child: Row(
+              children: [
+                if (item.item == widget.currentValue?.item)
+                  Icon(Icons.check_rounded, size: 18, color: primaryColor)
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 8),
+                if (item.icon != null) ...[
+                  IconTheme(
+                    data: IconTheme.of(context).copyWith(
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    child: item.icon!,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    item.title,
+                    style: TextStyle(
+                      fontWeight: item.item == widget.currentValue?.item
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+
+    if (result != null && mounted) {
+      if (result.isClear) {
+        widget.onSelected(null);
+      } else {
+        widget.onSelected(result.item);
+      }
+      setState(() {});
+    }
   }
 
   Future<List<MenuElement>> get menu async {
@@ -361,9 +482,10 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
     ];
   }
 
-  Future<void> _showSelectionSheet(context) async {
+  Future<void> _showSelectionSheet(BuildContext context) async {
     return await showScrollableModalBottomSheet(
       context: context,
+      useSidePane: false,
       builder: (context, setState, scrollcontroller) {
         return ListView(
           controller: scrollcontroller,
@@ -375,6 +497,44 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
+            if (Platform.isAndroid)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.touch_app_outlined,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Tip: lang indrukken op de knop is sneller",
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             FutureBuilder<List<DropDownChipItem<T>>>(
               future: widget.items(),
               builder: (context, snapshot) {
@@ -387,7 +547,6 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
                       children: [
                         for (DropDownChipItem<T> item in snapshot.data!)
                           CustomCard(
-                            elevation: 0,
                             child: Column(
                               children: [
                                 RadioListTile<T>(
@@ -439,6 +598,12 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
       },
     );
   }
+}
+
+class _MenuItemWrapper<T> {
+  final DropDownChipItem<T>? item;
+  final bool isClear;
+  const _MenuItemWrapper(this.item, {this.isClear = false});
 }
 
 class ToggleChip extends StatefulWidget {

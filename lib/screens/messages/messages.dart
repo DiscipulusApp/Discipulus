@@ -265,9 +265,8 @@ class _MessagesListScreenState extends State<MessagesListScreen>
 
                       if (selectedItems.isNotEmpty && wasEmpty) {
                         showSelectionSheet(context);
-                      } else if (selectedItems.isEmpty &&
-                          sheetKey.currentContext != null) {
-                        Navigator.of(sheetKey.currentContext!).pop();
+                      } else if (selectedItems.isEmpty) {
+                        closeSelectionSheet();
                       }
                       setState(() {});
                     },

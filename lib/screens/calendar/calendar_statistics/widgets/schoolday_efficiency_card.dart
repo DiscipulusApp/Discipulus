@@ -151,7 +151,7 @@ class SchoolDayEfficiencyCard extends StatelessWidget {
                 : theme.colorScheme.tertiaryContainer,
             title: "Schooldag Efficiëntie",
             value: "${efficiency.clamp(0.0, 100.0).toStringAsFixed(1)}%",
-            subtitle: "Tijd op school effectief in de les",
+            subtitle: "Tijd op school effectief in de les (dus ${(100 -efficiency).clamp(0.0, 100.0).toStringAsFixed(1)}% tussenuren)",
           ),
           if (maxGapMinutes > 0 && maxGapDay != null)
             InsightCardItem(

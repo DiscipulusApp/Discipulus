@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+
+import 'package:flutter/gestures.dart';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/routes.dart';
@@ -50,9 +53,22 @@ class _CalendarGridViewState extends State<CalendarGridView> {
 
   late CalendarGridDisplayMode _mode;
   late DateTime _selectedDate;
-  late PageController _pageController;
-  late PageController _headerPageController;
+  late PageController _dayPageController;
+  late PageController _weekPageController;
+  late PageController _dayHeaderPageController;
+  late PageController _weekHeaderPageController;
+  final List<PageController> _controllersToDispose = [];
   final ScrollController _verticalScrollController = ScrollController();
+
+  PageController get _activePageController =>
+      _mode == CalendarGridDisplayMode.day
+          ? _dayPageController
+          : _weekPageController;
+
+  PageController get _activeHeaderPageController =>
+      _mode == CalendarGridDisplayMode.day
+          ? _dayHeaderPageController
+          : _weekHeaderPageController;
 
   late final ValueNotifier<String> _titleNotifier;
   late final ValueNotifier<bool> _isTodayRangeNotifier;
@@ -95,6 +111,8 @@ class _CalendarGridViewState extends State<CalendarGridView> {
   CalendarGridDisplayMode get _defaultWeekMode =>
       appSettings.workWeek ? CalendarGridDisplayMode.workWeek : CalendarGridDisplayMode.week;
 
+  DateTime? _lastShiftPageTurnTime;
+
   @override
   void initState() {
     super.initState();
@@ -103,8 +121,15 @@ class _CalendarGridViewState extends State<CalendarGridView> {
     final initialPage = _dateToPageIndex(_selectedDate, _mode);
     _lastReportedPage = initialPage;
 
-    _pageController = PageController(initialPage: initialPage);
-    _headerPageController = PageController(initialPage: initialPage);
+    final initialDayPage =
+        _dateToPageIndex(_selectedDate, CalendarGridDisplayMode.day);
+    final initialWeekPage =
+        _dateToPageIndex(_selectedDate, _defaultWeekMode);
+
+    _dayPageController = PageController(initialPage: initialDayPage);
+    _weekPageController = PageController(initialPage: initialWeekPage);
+    _dayHeaderPageController = PageController(initialPage: initialDayPage);
+    _weekHeaderPageController = PageController(initialPage: initialWeekPage);
 
     final initialDays = _getDaysForPage(initialPage, _mode);
     _titleNotifier = ValueNotifier(_formatHeaderTitle(initialDays));
@@ -115,10 +140,51 @@ class _CalendarGridViewState extends State<CalendarGridView> {
     // Smart auto-scroll to optimal view showing events overview and now indicator
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToOptimalPosition();
+      _showDesktopScrollTipIfNeeded();
     });
   }
 
-  Future<void> _scrollToOptimalPosition() async {
+  void _showDesktopScrollTipIfNeeded() {
+    if (!PlatformExtension.isDesktop) return;
+    if (appSettings.tips.hasSeenGridCalendarScrollTip) return;
+
+    appSettings
+      ..tips.hasSeenGridCalendarScrollTip = true
+      ..save();
+
+    if (!mounted) return;
+
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 6),
+        content: Row(
+          children: [
+            Icon(
+              Icons.mouse_outlined,
+              size: 20,
+              color: colorScheme.surface,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                "Tip: Scroll verticaal voor de uren. Houd Shift ingedrukt om horizontaal door dagen te scrollen",
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: "Begrepen",
+          onPressed: () {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _scrollToOptimalPosition({bool animate = false}) async {
     if (!mounted || !_verticalScrollController.hasClients) return;
 
     final now = DateTime.now();
@@ -208,13 +274,26 @@ class _CalendarGridViewState extends State<CalendarGridView> {
       _verticalScrollController.position.maxScrollExtent,
     );
 
-    _verticalScrollController.jumpTo(clampedOffset);
+    if (animate && _verticalScrollController.hasClients) {
+      _verticalScrollController.animateTo(
+        clampedOffset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+      );
+    } else if (_verticalScrollController.hasClients) {
+      _verticalScrollController.jumpTo(clampedOffset);
+    }
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _headerPageController.dispose();
+    _dayPageController.dispose();
+    _weekPageController.dispose();
+    _dayHeaderPageController.dispose();
+    _weekHeaderPageController.dispose();
+    for (final c in _controllersToDispose) {
+      c.dispose();
+    }
     _verticalScrollController.dispose();
     _titleNotifier.dispose();
     _isTodayRangeNotifier.dispose();
@@ -237,11 +316,31 @@ class _CalendarGridViewState extends State<CalendarGridView> {
       _titleNotifier.value = _formatHeaderTitle(days);
       _isTodayRangeNotifier.value = _isCurrentRangeToday(days);
       _weekNumberNotifier.value = days.first.weekNumber;
-      _pageController.jumpToPage(targetPage);
-      if (_headerPageController.hasClients) {
-        _headerPageController.jumpToPage(targetPage);
+
+      // Keep references to retiring controllers for delayed disposal
+      final oldPageController = _activePageController;
+      final oldHeaderPageController = _activeHeaderPageController;
+
+      final newPageController = PageController(initialPage: targetPage);
+      final newHeaderPageController = PageController(initialPage: targetPage);
+
+      if (_mode == CalendarGridDisplayMode.day) {
+        _dayPageController = newPageController;
+        _dayHeaderPageController = newHeaderPageController;
+      } else {
+        _weekPageController = newPageController;
+        _weekHeaderPageController = newHeaderPageController;
       }
-      _scrollToOptimalPosition();
+
+      _controllersToDispose.addAll([oldPageController, oldHeaderPageController]);
+      Future.delayed(const Duration(milliseconds: 400), () {
+        oldPageController.dispose();
+        oldHeaderPageController.dispose();
+        _controllersToDispose.remove(oldPageController);
+        _controllersToDispose.remove(oldHeaderPageController);
+      });
+
+      _scrollToOptimalPosition(animate: true);
     });
     HapticFeedback.selectionClick();
   }
@@ -254,12 +353,12 @@ class _CalendarGridViewState extends State<CalendarGridView> {
     _titleNotifier.value = _formatHeaderTitle(days);
     _isTodayRangeNotifier.value = _isCurrentRangeToday(days);
     _weekNumberNotifier.value = days.first.weekNumber;
-    _pageController.animateToPage(
+    _activePageController.animateToPage(
       targetPage,
       duration: Durations.medium2,
       curve: Easing.emphasizedDecelerate,
     );
-    _scrollToOptimalPosition();
+    _scrollToOptimalPosition(animate: true);
   }
 
   String _formatHeaderTitle(List<DateTime> days) {
@@ -344,14 +443,24 @@ class _CalendarGridViewState extends State<CalendarGridView> {
       body: Column(
         children: [
           // 1. Sticky Top Day Header Component
-          CalendarGridHeader(
-            unifiedBackground: unifiedBackground,
-            timeColWidth: _timeColWidth,
-            weekNumberNotifier: _weekNumberNotifier,
-            isFetchingNotifier: _isFetchingNotifier,
-            headerPageController: _headerPageController,
-            getDaysForPage: (pageIndex) => _getDaysForPage(pageIndex, _mode),
-            onDayTap: _toggleDayWeekMode,
+          AnimatedSwitcher(
+            duration: Durations.short3,
+            switchInCurve: Easing.emphasizedDecelerate,
+            switchOutCurve: Easing.emphasizedDecelerate,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: CalendarGridHeader(
+              key: ValueKey("header_${_mode.name}"),
+              unifiedBackground: unifiedBackground,
+              timeColWidth: _timeColWidth,
+              weekNumberNotifier: _weekNumberNotifier,
+              isFetchingNotifier: _isFetchingNotifier,
+              headerPageController: _activeHeaderPageController,
+              getDaysForPage: (pageIndex) => _getDaysForPage(pageIndex, _mode),
+              onDayTap: _toggleDayWeekMode,
+            ),
           ),
           // 2. Main Scrollable 24-Hour Time Grid
           Expanded(
@@ -360,14 +469,14 @@ class _CalendarGridViewState extends State<CalendarGridView> {
                 // Keep the header PageView perfectly in sync with user swipe interactions in real-time
                 if (notification.metrics.axis == Axis.horizontal) {
                   if (notification is ScrollUpdateNotification) {
-                    if (_pageController.hasClients &&
-                        _headerPageController.hasClients) {
-                      _headerPageController.position
-                          .correctPixels(_pageController.position.pixels);
-                      _headerPageController.position.notifyListeners();
+                    if (_activePageController.hasClients &&
+                        _activeHeaderPageController.hasClients) {
+                      _activeHeaderPageController.position
+                          .correctPixels(_activePageController.position.pixels);
+                      _activeHeaderPageController.position.notifyListeners();
                     }
                   } else if (notification is ScrollEndNotification) {
-                    final currentPage = (_pageController.page ?? 0).round();
+                    final currentPage = (_activePageController.page ?? 0).round();
                     if (_lastReportedPage != currentPage) {
                       _lastReportedPage = currentPage;
                       HapticFeedback.selectionClick();
@@ -382,44 +491,89 @@ class _CalendarGridViewState extends State<CalendarGridView> {
                 }
                 return false;
               },
-              child: SingleChildScrollView(
-                controller: _verticalScrollController,
-                child: SizedBox(
-                  height: 24 * _hourHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sticky Left Hour Labels Axis
-                      HourAxis(
-                        hourHeight: _hourHeight,
-                        width: _timeColWidth,
-                      ),
-                      const SizedBox(width: 2),
-                      // Horizontal PageView of Day Columns
-                      Expanded(
-                        child: PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (pageIndex) {
-                            if (_lastReportedPage != pageIndex) {
-                              _lastReportedPage = pageIndex;
-                              HapticFeedback.selectionClick();
-                            }
-                          },
-                          itemBuilder: (context, pageIndex) {
-                            final days = _getDaysForPage(pageIndex, _mode);
-                            return GridDayColumnsPage(
-                              key: ValueKey("page_${_mode.name}_$pageIndex"),
-                              days: days,
-                              hourHeight: _hourHeight,
-                              onLoadingChanged: (loading) {
-                                _isFetchingNotifier.value = loading;
-                              },
-                            );
-                          },
+              child: Listener(
+                onPointerSignal: (event) {
+                  if (Platform.isMacOS &&
+                      event is PointerScrollEvent &&
+                      event.kind != PointerDeviceKind.trackpad &&
+                      HardwareKeyboard.instance.isShiftPressed) {
+                    final now = DateTime.now();
+                    if (_lastShiftPageTurnTime == null ||
+                        now.difference(_lastShiftPageTurnTime!) >
+                            const Duration(milliseconds: 250)) {
+                      _lastShiftPageTurnTime = now;
+                      if ((event.scrollDelta.dy > 0 ||
+                              event.scrollDelta.dx > 0) &&
+                          _activePageController.hasClients) {
+                        _activePageController.nextPage(
+                          duration: Durations.medium2,
+                          curve: Easing.emphasizedDecelerate,
+                        );
+                      } else if ((event.scrollDelta.dy < 0 ||
+                              event.scrollDelta.dx < 0) &&
+                          _activePageController.hasClients) {
+                        _activePageController.previousPage(
+                          duration: Durations.medium2,
+                          curve: Easing.emphasizedDecelerate,
+                        );
+                      }
+                    }
+                  }
+                },
+                child: SingleChildScrollView(
+                  controller: _verticalScrollController,
+                  child: SizedBox(
+                    height: 24 * _hourHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Sticky Left Hour Labels Axis
+                        HourAxis(
+                          hourHeight: _hourHeight,
+                          width: _timeColWidth,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
+                        const SizedBox(width: 2),
+                        // Horizontal PageView of Day Columns
+                        Expanded(
+                          child: AnimatedSwitcher(
+                            duration: Durations.short3,
+                            switchInCurve: Easing.emphasizedDecelerate,
+                            switchOutCurve: Easing.emphasizedDecelerate,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                              opacity: animation,
+                              child: ScaleTransition(
+                                scale: Tween<double>(begin: 0.98, end: 1.0)
+                                    .animate(animation),
+                                child: child,
+                              ),
+                            ),
+                            child: PageView.builder(
+                              key: ValueKey("grid_pageview_${_mode.name}"),
+                              controller: _activePageController,
+                              onPageChanged: (pageIndex) {
+                                if (_lastReportedPage != pageIndex) {
+                                  _lastReportedPage = pageIndex;
+                                  HapticFeedback.selectionClick();
+                                }
+                              },
+                              itemBuilder: (context, pageIndex) {
+                                final days = _getDaysForPage(pageIndex, _mode);
+                                return GridDayColumnsPage(
+                                  key: ValueKey("page_${_mode.name}_$pageIndex"),
+                                  days: days,
+                                  hourHeight: _hourHeight,
+                                  onLoadingChanged: (loading) {
+                                    _isFetchingNotifier.value = loading;
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -1,9 +1,15 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
+import 'package:discipulus/widgets/global/card.dart';
+import 'package:discipulus/widgets/global/layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_apple_handoff/flutter_apple_handoff.dart';
+
+export 'package:discipulus/widgets/global/layout.dart'
+    show SecondaryPaneScope, NormalWindowStateExtension;
 
 Future<T?> showScrollableModalBottomSheet<T>(
     {required BuildContext context,
@@ -11,12 +17,56 @@ Future<T?> showScrollableModalBottomSheet<T>(
     bool isDismissible = true,
     bool initiallyOpen = false,
     bool modelSheet = true,
+    bool useSidePane = true,
     required Widget Function(
       BuildContext context,
       void Function(void Function()) setState,
       ScrollController scrollController,
     ) builder,
-    Color? backgroundColor}) async {
+    Color? backgroundColor,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow}) async {
+  final layoutState = Layout.of(context) ??
+      (navKey.currentContext != null
+          ? Layout.of(navKey.currentContext!)
+          : null);
+
+  void effectiveUpdateNormalWindow([VoidCallback? fn]) {
+    if (onUpdateNormalWindow != null) {
+      onUpdateNormalWindow(fn);
+    } else {
+      fn?.call();
+      if (context.mounted) {
+        (context as Element).markNeedsBuild();
+      } else if (navKey.currentContext != null &&
+          navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
+      }
+    }
+  }
+
+  if (useSidePane &&
+      modelSheet &&
+      layoutState != null &&
+      layoutState.canShowSecondaryPane(context)) {
+    return await layoutState.showSecondaryPane<T>(
+      builder: builder,
+      showHeader: true,
+      backgroundColor: backgroundColor,
+      isDismissible: isDismissible,
+      activity: activity,
+      onUpdateNormalWindow: effectiveUpdateNormalWindow,
+    );
+  }
+
   Widget child = DraggableScrollableSheet(
     initialChildSize: initiallyOpen
         ? 0.8
@@ -65,7 +115,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
             PointerDeviceKind.stylus
           },
         ),
-        child: child,
+        child: InverseCardElevation(child: child),
       ),
     );
 
@@ -137,3 +187,80 @@ Future dropdownSheet(context,
         );
       },
     );
+
+/// Shows a view in the supporting side pane on wide screens (if 3-pane layout is available),
+/// or pushes it to the navigator on compact/mobile screens.
+Future<T?> showSideView<T>({
+  required BuildContext context,
+  required Widget child,
+  Color? backgroundColor,
+  bool isDismissible = true,
+  NSUserActivity? activity,
+  void Function([VoidCallback? fn])? onUpdateNormalWindow,
+}) async {
+  final layoutState = Layout.of(context) ??
+      (navKey.currentContext != null
+          ? Layout.of(navKey.currentContext!)
+          : null);
+
+  void effectiveUpdateNormalWindow([VoidCallback? fn]) {
+    if (onUpdateNormalWindow != null) {
+      onUpdateNormalWindow(fn);
+    } else {
+      fn?.call();
+      if (context.mounted) {
+        (context as Element).markNeedsBuild();
+      } else if (navKey.currentContext != null &&
+          navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
+      }
+    }
+  }
+
+  if (layoutState != null && layoutState.canShowSecondaryPane(context)) {
+    return await layoutState.showSecondaryPane<T>(
+      builder: (context, setState, scrollController) => child,
+      showHeader: false,
+      backgroundColor: backgroundColor,
+      isDismissible: isDismissible,
+      activity: activity,
+      onUpdateNormalWindow: effectiveUpdateNormalWindow,
+    );
+  } else {
+    final result = await Navigator.of(context).push<T>(
+      MaterialPageRoute(builder: (context) => child),
+    );
+    effectiveUpdateNormalWindow();
+    return result;
+  }
+}
+
+extension SideViewWidgetExtension on Widget {
+  /// Opens this widget in the supporting side pane on wide screens,
+  /// or pushes it to the Navigator on mobile screens.
+  Future<T?> pushSideView<T>(
+    BuildContext? context, {
+    Color? backgroundColor,
+    bool isDismissible = true,
+    NSUserActivity? activity,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow,
+  }) =>
+      showSideView<T>(
+        context: context ?? navKey.currentContext!,
+        child: this,
+        backgroundColor: backgroundColor,
+        isDismissible: isDismissible,
+        activity: activity,
+        onUpdateNormalWindow: onUpdateNormalWindow,
+      );
+}
+

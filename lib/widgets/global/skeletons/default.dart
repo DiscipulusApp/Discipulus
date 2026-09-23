@@ -229,6 +229,7 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
           }
           return Scaffold(
             primary: false,
+            backgroundColor: Colors.transparent,
             body: _childBuilder(context),
           );
         },

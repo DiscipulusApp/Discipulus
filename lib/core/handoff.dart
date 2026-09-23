@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/bronnen.dart';
+import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/api/models/studiewijzers.dart';
 import 'package:discipulus/api/models/subjects.dart';
@@ -26,6 +27,7 @@ import 'package:discipulus/screens/assignments/assignment_details.dart';
 import 'package:discipulus/screens/assignments/assignments.dart';
 import 'package:discipulus/screens/bronnen/bronnen_list.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
 import 'package:discipulus/screens/grades/grades.dart';
 import 'package:discipulus/screens/grades/grades_subject.dart';
 import 'package:discipulus/screens/messages/message_compose.dart';
@@ -68,8 +70,9 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
 
       if (destination?.view.runtimeType == CalendarDayView) {
         // Calendar should be launched
+        final dateStr = activity.userInfo?["date"]?.toString();
         Layout.of(navKey.currentContext!)?.goToPage(CalendarDayView(
-          displayedDay: DateTime.tryParse(activity.userInfo?["date"]),
+          displayedDay: dateStr != null ? DateTime.tryParse(dateStr) : null,
         ));
       } else if (destination != null) {
         Layout.of(navKey.currentContext!)?.goToPage(destination.view);
@@ -107,14 +110,25 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
           // Specific message
           Bericht? message = await isar.berichts
               .filter()
-              .uuidEqualTo(activity.userInfo?["message_uuid"])
+              .uuidEqualTo(activity.userInfo?["message_uuid"] ?? -1)
               .findFirst();
 
-          message ??= await isar.berichts
-              .filter()
-              .idEqualTo(activity.userInfo?["message_id"])
-              .onderwerpEqualTo(activity.userInfo?["message_title"])
-              .findFirst();
+          if (activity.userInfo?["message_id"] != null) {
+            final mId = int.tryParse(activity.userInfo!["message_id"].toString());
+            if (mId != null) {
+              message ??= await isar.berichts
+                  .filter()
+                  .idEqualTo(mId)
+                  .findFirst();
+            }
+          }
+
+          if (message == null && activity.userInfo?["message_title"] != null) {
+            message = await isar.berichts
+                .filter()
+                .onderwerpContains(activity.userInfo!["message_title"], caseSensitive: false)
+                .findFirst();
+          }
 
           if (message != null) {
             Layout.of(navKey.currentContext!)
@@ -129,14 +143,28 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
           // Specific studiewijzer
           Studiewijzer? studiewijzer = await isar.studiewijzers
               .filter()
-              .uuidEqualTo(activity.userInfo?["studiewijzer_uuid"])
+              .uuidEqualTo(activity.userInfo?["studiewijzer_uuid"] ?? -1)
               .findFirst();
 
-          studiewijzer ??= await isar.studiewijzers
-              .filter()
-              .idEqualTo(activity.userInfo?["studiewijzer_id"])
-              .rawTitelEqualTo(activity.userInfo?["studiewijzer_title"])
-              .findFirst();
+          if (activity.userInfo?["studiewijzer_id"] != null) {
+            final swId =
+                int.tryParse(activity.userInfo!["studiewijzer_id"].toString());
+            if (swId != null) {
+              studiewijzer ??= await isar.studiewijzers
+                  .filter()
+                  .idEqualTo(swId)
+                  .findFirst();
+            }
+          }
+
+          if (studiewijzer == null &&
+              activity.userInfo?["studiewijzer_title"] != null) {
+            studiewijzer = await isar.studiewijzers
+                .filter()
+                .rawTitelContains(activity.userInfo!["studiewijzer_title"],
+                    caseSensitive: false)
+                .findFirst();
+          }
 
           if (studiewijzer != null) {
             Layout.of(navKey.currentContext!)
@@ -153,14 +181,25 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
           // Specific assignment
           Assignment? assignment = await isar.assignments
               .filter()
-              .uuidEqualTo(activity.userInfo?["assignment_uuid"])
+              .uuidEqualTo(activity.userInfo?["assignment_uuid"] ?? -1)
               .findFirst();
 
-          assignment ??= await isar.assignments
-              .filter()
-              .idEqualTo(activity.userInfo?["assignment_id"])
-              .titelEqualTo(activity.userInfo?["assignment_title"])
-              .findFirst();
+          if (activity.userInfo?["assignment_id"] != null) {
+            final aId = int.tryParse(activity.userInfo!["assignment_id"].toString());
+            if (aId != null) {
+              assignment ??= await isar.assignments
+                  .filter()
+                  .idEqualTo(aId)
+                  .findFirst();
+            }
+          }
+
+          if (assignment == null && activity.userInfo?["assignment_title"] != null) {
+            assignment = await isar.assignments
+                .filter()
+                .titelContains(activity.userInfo!["assignment_title"], caseSensitive: false)
+                .findFirst();
+          }
 
           if (assignment != null) {
             Layout.of(navKey.currentContext!)
@@ -171,6 +210,26 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
                 assignment: assignment,
               ),
             );
+          }
+          break;
+        case "CalendarEventDetails":
+          final dynamic rawEventId = activity.userInfo?["event_id"] ??
+              (activity.userInfo?["event_ids"] as List?)?.firstOrNull ??
+              activity.userInfo?["id"];
+          final int? eventId = rawEventId != null
+              ? int.tryParse(rawEventId.toString())
+              : null;
+          if (eventId != null) {
+            final event = await isar.calendarEvents
+                .filter()
+                .idEqualTo(eventId)
+                .findFirst();
+            if (event != null && navKey.currentContext != null) {
+              Layout.of(navKey.currentContext!)
+                  ?.goToPage(CalendarDayView(displayedDay: event.start));
+              await showCalendarEventDetailsSheet(navKey.currentContext!,
+                  events: [event]);
+            }
           }
           break;
         case "ActivityDetailScreen":
@@ -271,7 +330,30 @@ Future<void> onNewUserActivity(NSUserActivity activity) async {
       }
 
     case "bottom-sheet":
-      await showComposeMessageSheet(navKey.currentContext!);
+      if (activity.userInfo?["screenType"] == "CalendarEventDetails" ||
+          activity.userInfo?["event_id"] != null ||
+          activity.userInfo?["event_ids"] != null) {
+        final dynamic rawEventId = activity.userInfo?["event_id"] ??
+            (activity.userInfo?["event_ids"] as List?)?.firstOrNull ??
+            activity.userInfo?["id"];
+        final int? eventId = rawEventId != null
+            ? int.tryParse(rawEventId.toString())
+            : null;
+        if (eventId != null) {
+          final event = await isar.calendarEvents
+              .filter()
+              .idEqualTo(eventId)
+              .findFirst();
+          if (event != null && navKey.currentContext != null) {
+            Layout.of(navKey.currentContext!)
+                ?.goToPage(CalendarDayView(displayedDay: event.start));
+            await showCalendarEventDetailsSheet(navKey.currentContext!,
+                events: [event]);
+          }
+        }
+      } else {
+        await showComposeMessageSheet(navKey.currentContext!);
+      }
       break;
     default:
   }

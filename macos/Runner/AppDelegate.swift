@@ -7,11 +7,27 @@ import CoreSpotlight
 @main
 class AppDelegate: FlutterAppDelegate, NSUserActivityDelegate {
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    if CommandLine.arguments.contains("--mcp") {
+      return false
+    }
     return true
   }
 
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
+  }
+
+  override func applicationWillFinishLaunching(_ notification: Notification) {
+    if CommandLine.arguments.contains("--mcp") {
+      NSApp.setActivationPolicy(.prohibited)
+    }
+  }
+
+  override func applicationDidFinishLaunching(_ notification: Notification) {
+    if CommandLine.arguments.contains("--mcp") {
+      NSApp.setActivationPolicy(.prohibited)
+      NSApp.windows.forEach { $0.orderOut(nil); $0.close() }
+    }
   }
     
     // Spotlight & Handoff

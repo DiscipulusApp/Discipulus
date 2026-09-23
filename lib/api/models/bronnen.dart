@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/models/external_bron.dart';
@@ -274,10 +273,11 @@ extension BronLocalExtension on Bron {
 
       // Open the file
       if (Platform.isLinux) {
-        // Without an Isolate the application will hang in Linux, making it
-        // impossible to open multiple files.
-        await Isolate.spawn(
-            (String path) async => await OpenFile.open(path), savedPath!);
+        // Open using xdg-open in detached mode. This avoids hanging the application
+        // when the external viewer process runs in the foreground, and avoids
+        // needing an isolate or platform channel.
+        await Process.start('xdg-open', [savedPath!],
+            mode: ProcessStartMode.detached);
       } else {
         await OpenFile.open(savedPath!);
       }

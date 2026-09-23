@@ -231,7 +231,7 @@ class PeriodHeatmapCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "1e Uur uitslapen",
+                            "1e uur uitval",
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -239,7 +239,7 @@ class PeriodHeatmapCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             firstPeriodTotal > 0
-                                ? "${(((firstPeriodTotal - firstPeriodCanceled) / firstPeriodTotal) * 100).toStringAsFixed(0)}% kans"
+                                ? "${((firstPeriodCanceled / firstPeriodTotal) * 100).toStringAsFixed(0)}% kans"
                                 : "N.v.t.",
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/summarizer.dart';
+import 'package:discipulus/screens/ai/summarizer.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -51,7 +51,7 @@ class HTMLDisplay extends StatelessWidget {
         final anchors = editableTextState.contextMenuAnchors;
         final buttonItems = [
           ...editableTextState.contextMenuButtonItems,
-          if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null)
+          if (appSettings.isAiConfigured)
             ContextMenuButtonItem(
               label: "Samenvatten",
               onPressed: () => showSummarizeSheet(

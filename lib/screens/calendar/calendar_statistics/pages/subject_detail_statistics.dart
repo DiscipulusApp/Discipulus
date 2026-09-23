@@ -172,11 +172,11 @@ class _SubjectDetailStatisticsScreenState
           teachersCount: sortedTeachers.length,
         ),
 
-        // Filter chips (including Zonder lesuur verbergen)
+        // Filter chips (including Alleen lesuren verbergen)
         FilterChipList(
           chips: [
             ToggleChip(
-              label: const Text("Zonder lesuur"),
+              label: const Text("Alleen lesuren"),
               icon: const Icon(Icons.timer_off_outlined),
               initalValue: _hideWithoutHours,
               onChanged: (val) => setState(() => _hideWithoutHours = val),

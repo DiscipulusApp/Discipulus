@@ -18,11 +18,13 @@ class GridDayColumnsPage extends StatefulWidget {
     required this.days,
     required this.hourHeight,
     this.onLoadingChanged,
+    this.exampleEvents,
   });
 
   final List<DateTime> days;
   final double hourHeight;
   final ValueChanged<bool>? onLoadingChanged;
+  final List<CalendarEvent>? exampleEvents;
 
   @override
   State<GridDayColumnsPage> createState() => _GridDayColumnsPageState();
@@ -37,16 +39,23 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
   @override
   void initState() {
     super.initState();
-    _loadEvents();
-    _tickerTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
-    });
+    if (widget.exampleEvents != null) {
+      _events = widget.exampleEvents!;
+      _initialCacheLoaded = true;
+    } else {
+      _loadEvents();
+      _tickerTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   @override
   void didUpdateWidget(covariant GridDayColumnsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.days.first != oldWidget.days.first ||
+    if (widget.exampleEvents != null) {
+      _events = widget.exampleEvents!;
+    } else if (widget.days.first != oldWidget.days.first ||
         widget.days.length != oldWidget.days.length) {
       _loadEvents();
     }
@@ -59,6 +68,15 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
   }
 
   Future<void> _loadEvents() async {
+    if (widget.exampleEvents != null) {
+      if (mounted) {
+        setState(() {
+          _events = widget.exampleEvents!;
+          _initialCacheLoaded = true;
+        });
+      }
+      return;
+    }
     if (widget.days.isEmpty) return;
 
     final rangeStart = DateTime(

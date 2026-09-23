@@ -176,8 +176,13 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
     Widget chartContent;
 
     if (_primaryCurveData == null || !_primaryCurveData!.hasEnoughData) {
-      chartContent =
-          const Center(child: Text("Not enough data for primary curve"));
+      chartContent = Center(
+        child: Icon(
+          Icons.multiline_chart_rounded,
+          size: 32,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        ),
+      );
     } else {
       chartContent = LineChart(
         LineChartData(
@@ -329,7 +334,8 @@ class _GaussianCurveChartState extends State<GaussianCurveChart> {
                   (curveData) => LineChartBarData(
                     spots: curveData.spots,
                     isCurved: true,
-                    color: onSurfaceVariant.withValues(alpha: 0.4), // Grayed out
+                    color:
+                        onSurfaceVariant.withValues(alpha: 0.4), // Grayed out
                     barWidth: 1.5, // Thinner
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),

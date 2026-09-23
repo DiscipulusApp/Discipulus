@@ -26,6 +26,9 @@ import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/core/ad_service.dart';
 import 'package:discipulus/core/watch_service.dart';
+import 'package:discipulus/mcp/local_ipc.dart';
+import 'package:discipulus/mcp/mcp_server.dart';
+import 'package:discipulus/screens/ai/ai_service.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -50,11 +53,12 @@ import 'package:dnd_manager/dnd_manager.dart';
 // Misc
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/expressive_intro.dart';
-import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/account_migration.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/utils/desktop_header_bar.dart';
+import 'package:discipulus/utils/desktop_scroll_behavior.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -70,12 +74,26 @@ late final RootIsolateToken rootIsolateToken;
 Directory? storageDir;
 late final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
-void main(args) async {
+void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (args.contains('--mcp')) {
+    await runZoned(
+      () async {
+        await runMcpServer();
+      },
+      zoneSpecification: ZoneSpecification(
+        print: (self, parent, zone, line) {
+          stderr.writeln(line);
+        },
+      ),
+    );
+    return;
+  }
 
   appLinks = AppLinks();
   rootIsolateToken = RootIsolateToken.instance!;
@@ -89,6 +107,7 @@ void main(args) async {
   );
 
   await initIsar();
+  await AIService.checkAndEnableLocalAi();
 
   initializeTimeZones();
   initializeDateFormatting("nl-NL");
@@ -114,6 +133,10 @@ void main(args) async {
 
   if (Platform.isAndroid) await AndroidAlarmManager.initialize();
   if (Platform.isIOS || Platform.isAndroid) WatchService().init();
+  if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
+    LocalIpcServer().init();
+  }
+
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
@@ -155,6 +178,8 @@ class MainAppState extends State<MainApp> {
     Future(() async {
       await AccountMigration.checkAndMigrateAccounts();
       await AdService.initialize();
+      await checkAccountPermissions();
+      await AIService.checkAndEnableLocalAi();
     });
   }
 
@@ -272,6 +297,7 @@ class MainAppState extends State<MainApp> {
         }
 
         return MaterialApp(
+          title: "Discipulus",
           theme: getTheme(),
           navigatorKey: navKey,
           locale: const Locale("nl-NL"),
@@ -282,28 +308,30 @@ class MainAppState extends State<MainApp> {
               : appSettings.brightness == ThemeBrightness.dark
                   ? ThemeMode.dark
                   : ThemeMode.light,
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              padding: MediaQuery.of(context).padding.copyWith(
-                    top: MediaQuery.of(context).padding.top +
-                        (Platform.isMacOS ? 28 : 0),
-                  ),
-            ),
-            child: ScrollConfiguration(
-              behavior: Platform.isIOS || Platform.isMacOS
-                  ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
-                  : const MaterialScrollBehavior(),
-              child: Layout(child: child!),
-            ),
-          ),
+          builder: (context, child) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              DesktopHeaderBar.updateHeaderBarTheme(Theme.of(context));
+            });
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: MediaQuery.of(context).padding.copyWith(
+                      top: MediaQuery.of(context).padding.top +
+                          (Platform.isMacOS ? 28 : 0),
+                    ),
+              ),
+              child: ScrollConfiguration(
+                behavior: Platform.isIOS || Platform.isMacOS
+                    ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
+                    : const GlobalScrollBehavior(),
+                child: Layout(child: child!),
+              ),
+            );
+          },
           home: (() {
             if (appSettings.activeProfileUuid == null &&
                 isar.profiles.countSync() == 0) {
               // No profile was found, so we will show the introduction screen
-              if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-                return const ExpressiveIntroductionScreen();
-              }
-              return const VerticalIntroductionScreen();
+              return const ExpressiveIntroductionScreen();
             } else {
               // An account was found, so we will show the starting view that the
               // user configured

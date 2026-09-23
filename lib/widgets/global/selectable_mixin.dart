@@ -10,6 +10,14 @@ mixin SelectableList<T extends StatefulWidget> on State<T> {
   List selectedItems = [];
 
   final GlobalKey<State<StatefulWidget>> sheetKey = GlobalKey();
+  PersistentBottomSheetController? _sheetController;
+
+  void closeSelectionSheet() {
+    try {
+      _sheetController?.close();
+    } catch (_) {}
+    _sheetController = null;
+  }
 
   List<Widget>? selectionSheetContentBuilder(BuildContext context) {
     return null;
@@ -25,6 +33,7 @@ mixin SelectableList<T extends StatefulWidget> on State<T> {
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
+          closeSelectionSheet();
           selectedItems.clear();
           setState(() {});
         }
@@ -51,66 +60,74 @@ mixin SelectableList<T extends StatefulWidget> on State<T> {
               MediaQuery.of(context).padding.top) /
           MediaQuery.of(context).size.height;
 
-      // Display the sheet
-      await showBottomSheet(
-        context: context,
-        enableDrag: true,
-        constraints: const BoxConstraints(maxWidth: 640),
-        shape: Theme.of(context).bottomSheetTheme.shape,
-        builder: (context) => ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: {
-              PointerDeviceKind.touch,
-              PointerDeviceKind.mouse,
-              PointerDeviceKind.trackpad,
-              PointerDeviceKind.unknown
-            },
-          ),
-          child: DraggableScrollableSheet(
-            key: sheetKey,
-            shouldCloseOnMinExtent: false,
-            initialChildSize: 0.2,
-            minChildSize: 0.2,
-            maxChildSize: maxExtent,
-            snap: true,
-            snapSizes: [.2, maxExtent],
-            expand: false,
-            builder: (context, scrollController) => StatefulBuilder(
-              builder: (context, setState) => SafeArea(
-                child: ListView(
-                  controller: scrollController,
-                  children: [
-                    if (headerOptionsBuilder.call(context) != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [...headerOptionsBuilder.call(context)!],
+      closeSelectionSheet();
+
+      try {
+        final scaffold = Scaffold.maybeOf(context);
+        if (scaffold == null) return;
+
+        _sheetController = scaffold.showBottomSheet(
+          enableDrag: true,
+          constraints: const BoxConstraints(maxWidth: 640),
+          shape: Theme.of(context).bottomSheetTheme.shape,
+          (context) => ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+                PointerDeviceKind.unknown
+              },
+            ),
+            child: DraggableScrollableSheet(
+              key: sheetKey,
+              shouldCloseOnMinExtent: false,
+              initialChildSize: 0.2,
+              minChildSize: 0.2,
+              maxChildSize: maxExtent,
+              snap: true,
+              snapSizes: [.2, maxExtent],
+              expand: false,
+              builder: (context, scrollController) => StatefulBuilder(
+                builder: (context, setState) => SafeArea(
+                  child: ListView(
+                    controller: scrollController,
+                    children: [
+                      if (headerOptionsBuilder.call(context) != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [...headerOptionsBuilder.call(context)!],
+                            ),
                           ),
                         ),
-                      ),
-                    if (headerOptionsBuilder.call(context) != null &&
-                        selectionSheetContentBuilder.call(context) != null)
-                      const Divider(
-                        indent: 16,
-                        endIndent: 16,
-                      ),
-                    if (selectionSheetContentBuilder.call(context) != null)
-                      ...selectionSheetContentBuilder.call(context)!,
-                    const BottomSheetBottomContentPadding()
-                  ],
+                      if (headerOptionsBuilder.call(context) != null &&
+                          selectionSheetContentBuilder.call(context) != null)
+                        const Divider(
+                          indent: 16,
+                          endIndent: 16,
+                        ),
+                      if (selectionSheetContentBuilder.call(context) != null)
+                        ...selectionSheetContentBuilder.call(context)!,
+                      const BottomSheetBottomContentPadding()
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ).closed.then(
-        (value) {
-          selectedItems.clear();
-          setState(() {});
-        },
-      );
+        );
+
+        _sheetController?.closed.then(
+          (value) {
+            _sheetController = null;
+            selectedItems.clear();
+            if (mounted) setState(() {});
+          },
+        );
+      } catch (_) {}
     }
   }
 }
@@ -136,9 +153,9 @@ mixin SelectableListItem<T extends StatefulWidget> on State<T> {
         list.selectedItems.remove(selectableId);
       }
 
-      if (list.selectedItems.isEmpty && list.sheetKey.currentContext != null) {
+      if (list.selectedItems.isEmpty) {
         // The selection is now empty, so we should hide the selection sheet
-        Navigator.of(list.sheetKey.currentContext!).pop();
+        list.closeSelectionSheet();
       } else if (isFirst) {
         // The selection was empty before, so we still need to show the sheet
         list.showSelectionSheet(context);

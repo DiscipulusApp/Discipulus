@@ -140,6 +140,9 @@ extension CalenderEventExt on CalendarEvent {
 
   bool get isCanceled => [4, 5].contains(status.index);
   bool get isTest => [2, 3, 4, 5].contains(infoType.index);
+  bool get hasHomework =>
+      infoType == InfoType.homework ||
+      (inhoud != null && inhoud!.trim().isNotEmpty && !isTest);
 
   bool get isEditable =>
       id.isNegative ||

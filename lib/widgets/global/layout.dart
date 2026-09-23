@@ -9,12 +9,12 @@ import 'package:discipulus/core/spotlight_search.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/gemini/chat_screen.dart';
+import 'package:discipulus/screens/calendar/calendar_statistics/widgets/appie_receipt_export.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/desktop_header_bar.dart';
 import 'package:discipulus/utils/extensions.dart';
-import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +25,7 @@ import 'package:collection/collection.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/screens/grades/widgets/grade_reveal_dialog.dart';
 import 'package:discipulus/widgets/ads/banner_ad_widget.dart';
+import 'package:flutter_apple_handoff/flutter_apple_handoff.dart';
 import 'package:isar/isar.dart';
 
 /// Creates the base layout of the app.
@@ -60,9 +61,10 @@ class LayoutState extends State<Layout>
 
   // Global drawer
   late final ValueNotifier<int> selectedIndex;
-  Timer? hoverTimer;
-  bool _hoveredChild = false;
   bool _showDrawer = true;
+
+  // Supporting pane (3rd pane)
+  SecondaryPaneEntry? _activeSecondaryPane;
 
   // The index is not the actual index in some cases, since we use intersperse
   // to create dividers in the medium sidebar.
@@ -105,6 +107,11 @@ class LayoutState extends State<Layout>
     bool makeFirst = true,
     String? routeName,
   }) async {
+    // If a secondary pane is open, close it when navigating to a new page
+    if (_activeSecondaryPane != null) {
+      closeSecondaryPane();
+    }
+
     // If the drawer is present, it should be closed
     if (mounted && !skipDrawer) drawerController.hideDrawer();
 
@@ -142,10 +149,10 @@ class LayoutState extends State<Layout>
       // When the slidable is used we want the transition in a diffrent axis
       transitionsBuilder: (context, animation, secAnimation, child) {
         return SharedAxisTransition(
-          fillColor:
-              (screen.key == const ValueKey("TRANSPARENT")) && Platform.isMacOS
-                  ? Colors.transparent
-                  : null,
+          fillColor: (screen.key == const ValueKey("TRANSPARENT")) &&
+                  (Platform.isMacOS || Platform.isWindows)
+              ? Colors.transparent
+              : null,
           animation: animation,
           secondaryAnimation: secAnimation,
           transitionType: persistantDrawer
@@ -248,18 +255,19 @@ class LayoutState extends State<Layout>
     _setupGradeListener();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       checkForNewGradesToReveal();
+      checkAccountPermissions();
     });
   }
 
   @override
   void dispose() {
+    _activeSecondaryPane?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _gradeSubscription?.cancel();
     drawerController.dispose();
     animationController.dispose();
     _desinations.dispose();
     selectedIndex.dispose();
-    hoverTimer?.cancel();
     super.dispose();
   }
 
@@ -268,16 +276,20 @@ class LayoutState extends State<Layout>
   //
 
   EdgeInsets get padding => const EdgeInsets.all(24).copyWith(
-        top: 24 +
-            (Platform.isMacOS ? 4 : 0), // The title bar is hidden in macOS,
+        top: (0 +
+                (Platform.isMacOS ? 4 : 0) +
+                MediaQuery.of(context).padding.top)
+            .toDouble()
+            .clamp(24, double.infinity), // The title bar is hidden in macOS,
         // so we have to add some extra padding on top of the normal padding.
       );
 
   // The border radius that is used
   BorderRadius borderRadius = const BorderRadius.all(Radius.circular(16));
 
-  // On macOS we would like the window to be semi-transparent
-  int get alpha => (255 * (Platform.isMacOS ? 0.5 : 1)).toInt();
+  // On macOS and Windows we would like the window to be semi-transparent
+  int get alpha =>
+      (255 * ((Platform.isMacOS || Platform.isWindows) ? 0.5 : 1)).toInt();
 
   Color? get backgroundColor => ElevationOverlay.applySurfaceTint(
           Theme.of(context).colorScheme.surface,
@@ -289,45 +301,148 @@ class LayoutState extends State<Layout>
     return SizeTransition(
       sizeFactor: CurvedAnimation(
         parent: animation,
-        curve: CustomAnimatedSize.style().curve!,
+        curve: Easing.standard,
       ),
       axis: Axis.horizontal,
       child: child,
     );
   }
 
-  // This function takes two widgets. Normally it displays only one, but when on
-  // a desktop the mouse cursor stays hovered on it for more than a second it
-  // switches to the second widget. This is reversed the moment the mouse is no
-  // longer hovering over either widget.
-  Widget _buildHoverAnimation(Widget child, Widget hoverChild) {
-    const Duration hoverDuration = Duration(milliseconds: 300);
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return MouseRegion(
-          //
-          // Idea was good, but this is honestly horrible UX wise.
-          //
-          // onEnter: (_) {
-          //   hoverTimer = Timer(hoverDuration, () {
-          //     setState(() {
-          //       _hoveredChild = true;
-          //     });
-          //   });
-          // },
-          // onExit: (_) {
-          //   hoverTimer?.cancel();
-          //   if (_hoveredChild) {
-          //     setState(() {
-          //       _hoveredChild = false;
-          //     });
-          //   }
-          // },
-          child: CustomAnimatedSize(
-            child: _hoveredChild ? hoverChild : child,
-          ),
+  /// Minimum screen width required to show the secondary side pane (e.g. 3-pane layout)
+  static const double secondaryPaneMinWidth = 1024;
+
+  /// Returns whether the current layout context can host a 3-pane supporting side pane
+  bool canShowSecondaryPane(BuildContext context) {
+    if (!(appSettings.useSideView ?? true) ||
+        widget.child.key == const ValueKey("NO_DRAWER") ||
+        !_showDrawer ||
+        appSettings.activeProfileUuid == null) {
+      return false;
+    }
+    return MediaQuery.of(context).size.width >= secondaryPaneMinWidth;
+  }
+
+  Future<T?> showSecondaryPane<T>({
+    required Widget Function(
+      BuildContext context,
+      void Function(void Function()) setState,
+      ScrollController scrollController,
+    ) builder,
+    Color? backgroundColor,
+    bool isDismissible = true,
+    bool showHeader = true,
+    NSUserActivity? activity,
+    void Function([VoidCallback? fn])? onUpdateNormalWindow,
+  }) {
+    if (_activeSecondaryPane != null) {
+      if (!_activeSecondaryPane!.completer.isCompleted) {
+        _activeSecondaryPane!.completer.complete(null);
+      }
+    }
+
+    if (Platform.isIOS || Platform.isMacOS) {
+      activity?.becomeCurrent();
+    }
+
+    final completer = Completer<T?>();
+    final entry = SecondaryPaneEntry<T>(
+      builder: builder,
+      completer: completer,
+      backgroundColor: backgroundColor,
+      isDismissible: isDismissible,
+      showHeader: showHeader,
+      activity: activity,
+      onUpdateNormalWindow: onUpdateNormalWindow,
+    );
+
+    setState(() {
+      _activeSecondaryPane = entry;
+    });
+
+    completer.future.whenComplete(() async {
+      if (activity != null && (Platform.isIOS || Platform.isMacOS)) {
+        await FlutterAppleHandoff.updateActivity(null);
+      }
+    });
+
+    return completer.future;
+  }
+
+  /// Closes the supporting side pane and resolves its future
+  void closeSecondaryPane([dynamic result]) {
+    if (_activeSecondaryPane != null) {
+      final entry = _activeSecondaryPane!;
+      setState(() {
+        _activeSecondaryPane = null;
+      });
+      if (!entry.completer.isCompleted) {
+        entry.completer.complete(result);
+      }
+    }
+  }
+
+  /// Triggers a rebuild/setState in the normal (main) window.
+  /// If [fn] is provided, it is executed before triggering the rebuild.
+  void setNormalWindowState([VoidCallback? fn]) {
+    if (_activeSecondaryPane?.onUpdateNormalWindow != null) {
+      _activeSecondaryPane!.onUpdateNormalWindow!(fn);
+    } else {
+      fn?.call();
+      if (navKey.currentContext != null && navKey.currentContext!.mounted) {
+        void markElementAndChildrenDirty(Element element, [int depth = 2]) {
+          element.markNeedsBuild();
+          if (depth > 0) {
+            element.visitChildren(
+              (child) => markElementAndChildrenDirty(child, depth - 1),
+            );
+          }
+        }
+
+        markElementAndChildrenDirty(navKey.currentContext as Element);
+      }
+    }
+  }
+
+  Widget secondarySidePane(BuildContext context) {
+    if (_activeSecondaryPane == null) return const SizedBox.shrink();
+    final entry = _activeSecondaryPane!;
+    final surfaceColor = entry.backgroundColor ??
+        ElevationOverlay.applySurfaceTint(
+          Theme.of(context).colorScheme.surface,
+          Theme.of(context).colorScheme.surfaceTint,
+          1,
         );
-      },
+
+    return Padding(
+      padding: padding.copyWith(left: 12),
+      child: RepaintBoundary(
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: PageTransitionSwitcher(
+            duration: Durations.short4,
+            transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+              return SharedAxisTransition(
+                animation: primaryAnimation,
+                secondaryAnimation: secondaryAnimation,
+                transitionType: SharedAxisTransitionType.horizontal,
+                fillColor: surfaceColor,
+                child: child,
+              );
+            },
+            child: Material(
+              key: ValueKey(entry.hashCode),
+              color: surfaceColor,
+              elevation: 1,
+              shadowColor: Colors.transparent,
+              child: SecondaryPaneContent(
+                key: ValueKey(entry.hashCode),
+                entry: entry,
+                onClose: closeSecondaryPane,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -339,44 +454,67 @@ class LayoutState extends State<Layout>
     if ((widget.child.key == const ValueKey("NO_DRAWER") ||
         !_showDrawer ||
         appSettings.activeProfileUuid == null)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        DesktopHeaderBar.updateHeaderBarColor(
+          background: Theme.of(context).colorScheme.surface,
+          foreground: Theme.of(context).colorScheme.onSurface,
+        );
+      });
       // This widget is not a widget that should contain a sidebar, so we will
       // not do anything
       return Theme(
         data: Theme.of(context).copyWith(
-          canvasColor: Platform.isMacOS ? Colors.transparent : null,
+          canvasColor: (Platform.isMacOS || Platform.isWindows)
+              ? Colors.transparent
+              : null,
         ),
         child: widget.child,
       );
     } else {
+      if (backgroundColor != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          DesktopHeaderBar.updateHeaderBarColor(
+            background: backgroundColor!,
+            foreground: Theme.of(context).colorScheme.onSurface,
+          );
+        });
+      }
+      final screenWidth = MediaQuery.of(context).size.width;
+      final isWideForSecondaryPane = screenWidth >= secondaryPaneMinWidth;
+      final bool hasSecondaryPane = (appSettings.useSideView ?? true) &&
+          _activeSecondaryPane != null &&
+          isWideForSecondaryPane;
+      final double? dynamicBodyRatio = hasSecondaryPane
+          ? (1.0 - (420.0 / (screenWidth - (persistantDrawer ? 80.0 : 0.0))))
+              .clamp(0.5, 0.75)
+          : null;
+
+      final bool isSmall =
+          hasSecondaryPane || Breakpoints.medium.isActive(context);
+
       return Scaffold(
-        backgroundColor:
-            Platform.isMacOS ? Colors.transparent : backgroundColor,
+        backgroundColor: (Platform.isMacOS || Platform.isWindows)
+            ? Colors.transparent
+            : backgroundColor,
         body: Column(
           children: [
             Expanded(
               child: AdaptiveLayout(
-                transitionDuration: Durations.short3,
+                transitionDuration: Durations.short4,
+                bodyRatio: dynamicBodyRatio,
                 primaryNavigation: SlotLayout(
                   config: {
                     Breakpoints.mediumAndUp: SlotLayout.from(
                       key: const Key('primaryNavigation'),
                       inAnimation: _slotLayoutAnimation,
                       outAnimation: _slotLayoutAnimation,
-                      inDuration: Durations.short3,
-                      outDuration: Durations.short3,
-                      builder: (_) {
-                        return largeSideBar();
-                      },
-                    ),
-                    Breakpoints.medium: SlotLayout.from(
-                      key: const Key('primaryNavigation'),
-                      inAnimation: _slotLayoutAnimation,
-                      outAnimation: _slotLayoutAnimation,
-                      inDuration: Durations.short3,
-                      outDuration: Durations.short3,
-                      builder: (_) {
-                        return _buildHoverAnimation(
-                            mediumSideBar(), largeSideBar());
+                      inDuration: Durations.short4,
+                      outDuration: Durations.short4,
+                      builder: (context) {
+                        return ClipRRect(
+                          borderRadius: borderRadius,
+                          child: BigDrawerBase(isSmall: isSmall),
+                        );
                       },
                     ),
                   },
@@ -391,13 +529,21 @@ class LayoutState extends State<Layout>
                       },
                     ),
                     Breakpoints.mediumAndUp: SlotLayout.from(
-                      inDuration: Durations.short3,
-                      outDuration: Durations.short3,
+                      inDuration: Durations.short4,
+                      outDuration: Durations.short4,
+                      inAnimation: _slotLayoutAnimation,
+                      outAnimation: _slotLayoutAnimation,
                       key: const Key('body'),
                       builder: (_) {
                         persistantDrawer = true;
                         return Padding(
-                          padding: padding,
+                          padding: padding.copyWith(
+                            right: (hasSecondaryPane ? 12 : 24)
+                                .clamp(MediaQuery.of(context).viewPadding.right,
+                                    double.infinity)
+                                .toDouble(),
+                            left: isSmall ? 0 : padding.left,
+                          ),
                           child: RepaintBoundary(
                             child: ClipRRect(
                               borderRadius: borderRadius,
@@ -414,6 +560,20 @@ class LayoutState extends State<Layout>
                         );
                       },
                     ),
+                  },
+                ),
+                secondaryBody: SlotLayout(
+                  config: <Breakpoint, SlotLayoutConfig?>{
+                    Breakpoints.mediumAndUp: hasSecondaryPane
+                        ? SlotLayout.from(
+                            key: const Key('secondaryBody'),
+                            inAnimation: _slotLayoutAnimation,
+                            outAnimation: _slotLayoutAnimation,
+                            inDuration: Durations.short4,
+                            outDuration: Durations.short4,
+                            builder: (context) => secondarySidePane(context),
+                          )
+                        : null,
                   },
                 ),
               ),
@@ -438,11 +598,8 @@ class LayoutState extends State<Layout>
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
         childDecoration: BoxDecoration(borderRadius: borderRadius),
-        drawer: Padding(
-          padding: padding.copyWith(left: 0, right: 0),
-          child: const RepaintBoundary(
-            child: BigDrawerBase(),
-          ),
+        drawer: const RepaintBoundary(
+          child: BigDrawerBase(),
         ),
         child: ScaffoldMessenger(child: widget.child),
       ),
@@ -450,76 +607,11 @@ class LayoutState extends State<Layout>
   }
 
   Widget mediumSideBar() {
-    return Padding(
-      padding: padding.copyWith(right: 0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: borderRadius,
-        ),
-        child: ClipRRect(
-          borderRadius: borderRadius,
-          child: ValueListenableBuilder(
-            valueListenable: selectedIndex,
-            builder: (context, index, child) {
-              return ValueListenableBuilder(
-                valueListenable: _desinations,
-                builder: (context, desinations, child) {
-                  return AdaptiveScaffold.standardNavigationRail(
-                    labelType: NavigationRailLabelType.selected,
-                    backgroundColor: Colors.transparent,
-                    padding: EdgeInsets.zero,
-                    selectedIndex: _getIndex(index, toIntersperse: true),
-                    onDestinationSelected: (int index) => goToPageFromIndex(
-                      _getIndex(index, toIntersperse: false),
-                    ),
-                    leading: InkWell(
-                      onTap: () =>
-                          showGeminiChatSheet(navKey.currentState!.context),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Icon(Icons.query_stats_rounded),
-                      ),
-                    ),
-                    destinations: <NavigationRailDestination>[
-                      ...<List<NavigationRailDestination>>[
-                        for (DestinationSegement segment in desinations)
-                          [
-                            for (Destination destination
-                                in segment.destinations)
-                              NavigationRailDestination(
-                                indicatorColor: Layout.of(context)?.alpha == 255
-                                    ? null
-                                    : Layout.of(context)
-                                        ?.backgroundColor
-                                        ?.withAlpha(255),
-                                selectedIcon: destination.filledIcon,
-                                icon: destination.icon,
-                                label: Text(
-                                  destination.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                          ]
-                      ].intersperse([
-                        NavigationRailDestination(
-                          disabled: true,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 0),
-                          label: const SizedBox(),
-                          icon: Divider(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                        )
-                      ]).expand((e) => e),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ),
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: Padding(
+        padding: padding.copyWith(left: 0, right: 0),
+        child: const BigDrawerBase(isSmall: true),
       ),
     );
   }
@@ -529,7 +621,7 @@ class LayoutState extends State<Layout>
       borderRadius: borderRadius,
       child: Padding(
         padding: padding.copyWith(left: 0, right: 0),
-        child: const BigDrawerBase(),
+        child: const BigDrawerBase(isSmall: false),
       ),
     );
   }
@@ -558,6 +650,7 @@ class LayoutState extends State<Layout>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       checkForNewGradesToReveal();
+      checkAccountPermissions();
     }
   }
 
@@ -595,117 +688,377 @@ class LayoutState extends State<Layout>
 }
 
 class BigDrawerBase extends StatelessWidget {
-  const BigDrawerBase({super.key});
+  const BigDrawerBase({
+    super.key,
+    this.isSmall = false,
+  });
 
-  Widget _buildFakeDest(context,
-      {required Widget title,
-      required Widget icon,
-      EdgeInsets iconPadding = const EdgeInsets.all(12)}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: InkWell(
-        onTap: () {
-          if (Layout.of(context)!.drawerController.value.visible) {
-            Layout.of(context)!.drawerController.hideDrawer();
-          }
+  final bool isSmall;
 
-          showGeminiChatSheet(navKey.currentState!.context);
-        },
-        child: Row(
-          children: [
-            Padding(
-              padding: iconPadding,
-              child: icon,
-            ),
-            title
-          ],
-        ),
-      ),
+  @override
+  Widget build(BuildContext context) {
+    final double targetWidth = isSmall ? 80.0 : 304.0;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(end: targetWidth),
+      duration: Durations.short4,
+      curve: Easing.standard,
+      builder: (context, width, child) {
+        final double progress =
+            ((width - 80.0) / (304.0 - 80.0)).clamp(0.0, 1.0);
+        final double textOpacity =
+            ((width - 140.0) / (304.0 - 140.0)).clamp(0.0, 1.0);
+
+        return ClipRect(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SizedBox(
+                width: width,
+                child: ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, (MediaQuery.of(context).viewPadding.top * 2 / constraints.maxHeight).clamp(0.05, 1.0), 0.95, 1.0],
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      scrollbars: false,
+                      physics: const ClampingScrollPhysics(),
+                    ),
+                    child: ValueListenableBuilder(
+                      valueListenable: Layout.of(context)!._desinations,
+                      builder: (context, desinations, child) {
+                        return ValueListenableBuilder(
+                          valueListenable: Layout.of(context)!.selectedIndex,
+                          builder: (context, index, child) {
+                            return MediaQuery.removePadding(
+                              context: context,
+                              removeTop: true,
+                              child: NavigationDrawer(
+                                backgroundColor: Colors.transparent,
+                                indicatorColor: Layout.of(context)!.alpha == 255
+                                    ? null
+                                    : Layout.of(context)!
+                                        .backgroundColor
+                                        ?.withAlpha(255),
+                                onDestinationSelected:
+                                    Layout.of(context)!.goToPageFromIndex,
+                                selectedIndex: Layout.of(context)!._getIndex(index),
+                                elevation: 0,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                      left: 26.0 + 2.0 * progress,
+                                      top: 16.0 +
+                                          24 + MediaQuery.of(context).padding.top, // 24 is added by global padding in the layout class,
+                                      bottom: 16.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CustomPaint(
+                                          size: const Size(28, 28),
+                                          painter: DiscipulusLogoPainter(
+                                            primaryColor: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            secondaryColor: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
+                                          ),
+                                        ),
+                                        if (width >= 120) ...[
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Opacity(
+                                              opacity: textOpacity,
+                                              child: Text(
+                                                "Discipulus",
+                                                maxLines: 1,
+                                                softWrap: false,
+                                                overflow: TextOverflow.clip,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineSmall
+                                                    ?.copyWith(
+                                                      fontWeight: FontWeight.w800,
+                                                      letterSpacing: -0.3,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ...[
+                                    for (DestinationSegement segment in desinations)
+                                      [
+                                        if (segment.name != null && width >= 140)
+                                          Opacity(
+                                            opacity: textOpacity,
+                                            child: Padding(
+                                              padding: const EdgeInsets.fromLTRB(
+                                                  16, 16, 16, 10),
+                                              child: Text(
+                                                segment.name!,
+                                                maxLines: 1,
+                                                softWrap: false,
+                                                overflow: TextOverflow.clip,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleSmall,
+                                              ),
+                                            ),
+                                          ),
+                                        for (Destination destination
+                                            in segment.destinations)
+                                          NavigationDrawerDestination(
+                                            selectedIcon: destination.filledIcon,
+                                            icon: destination.icon,
+                                            label: width < 120
+                                                ? const SizedBox.shrink()
+                                                : Opacity(
+                                                    opacity: textOpacity,
+                                                    child: Text(
+                                                      destination.label,
+                                                      maxLines: 1,
+                                                      softWrap: false,
+                                                      overflow: TextOverflow.clip,
+                                                    ),
+                                                  ),
+                                          ),
+                                      ]
+                                  ].intersperse([
+                                    Divider(
+                                      indent: 16.0 + 12.0 * progress,
+                                      endIndent: 16.0 + 12.0 * progress,
+                                    ),
+                                  ]).expand((element) => element),
+                                  if (isar.profiles.countSync() > 1)
+                                    CustomCard(
+                                      margin:
+                                          const EdgeInsets.symmetric(horizontal: 0),
+                                      child: ProfileChangeWidget(
+                                        vertical: isSmall,
+                                        showAddProfileButton: false,
+                                        showName: progress > 0.6,
+                                        updateState: (fn) => navKey.currentContext!
+                                            .findAncestorStateOfType<LayoutState>()!
+                                            .updateShownPage(),
+                                      ),
+                                    ),
+                                  Padding(
+                                      padding: EdgeInsets.only(
+                                          bottom:
+                                              24)), // 24 is added by global padding in the layout class
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }
+          ),
+        );
+      },
     );
+  }
+}
+
+class SecondaryPaneEntry<T> {
+  final Widget Function(
+    BuildContext context,
+    void Function(void Function()) setState,
+    ScrollController scrollController,
+  ) builder;
+  final Completer<T?> completer;
+  final Color? backgroundColor;
+  final bool isDismissible;
+  final bool showHeader;
+  final NSUserActivity? activity;
+  final ScrollController scrollController;
+  final GlobalKey<NavigatorState> navigatorKey;
+  final void Function([VoidCallback? fn])? onUpdateNormalWindow;
+
+  SecondaryPaneEntry({
+    required this.builder,
+    required this.completer,
+    this.backgroundColor,
+    this.isDismissible = true,
+    this.showHeader = true,
+    this.activity,
+    this.onUpdateNormalWindow,
+    ScrollController? scrollController,
+    GlobalKey<NavigatorState>? navigatorKey,
+  })  : scrollController = scrollController ?? ScrollController(),
+        navigatorKey = navigatorKey ?? GlobalKey<NavigatorState>();
+
+  void dispose() {
+    try {
+      scrollController.dispose();
+    } catch (_) {}
+  }
+}
+
+class SecondaryPaneContent extends StatefulWidget {
+  final SecondaryPaneEntry entry;
+  final void Function([dynamic result]) onClose;
+
+  const SecondaryPaneContent({
+    super.key,
+    required this.entry,
+    required this.onClose,
+  });
+
+  @override
+  State<SecondaryPaneContent> createState() => _SecondaryPaneContentState();
+}
+
+class _SecondaryPaneContentState extends State<SecondaryPaneContent> {
+  @override
+  void dispose() {
+    widget.entry.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        scrollbars: false,
-        physics: const ClampingScrollPhysics(),
+    final surfaceColor = widget.entry.backgroundColor ??
+        ElevationOverlay.applySurfaceTint(
+          Theme.of(context).colorScheme.surface,
+          Theme.of(context).colorScheme.surfaceTint,
+          1,
+        );
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: surfaceColor,
       ),
-      child: ValueListenableBuilder(
-        valueListenable: Layout.of(context)!._desinations,
-        builder: (context, desinations, child) {
-          return ValueListenableBuilder(
-            valueListenable: Layout.of(context)!.selectedIndex,
-            builder: (context, index, child) {
-              return NavigationDrawer(
-                backgroundColor: Colors.transparent,
-                indicatorColor: Layout.of(context)!.alpha == 255
-                    ? null
-                    : Layout.of(context)!.backgroundColor?.withAlpha(255),
-                onDestinationSelected: Layout.of(context)!.goToPageFromIndex,
-                selectedIndex: Layout.of(context)!._getIndex(index),
-                elevation: 0,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 28, vertical: 16),
-                    child: Text(
-                      "Discipulus",
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.3,
-                              ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // For now this will be left disabled, since I do not think
-                  // that this is not all too useful.
-                  // if (appSettings.useLocalAI || appSettings.openRouterAPIKey != null) ...[
-                  //   _buildFakeDest(
-                  //     context,
-                  //     title: const Text("AI Assistent"),
-                  //     icon: const Icon(Icons.auto_awesome),
-                  //   ),
-                  //   const Divider(indent: 28, endIndent: 28),
-                  // ],
-                  ...[
-                    for (DestinationSegement segment in desinations)
-                      [
-                        if (segment.name != null)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(28, 16, 16, 10),
-                            child: Text(
-                              segment.name!,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ),
-                        for (Destination destination in segment.destinations)
-                          NavigationDrawerDestination(
-                            selectedIcon: destination.filledIcon,
-                            icon: destination.icon,
-                            label: Text(destination.label),
-                          ),
-                      ]
-                  ].intersperse([
-                    const Divider(indent: 28, endIndent: 28),
-                  ]).expand((element) => element),
-                  if (isar.profiles.countSync() > 1)
-                    CustomCard(
-                      margin: const EdgeInsets.symmetric(horizontal: 0),
-                      child: ProfileChangeWidget(
-                        showAddProfileButton: false,
-                        updateState: (fn) => navKey.currentContext!
-                            .findAncestorStateOfType<LayoutState>()!
-                            .updateShownPage(),
-                      ),
-                    ),
-                ],
-              );
+      child: HeroControllerScope.none(
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.escape): () {
+              if (widget.entry.isDismissible) {
+                widget.onClose();
+              }
             },
-          );
-        },
+          },
+          child: FocusScope(
+            autofocus: true,
+            child: SecondaryPaneScope(
+              entry: widget.entry,
+              close: widget.onClose,
+              setNormalWindowState: ([fn]) {
+                Layout.of(context)?.setNormalWindowState(fn);
+              },
+              child: Navigator(
+                key: widget.entry.navigatorKey,
+                initialRoute: '/',
+                onGenerateInitialRoutes: (navigator, initialRoute) {
+                  final activeRoute = MaterialPageRoute(
+                    settings: const RouteSettings(name: 'secondary_pane_root'),
+                    builder: (paneContext) {
+                      final content = PrimaryScrollController(
+                        controller: widget.entry.scrollController,
+                        child: StatefulBuilder(
+                          builder: (ctx, paneSetState) {
+                            return widget.entry.builder(
+                              paneContext,
+                              paneSetState,
+                              widget.entry.scrollController,
+                            );
+                          },
+                        ),
+                      );
+
+                      if (!widget.entry.showHeader) {
+                        return content;
+                      }
+
+                      return Scaffold(
+                        backgroundColor: Colors.transparent,
+                        appBar: widget.entry.isDismissible
+                            ? AppBar(
+                                leading: IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed: () => widget.onClose(),
+                                ),
+                                title: const Text(""),
+                                elevation: 0,
+                                backgroundColor: Colors.transparent,
+                              )
+                            : null,
+                        body: content,
+                      );
+                    },
+                  );
+
+                  // Listen to when this route is popped (e.g. via Navigator.pop(paneContext, result))
+                  activeRoute.popped.then((result) {
+                    widget.onClose(result);
+                  });
+
+                  return [
+                    // Base placeholder route so that activeRoute can be popped without exhausting navigator history
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      transitionDuration: Duration.zero,
+                    ),
+                    activeRoute,
+                  ];
+                },
+              ),
+            ),
+          ),
+        ),
       ),
     );
+  }
+}
+
+class SecondaryPaneScope extends InheritedWidget {
+  final SecondaryPaneEntry entry;
+  final VoidCallback? close;
+  final void Function([VoidCallback? fn]) setNormalWindowState;
+
+  const SecondaryPaneScope({
+    super.key,
+    required this.entry,
+    required this.setNormalWindowState,
+    this.close,
+    required super.child,
+  });
+
+  static SecondaryPaneScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<SecondaryPaneScope>();
+
+  @override
+  bool updateShouldNotify(SecondaryPaneScope oldWidget) =>
+      entry != oldWidget.entry;
+}
+
+extension NormalWindowStateExtension on BuildContext {
+  /// Calls setState or triggers a refresh on the normal (main) window from a subscreen
+  /// (e.g. from inside the SecondaryPane on desktop or a pushed subscreen).
+  void setNormalWindowState([VoidCallback? fn]) {
+    if (SecondaryPaneScope.of(this) != null) {
+      SecondaryPaneScope.of(this)!.setNormalWindowState(fn);
+    } else {
+      Layout.of(this)?.setNormalWindowState(fn);
+    }
   }
 }

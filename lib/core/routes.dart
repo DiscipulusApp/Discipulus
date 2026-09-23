@@ -231,6 +231,19 @@ List<DestinationSegement> destinations(List<Permission> permissions,
         ])
     ].where((s) => s.destinations.isNotEmpty).toList();
 
+/// Returns all destination labels for the given permissions, or all known permissions if omitted.
+List<String> destinationLabels([List<Permission>? permissions]) {
+  final perms = permissions ??
+      PermissionType.values
+          .map((t) =>
+              Permission(type: t, statuses: const [PermissionStatus.read]))
+          .toList();
+  return destinations(perms)
+      .expand((s) => s.destinations)
+      .map((d) => d.label)
+      .toList();
+}
+
 List<PlatformMenuItem> platformMenu = [];
 
 /// Updates the menubar for macOS

@@ -501,11 +501,30 @@ jobs:
         run: |
           flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
 
-      - name: Create Windows ZIP
+      - name: Create Windows Portable ZIP
         shell: powershell
         run: |
           $ReleasePath = if (Test-Path "build\windows\x64\runner\Release") { "build\windows\x64\runner\Release\*" } else { "build\windows\runner\Release\*" }
           Compress-Archive -Path $ReleasePath -DestinationPath ${{ env.APP_NAME }}_windows.zip
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build Windows Installer
+        shell: powershell
+        run: |
+          $SourceDir = if (Test-Path "build\windows\x64\runner\Release\discipulus.exe") {
+            "build\windows\x64\runner\Release"
+          } else {
+            "build\windows\runner\Release"
+          }
+          New-Item -ItemType Directory -Force -Path "build\windows_installer" | Out-Null
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            "/DMyAppVersion=${{ needs.version.outputs.version }}" `
+            "/DSourceDir=$SourceDir" `
+            "/DOutputDir=build\windows_installer" `
+            "/DOutputBaseFilename=Windows - Discipulus_Setup" `
+            windows\installer\discipulus.iss
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
@@ -513,7 +532,7 @@ jobs:
           name: windows-builds
           path: |
             ${{ env.APP_NAME }}_windows.zip
-            build/windows/**/runner/Release/*.exe
+            build/windows_installer/*.exe
 
   create-release:
     name: Create GitHub Release
@@ -522,20 +541,25 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Prepare & Normalize Release Assets
+        run: |
+          python3 .github/scripts/prepare_release_assets.py artifacts release_assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.version.outputs.version }}
           name: Release ${{ needs.version.outputs.version }} (Build ${{ needs.version.outputs.build_number }})
-          files: |
-            artifacts/apple-builds/**/*
-            artifacts/android-linux-builds/**/*
-            artifacts/windows-builds/**/*
+          files: release_assets/*
           draft: false
           prerelease: false
         env:

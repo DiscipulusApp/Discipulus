@@ -10,7 +10,6 @@ import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:discipulus/utils/account_manager.dart';
-import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -21,8 +20,6 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_local_ai/flutter_local_ai.dart';
 
 class DiscipulusSettingsPage extends StatefulWidget {
   const DiscipulusSettingsPage({super.key});
@@ -32,7 +29,6 @@ class DiscipulusSettingsPage extends StatefulWidget {
 }
 
 class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
-  bool _obscureAPIKey = true;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +134,25 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             });
           },
         ),
+        SwitchListTile(
+          value: appSettings.useSideView ?? true,
+          secondary: const Icon(Icons.vertical_split_rounded),
+          title: const Text("Zijweergave gebruiken"),
+          subtitle: const Text(
+              "Open details en instellingen in een zijpaneel op brede schermen"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..useSideView = value
+                ..save();
+              if (!value) {
+                Layout.of(context)?.closeSecondaryPane();
+              }
+              Layout.of(context)?.update();
+              context.setNormalWindowState();
+            });
+          },
+        ),
         ListTile(
           title: const Text("Startpagina"),
           leading: const Icon(Icons.brightness_auto),
@@ -171,105 +186,6 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
               ),
             ],
           ),
-        ),
-        //
-        //  AI
-        //
-        const ListTitle(child: Text("Kunstmatige intelligentie")),
-        Column(
-          children: [
-            const ListTile(
-              leading: Icon(Icons.info_outline),
-              title: Text("Over AI in Discipulus"),
-              subtitle: Text(
-                  "Discipulus kan gebruik maken van AI om teksten samen te vatten of je te helpen als een persoonlijke assistent. Hiervoor kun je OpenRouter gebruiken (Cloud) of een lokaal model (Privacy)."),
-            ),
-            ListTile(
-              leading: const Icon(Icons.auto_awesome),
-              title: const Text("OpenRouter API key"),
-              subtitle: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      obscureText: _obscureAPIKey,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        filled: true,
-                        hintText: appSettings.openRouterAPIKey ??
-                            "Voer je API key in",
-                      ),
-                      onChanged: (value) => setState(() {
-                        appSettings
-                          ..openRouterAPIKey = value.nullOnEmpty
-                          ..save();
-                      }),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(_obscureAPIKey
-                        ? Icons.visibility_off
-                        : Icons.visibility),
-                    onPressed: () =>
-                        setState(() => _obscureAPIKey = !_obscureAPIKey),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.open_in_browser),
-              title: const Text("Krijg een API-key op openrouter.ai"),
-              onTap: () => launchUrl(Uri.parse("https://openrouter.ai/keys")),
-            ),
-            ListTile(
-              leading: const Icon(Icons.model_training),
-              title: const Text("OpenRouter Model"),
-              subtitle: TextField(
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  filled: true,
-                  hintText: appSettings.openRouterModel,
-                ),
-                onChanged: (value) => appSettings
-                  ..openRouterModel = value.nullOnEmpty ??
-                      "google/gemini-2.0-flash-lite:free"
-                  ..save(),
-              ),
-            ),
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.open_in_browser),
-              title: const Text("Bekijk gratis modellen op openrouter.ai"),
-              onTap: () => launchUrl(
-                  Uri.parse("https://openrouter.ai/models?max_price=0")),
-            ),
-          ],
-        ),
-        FutureBuilder<bool>(
-          future: FlutterLocalAi().isAvailable(),
-          builder: (context, snapshot) {
-            final isAvailable = snapshot.data ?? false;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: CustomCard(
-                child: SwitchListTile(
-                  value: appSettings.useLocalAI,
-                  onChanged: isAvailable
-                      ? (value) => setState(() {
-                            appSettings
-                              ..useLocalAI = value
-                              ..save();
-                          })
-                      : null,
-                  secondary: const Icon(Icons.memory),
-                  title: const Text("Gebruik Lokale AI (Offline)"),
-                  subtitle: Text(isAvailable
-                      ? "Genereer tekst lokaal op je apparaat zonder API key."
-                      : "Lokale AI wordt niet ondersteund op dit apparaat."),
-                ),
-              ),
-            );
-          },
         ),
         //
         //  Profiles

@@ -88,3 +88,39 @@ Future<void> nextActiveProfile({int steps = 1}) async {
   activeProfile =
       (await isar.profiles.filter().uuidEqualTo(newAccountUUID).findFirst())!;
 }
+
+DateTime? _lastPermissionsCheckTime;
+
+/// Checks and updates the permissions of all accounts from Magister.
+/// If permissions for the active profile's account changed, updates the Layout destinations.
+Future<void> checkAccountPermissions({bool force = false}) async {
+  final now = DateTime.now();
+  if (!force &&
+      _lastPermissionsCheckTime != null &&
+      now.difference(_lastPermissionsCheckTime!) <
+          const Duration(seconds: 30)) {
+    return;
+  }
+  _lastPermissionsCheckTime = now;
+
+  try {
+    final accounts = await isar.discipulusAccounts.where().findAll();
+    if (accounts.isEmpty) return;
+
+    bool activeAccountChanged = false;
+    final activeAccountUuid = activeProfileNullable?.account.value?.uuid;
+
+    for (final account in accounts) {
+      final changed = await account.refreshPermissions();
+      if (changed && account.uuid == activeAccountUuid) {
+        activeAccountChanged = true;
+      }
+    }
+
+    if (activeAccountChanged && navKey.currentContext != null) {
+      Layout.of(navKey.currentContext!)?.update();
+    }
+  } catch (_) {
+    // Handle or ignore network errors
+  }
+}

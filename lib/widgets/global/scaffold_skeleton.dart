@@ -230,6 +230,7 @@ class _TabbedScaffoldSkeletonState extends State<TabbedScaffoldSkeleton>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: NestedScrollView(
         controller: _scrollController,
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {

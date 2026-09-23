@@ -10,11 +10,13 @@ class ProfilePicture extends StatefulWidget {
     this.base64ProfilePicture,
     this.radius = 22.5,
     this.setProfilePicture,
+    this.forceSquare = false,
   });
 
   final String? base64ProfilePicture;
   final void Function(String? newProfilePicture)? setProfilePicture;
   final double radius;
+  final bool forceSquare;
 
   @override
   State<ProfilePicture> createState() => _ProfilePictureState();
@@ -22,6 +24,29 @@ class ProfilePicture extends StatefulWidget {
 
 class _ProfilePictureState extends State<ProfilePicture> {
   bool isDroppedOver = false;
+
+  Widget _buildImage() {
+    if (widget.base64ProfilePicture == null) {
+      return const Icon(Icons.person);
+    }
+
+    final pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 2.0;
+    final targetPixelSize = (widget.radius * 2 * pixelRatio).ceil();
+
+    return AspectRatio(
+      aspectRatio: 1,
+      child: Image.memory(
+        const Base64Decoder().convert(widget.base64ProfilePicture!),
+        gaplessPlayback: true,
+        fit: BoxFit.cover,
+        filterQuality: FilterQuality.medium,
+        cacheHeight: targetPixelSize,
+        cacheWidth: targetPixelSize,
+        width: (widget.radius * 2),
+        height: (widget.radius * 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,23 +75,10 @@ class _ProfilePictureState extends State<ProfilePicture> {
             },
           );
         },
-        child: CircleAvatar(
+        child: widget.forceSquare ? _buildImage() : CircleAvatar(
           radius: widget.radius,
           child: ClipOval(
-            child: widget.base64ProfilePicture != null
-                ? AspectRatio(
-                    aspectRatio: 1,
-                    child: Image.memory(
-                      const Base64Decoder()
-                          .convert(widget.base64ProfilePicture!),
-                      gaplessPlayback: true,
-                      cacheHeight: (widget.radius * 2).toInt(),
-                      cacheWidth: (widget.radius * 2).toInt(),
-                      width: (widget.radius * 2),
-                      height: (widget.radius * 2),
-                    ),
-                  )
-                : const Icon(Icons.person),
+            child: _buildImage()
           ),
         ),
       ),

@@ -8,6 +8,7 @@ import 'package:discipulus/screens/studiewijzers/studiewijzer_extensions.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
+import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/context_menu.dart';
 import 'package:discipulus/widgets/global/html.dart';
@@ -144,7 +145,7 @@ class _StudieWijzerTileState extends State<StudieWijzerTile>
                 : null
             : widget.navigationTile
                 ? () => StudieWijzerScreen(studiewijzer: widget.studiewijzer)
-                        .push(context)
+                        .pushSideView(context)
                         .then(
                       (value) {
                         if (widget.callback != null) widget.callback!();
