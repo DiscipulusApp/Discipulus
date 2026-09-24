@@ -513,18 +513,26 @@ jobs:
       - name: Build Windows Installer
         shell: powershell
         run: |
-          $SourceDir = if (Test-Path "build\windows\x64\runner\Release\discipulus.exe") {
+          $RelSource = if (Test-Path "build\windows\x64\runner\Release\discipulus.exe") {
             "build\windows\x64\runner\Release"
-          } else {
+          } elseif (Test-Path "build\windows\runner\Release\discipulus.exe") {
             "build\windows\runner\Release"
+          } else {
+            throw "Could not find discipulus.exe in build\windows"
           }
-          New-Item -ItemType Directory -Force -Path "build\windows_installer" | Out-Null
+          $SourceDir = (Resolve-Path $RelSource).Path
+          $OutputDir = (New-Item -ItemType Directory -Force -Path "build\windows_installer").FullName
+          $IssPath = (Resolve-Path "windows\installer\discipulus.iss").Path
+          Write-Host "Inno Setup compilation parameters:"
+          Write-Host "  SourceDir: $SourceDir"
+          Write-Host "  OutputDir: $OutputDir"
+          Write-Host "  IssPath:   $IssPath"
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
             "/DMyAppVersion=${{ needs.version.outputs.version }}" `
             "/DSourceDir=$SourceDir" `
-            "/DOutputDir=build\windows_installer" `
+            "/DOutputDir=$OutputDir" `
             "/DOutputBaseFilename=Windows - Discipulus_Setup" `
-            windows\installer\discipulus.iss
+            "$IssPath"
 
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
