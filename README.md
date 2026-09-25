@@ -134,6 +134,10 @@ Welke moet ik kiezen? Ik raad over het algemeen `discipulus-bin` aan, maar hier 
 
 Je kan dit installeren met je favoriete AUR helper. (`yay` of `paru` meestal)
 
+> [!TIP]
+> Omdat de normale en `-git` packages (dus niet de `-bin`) dependen op `flutter`, die niet in de main arch repos zit, kan yay/paru packages aanraden om te installeren, wat verwarrend kan zijn.
+> Ik raad aan om eerst `flutter-bin` te installeren van de AUR.
+
 ## Wil je Bijdragen? Super!
 
 Ik waardeer elke bijdrage aan Discipulus enorm. Hier zijn een paar dingen om in gedachten te houden:
