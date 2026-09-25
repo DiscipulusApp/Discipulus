@@ -126,7 +126,7 @@ Voor meer details over het bouwen voor jouw platform, kun je het beste de [offic
 
 ### Arch Linux (of distro met AUR)
 
-Discipulus is beschikbaar op de AUR, en kan dus gebruikt worden op alle distro's die daar support voor hebben. Er zijn er 3, `discipulus`, `discipulus-git`, en `discipulus-bin`.
+Discipulus is beschikbaar op de AUR (onderhouden door @ElectricSteve), en kan dus gebruikt worden op alle distro's die daar support voor hebben. Er zijn er 3, `discipulus`, `discipulus-git`, en `discipulus-bin`.
 Welke moet ik kiezen? Ik raad over het algemeen `discipulus-bin` aan, maar hier nog een uitleg van de verschillende versies:
 - `discipulus`: Dit build discipulus van de source van de bepaalde versie (probeer ik up to date te houden)
 - `discipulus-git`: Doet hetzelfde, maar van de `main` branch, of te wel als Harry verandering maakt, maar nog niet released, dan krijg je die hierbij. Waarschuwing: het kan dat deze veranderingen niet af zijn of niet werken, dus kijk uit als je deze gebruikt.
