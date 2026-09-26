@@ -252,12 +252,10 @@ class _GradeInformationState extends State<GradeInformation> {
           grades: grades,
           onResult: (gradesList, average) =>
               WidgetsBinding.instance.addPostFrameCallback(
-            (_) => highlightGrade.value = gradesList.isNotEmpty
-                ? HighlightGrade.fromGrades(
-                    id: widget.grade.id,
-                    grades: gradesList,
-                  )
-                : null,
+            (_) => highlightGrade.value = HighlightGrade.fromGrades(
+              id: widget.grade.id,
+              grades: gradesList,
+            ),
           ),
         ),
         GradeCalculationCard(
@@ -266,12 +264,10 @@ class _GradeInformationState extends State<GradeInformation> {
           grades: grades,
           onResult: (gradesList, average) =>
               WidgetsBinding.instance.addPostFrameCallback(
-            (_) => highlightGrade.value = gradesList.isNotEmpty
-                ? HighlightGrade.fromGrades(
-                    id: widget.grade.id,
-                    grades: gradesList,
-                  )
-                : null,
+            (_) => highlightGrade.value = HighlightGrade.fromGrades(
+              id: widget.grade.id,
+              grades: gradesList,
+            ),
           ),
         ),
         const ListTile(

@@ -55,6 +55,24 @@ class HighlightGrade {
           DummyGrade(grade: customGrade!, weight: customWeight!),
         ...extraGrades,
       ];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HighlightGrade &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          customGrade == other.customGrade &&
+          customWeight == other.customWeight &&
+          const DeepCollectionEquality().equals(extraGrades, other.extraGrades);
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        customGrade,
+        customWeight,
+        const DeepCollectionEquality().hash(extraGrades),
+      );
 }
 
 class GradesLineChart extends StatefulWidget {
