@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Discipulus
+GenericName=School Schedule Viewer
+GenericName[nl]=Schoolrooster
+Comment=Alternative open-source Magister client
+Exec=discipulus %U
+Icon=discipulus
+Terminal=false
+StartupWMClass=discipulus
+Categories=Utility;Education;
+Keywords=discipulus;magister;schedule;rooster;
+MimeType=x-scheme-handler/m6loapp;x-scheme-handler/discipulus;
