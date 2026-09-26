@@ -306,17 +306,49 @@ fun EventDetailView(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = if (isHomework) "Huiswerk" else "Omschrijving",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = if (isHomework) "Huiswerk" else "Omschrijving",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                                if (activeEvent.customCalendarProperties?.inhoud != null) {
+                                    Text(
+                                        text = "Aangepast",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+                                }
+                            }
                             Text(
                                 text = parsedDescription,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+
+                            val origInhoud = activeEvent.customCalendarProperties?.inhoudOriginal
+                            if (!origInhoud.isNullOrBlank() && origInhoud != activeEvent.customCalendarProperties?.inhoud) {
+                                val cleanOrig = HtmlCompat.fromHtml(origInhoud, HtmlCompat.FROM_HTML_MODE_COMPACT).toString().trim()
+                                if (cleanOrig.isNotEmpty() && cleanOrig != parsedDescription) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Origineel:",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = cleanOrig,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
                 }

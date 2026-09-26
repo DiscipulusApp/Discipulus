@@ -18,6 +18,7 @@ import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUp
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.Wearable
+import dev.harrydekat.discipulus.wear.models.CustomCalendarProperties
 import dev.harrydekat.discipulus.wear.models.ScheduleEvent
 import dev.harrydekat.discipulus.wear.models.SchoolYearData
 import dev.harrydekat.discipulus.wear.models.StandaloneAccount
@@ -410,12 +411,23 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                         }.takeIf { it.isNotEmpty() }
                     }
 
-                    val location = item.optString("Lokatie").ifEmpty { item.optString("lokatie", "") }.takeIf { it.isNotEmpty() }
-                    val description = item.optString("Inhoud").ifEmpty {
+                    val rawAantekening = item.optString("Aantekening").ifEmpty {
+                        item.optString("aantekening", "")
+                    }.takeIf { it.isNotEmpty() }
+
+                    val customProperties = rawAantekening?.let {
+                        CustomCalendarProperties.fromAantekening(it)
+                    }
+
+                    val rawLokatie = item.optString("Lokatie").ifEmpty { item.optString("lokatie", "") }.takeIf { it.isNotEmpty() }
+                    val location = customProperties?.resolveLokatie(rawLokatie) ?: rawLokatie
+
+                    val rawInhoud = item.optString("Inhoud").ifEmpty {
                         item.optString("inhoud").ifEmpty {
                             item.optString("Omschrijving", item.optString("omschrijving", ""))
                         }
                     }.takeIf { it.isNotEmpty() }
+                    val description = customProperties?.resolveInhoud(rawInhoud) ?: rawInhoud
 
                     val docenten = item.optJSONArray("Docenten") ?: item.optJSONArray("docenten")
                     val teacher = if (docenten != null && docenten.length() > 0) {
@@ -437,8 +449,12 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                         item.has("lesuurTotMet") && !item.isNull("lesuurTotMet") -> item.getInt("lesuurTotMet")
                         else -> null
                     }
-                    val infoType = item.optInt("InfoType", item.optInt("infoType", 0))
-                    val status = item.optInt("Status", item.optInt("status", 0))
+                    val rawInfoType = item.optInt("InfoType", item.optInt("infoType", 0))
+                    val infoType = customProperties?.resolveInfoType(rawInfoType) ?: rawInfoType
+
+                    val rawStatus = item.optInt("Status", item.optInt("status", 0))
+                    val status = customProperties?.resolveStatus(rawStatus) ?: rawStatus
+
                     val isCompleted = item.optBoolean("Afgerond", item.optBoolean("afgerond", false))
 
                     eventsList.add(
@@ -455,7 +471,8 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                             endHourIndicator = endHour,
                             startTime = startDate,
                             endTime = endDate,
-                            isCompleted = isCompleted
+                            isCompleted = isCompleted,
+                            customCalendarProperties = customProperties
                         )
                     )
                 }
