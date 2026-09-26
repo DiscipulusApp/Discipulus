@@ -69,6 +69,28 @@ void EnableFullDpiSupportIfAvailable(HWND hwnd) {
   FreeLibrary(user32_module);
 }
 
+// Returns the OS build number using RtlGetVersion from ntdll.dll.
+// Returns 0 if unable to query.
+DWORD GetWindowsBuildNumber() {
+  using RtlGetVersionFn = LONG(NTAPI*)(PRTL_OSVERSIONINFOW);
+  HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+  if (!ntdll) {
+    ntdll = LoadLibraryW(L"ntdll.dll");
+  }
+  if (ntdll) {
+    auto rtl_get_version = reinterpret_cast<RtlGetVersionFn>(
+        GetProcAddress(ntdll, "RtlGetVersion"));
+    if (rtl_get_version) {
+      RTL_OSVERSIONINFOW osvi = {};
+      osvi.dwOSVersionInfoSize = sizeof(osvi);
+      if (rtl_get_version(&osvi) == 0) {
+        return osvi.dwBuildNumber;
+      }
+    }
+  }
+  return 0;
+}
+
 }  // namespace
 
 // Manages the Win32Window's window class registration.
@@ -298,24 +320,51 @@ void Win32Window::UpdateTheme(HWND const window) {
                                &light_mode_size);
 
   BOOL enable_dark_mode = (result == ERROR_SUCCESS && light_mode == 0);
-  DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
-                        &enable_dark_mode, sizeof(enable_dark_mode));
+  DWORD build = GetWindowsBuildNumber();
 
-  // Enable Mica system backdrop (Windows 11 22H2+ DWMSBT_MAINWINDOW = 2)
-  int backdrop_type = 2;
-  HRESULT hr = DwmSetWindowAttribute(window, DWMWA_SYSTEMBACKDROP_TYPE,
-                                     &backdrop_type, sizeof(backdrop_type));
-  if (FAILED(hr)) {
-    // Fallback for earlier Windows 11 builds (21H2)
-    BOOL enable_mica = TRUE;
-    DwmSetWindowAttribute(window, DWMWA_MICA_EFFECT, &enable_mica, sizeof(enable_mica));
+  if (build >= 18985) {
+    DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE,
+                          &enable_dark_mode, sizeof(enable_dark_mode));
+  } else if (build >= 17763) {
+    // Windows 10 1809 used attribute 19
+    DwmSetWindowAttribute(window, 19,
+                          &enable_dark_mode, sizeof(enable_dark_mode));
   }
 
-  // Extend the frame into the client area so the backdrop covers the entire window
-  MARGINS margins = {-1, -1, -1, -1};
-  DwmExtendFrameIntoClientArea(window, &margins);
+  // Mica system backdrop is only available on Windows 11 (Build 22000+)
+  bool mica_enabled = false;
+  if (build >= 22000) {
+    if (build >= 22621) {
+      // Windows 11 22H2+ DWMSBT_MAINWINDOW = 2
+      int backdrop_type = 2;
+      HRESULT hr = DwmSetWindowAttribute(window, DWMWA_SYSTEMBACKDROP_TYPE,
+                                         &backdrop_type, sizeof(backdrop_type));
+      if (SUCCEEDED(hr)) {
+        mica_enabled = true;
+      }
+    }
 
-  // Set caption color to DWMWA_COLOR_NONE so the header bar merges seamlessly with the backdrop
-  COLORREF caption_color = DWMWA_COLOR_NONE;
-  DwmSetWindowAttribute(window, DWMWA_CAPTION_COLOR, &caption_color, sizeof(caption_color));
+    if (!mica_enabled) {
+      // Fallback for earlier Windows 11 builds (21H2, build 22000)
+      BOOL enable_mica = TRUE;
+      HRESULT hr = DwmSetWindowAttribute(window, DWMWA_MICA_EFFECT, &enable_mica, sizeof(enable_mica));
+      if (SUCCEEDED(hr)) {
+        mica_enabled = true;
+      }
+    }
+  }
+
+  if (mica_enabled) {
+    // Extend the frame into the client area so the backdrop covers the entire window
+    MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(window, &margins);
+
+    // Set caption color to DWMWA_COLOR_NONE so the header bar merges seamlessly with the backdrop
+    COLORREF caption_color = DWMWA_COLOR_NONE;
+    DwmSetWindowAttribute(window, DWMWA_CAPTION_COLOR, &caption_color, sizeof(caption_color));
+  } else {
+    // Ensure standard margins when mica is disabled or unsupported (e.g. Windows 10)
+    MARGINS margins = {0, 0, 0, 0};
+    DwmExtendFrameIntoClientArea(window, &margins);
+  }
 }

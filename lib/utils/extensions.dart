@@ -9,6 +9,7 @@ import 'package:discipulus/utils/account_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:html/parser.dart';
 import 'package:discipulus/api/models/calendar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart' show lookupMimeType;
 
 extension FileExtension on File {
@@ -289,3 +290,16 @@ extension ContactExtension on Contact {
     }
   }
 }
+
+/// Checks whether the running Windows version supports the Mica effect (Windows 11 build 22000+).
+bool get isWindowsMicaSupported {
+  if (kIsWeb || !Platform.isWindows) return false;
+  final match =
+      RegExp(r'Build (\d+)').firstMatch(Platform.operatingSystemVersion);
+  final build = int.tryParse(match?.group(1) ?? '') ?? 0;
+  return build >= 22000;
+}
+
+/// Checks whether desktop window transparency (Mica / macOS vibrancy) is supported.
+bool get isDesktopTransparencySupported =>
+    Platform.isMacOS || isWindowsMicaSupported;
