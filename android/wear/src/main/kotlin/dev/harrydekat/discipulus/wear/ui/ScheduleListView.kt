@@ -308,18 +308,21 @@ fun BreakRow(durationMinutes: Int) {
 
 @Composable
 fun EventCard(event: ScheduleEvent, eventTimeDisplay: Int = 0, onClick: () -> Unit) {
-    val isCompleted = event.isCompleted && event.infoType == 1
     val isCanceled = event.status in 4..5 || event.isCanceled
+    val isCompleted = event.isCompleted && !isCanceled
 
     val containerColor = when {
         isCanceled -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
-        isCompleted -> MaterialTheme.colorScheme.secondaryContainer
+        // When an event is marked as done we need to override the colour back to the default.
+        isCompleted -> MaterialTheme.colorScheme.surfaceContainer 
+        event.infoType == 1 -> MaterialTheme.colorScheme.secondaryContainer
         event.infoType in 2..5 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
         else -> MaterialTheme.colorScheme.surfaceContainer
     }
     val contentColor = when {
         isCanceled -> MaterialTheme.colorScheme.onErrorContainer
-        isCompleted -> MaterialTheme.colorScheme.onSecondaryContainer
+        isCompleted -> MaterialTheme.colorScheme.onSurface
+        event.infoType == 1 -> MaterialTheme.colorScheme.onSecondaryContainer
         event.infoType in 2..5 -> MaterialTheme.colorScheme.onTertiaryContainer
         else -> MaterialTheme.colorScheme.onSurface
     }
