@@ -476,6 +476,8 @@ jobs:
       - name: Build Linux Desktop
         run: |
           flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ needs.version.outputs.build_number }}
+          cp discipulus.desktop build/linux/${{ matrix.arch }}/release/bundle/
+          cp icon.svg build/linux/${{ matrix.arch }}/release/bundle/
           cd build/linux/${{ matrix.arch }}/release
           tar -czvf ../../../../${{ env.APP_NAME }}_linux_${{ matrix.tar_arch }}.tar.gz bundle
           cd ../../../..
@@ -490,17 +492,9 @@ jobs:
           cp macos/Runner/Assets.xcassets/AppIcon.appiconset/icon_512x512.png flatpak_assets/${{ env.APP_ID }}.png
           python3 -c "from PIL import Image; im = Image.open('flatpak_assets/${{ env.APP_ID }}.png'); im.resize((512, 512)).save('flatpak_assets/${{ env.APP_ID }}.png') if im.size != (512, 512) else None" 2>/dev/null || true
           cp icon.svg flatpak_assets/${{ env.APP_ID }}.svg
-          cat << 'EOF' > flatpak_assets/${{ env.APP_ID }}.desktop
-          [Desktop Entry]
-          Version=1.0
-          Type=Application
-          Name=Discipulus
-          Comment=Discipulus Magister Client
-          Exec=discipulus
-          Icon=dev.harrydekat.discipulus
-          Terminal=false
-          Categories=Utility;Education;
-          EOF
+          cp discipulus.desktop flatpak_assets/${{ env.APP_ID }}.desktop
+          sed -i "s|^Icon=.*|Icon=${{ env.APP_ID }}|" flatpak_assets/${{ env.APP_ID }}.desktop
+          sed -i "s|^Exec=/usr/bin/|Exec=|" flatpak_assets/${{ env.APP_ID }}.desktop
 
           cat << 'EOF' > ${{ env.APP_ID }}.json
           {
