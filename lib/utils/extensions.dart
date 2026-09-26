@@ -291,6 +291,11 @@ extension ContactExtension on Contact {
   }
 }
 
+/// I keep writing this a bit too often, so here goes
+extension BuildContextExt on BuildContext {
+  ColorScheme get cs => Theme.of(this).colorScheme; 
+}
+
 /// Checks whether the running Windows version supports the Mica effect (Windows 11 build 22000+).
 bool get isWindowsMicaSupported {
   if (kIsWeb || !Platform.isWindows) return false;

@@ -197,63 +197,71 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
           ),
         if (containsNumericalGrades)
           ...[
-            ValueListenableBuilder(
+            CustomCard(
+              child: ValueListenableBuilder(
                 valueListenable: highlightGrade,
                 builder: (context, value, child) {
                   return GradesLineChart(
-                      grades: grades.applyGradeFilter(),
-                      showAverage: true,
-                      highlightGrade: value);
-                }),
-            GradeCalculationCard(
-                toNewAverage: true,
-                grades: grades.applyGradeFilter(),
-                onResult: (grade, average, weight) => WidgetsBinding.instance
-                    .addPostFrameCallback((_) => highlightGrade.value =
-                        weight != null
-                            ? HighlightGrade(
-                                id: null,
-                                customGrade: grade,
-                                customWeight: weight)
-                            : null)),
-            GradeCalculationCard(
-                grades: grades.applyGradeFilter(),
-                onResult: (grade, average, weight) => WidgetsBinding.instance
-                    .addPostFrameCallback((_) => highlightGrade.value =
-                        weight != null
-                            ? HighlightGrade(
-                                id: null,
-                                customGrade: grade,
-                                customWeight: weight)
-                            : null)),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: BarChartSchoolyears(
-                subject: subject,
-                onSelected: (newSubject) async {
-                  subject = newSubject;
-                  containsNumericalGrades = await subject.grades
-                      .filter()
-                      .numericalGrades
-                      .isNotEmpty();
-                  grades = subject.grades.filter();
-                  setFilterChips().then((value) => setState(() {}));
+                    grades: grades.applyGradeFilter(),
+                    showAverage: true,
+                    highlightGrade: value,
+                  );
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: BarChartRoundedGrades(
-                grades: grades,
-                onFilterApplied: () {
-                  grades = subject.grades.filter();
-                  setFilterChips().then((value) => setState(() {}));
-                },
+            GradeCalculationCard(
+                toNewAverage: true,
+                grades: grades.applyGradeFilter(),
+                onResult: (gradesList, average) => WidgetsBinding.instance
+                    .addPostFrameCallback(
+                        (_) => highlightGrade.value = gradesList.isNotEmpty
+                            ? HighlightGrade.fromGrades(
+                                id: null,
+                                grades: gradesList,
+                              )
+                            : null)),
+            GradeCalculationCard(
+                grades: grades.applyGradeFilter(),
+                onResult: (gradesList, average) => WidgetsBinding.instance
+                    .addPostFrameCallback(
+                        (_) => highlightGrade.value = gradesList.isNotEmpty
+                            ? HighlightGrade.fromGrades(
+                                id: null,
+                                grades: gradesList,
+                              )
+                            : null)),
+            CustomCard(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BarChartSchoolyears(
+                  subject: subject,
+                  onSelected: (newSubject) async {
+                    subject = newSubject;
+                    containsNumericalGrades = await subject.grades
+                        .filter()
+                        .numericalGrades
+                        .isNotEmpty();
+                    grades = subject.grades.filter();
+                    setFilterChips().then((value) => setState(() {}));
+                  },
+                ),
+              ),
+            ),
+            CustomCard(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BarChartRoundedGrades(
+                  grades: grades,
+                  onFilterApplied: () {
+                    grades = subject.grades.filter();
+                    setFilterChips().then((value) => setState(() {}));
+                  },
+                ),
               ),
             ),
           ].map((e) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: CustomCard(child: e),
+                child: e,
               )),
         ...grades
             .applyGradeFilter()

@@ -211,20 +211,20 @@ class _ExpressiveIntroductionScreenState
                 ),
               ),
               CustomCard(
-                margin: const EdgeInsets.symmetric(vertical: 3),
-                elevation: 0,
+                margin: EdgeInsets.zero,
                 child: GradeCalculationCard(
                   grades: null,
                   initialGrade: 6.5,
                   weight: 2,
-                  onResult: (grade, average, weight) {
+                  onResult: (gradesList, average) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (mounted) {
-                        _highlightGrade.value = HighlightGrade(
-                          id: null,
-                          customGrade: grade,
-                          customWeight: weight,
-                        );
+                        _highlightGrade.value = gradesList.isNotEmpty
+                            ? HighlightGrade.fromGrades(
+                                id: null,
+                                grades: gradesList,
+                              )
+                            : null;
                       }
                     });
                   },
