@@ -194,7 +194,7 @@ class CalendarEvent {
           subtype: json["Subtype"] ?? 1,
           isOnlineDeelname: json["IsOnlineDeelname"] ?? false,
           weergaveType: json["WeergaveType"] ?? 1,
-          rawInhoud: json["Inhoud"] ?? "",
+          rawInhoud: json["Inhoud"] ?? json["Opmerking"] ?? "" ,
           rawInfoType:
               infoTypeValues.map[json["InfoType"].toString()] ?? InfoType.none,
           aantekening: json["Aantekening"],
