@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:watch_connectivity/watch_connectivity.dart';
 
-bool useTransparency = Platform.isMacOS || Platform.isWindows;
+bool get useTransparency => isDesktopTransparencySupported;
 
 class VerticalIntroductionScreen extends StatefulWidget {
   const VerticalIntroductionScreen({super.key});

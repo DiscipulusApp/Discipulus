@@ -136,6 +136,22 @@ class WatchService with WidgetsBindingObserver {
                 'endTime': e.last.einde.millisecondsSinceEpoch,
                 'isCompleted': e.first.afgerond,
                 'isCanceled': e.first.isCanceled,
+                'customCalendarProperties': e.first.customCalendarProperties != null
+                    ? {
+                        'Status': e.first.customCalendarProperties!.rawStatus,
+                        'InfoType': e.first.customCalendarProperties!.rawInfotype,
+                        'Lokatie': e.first.customCalendarProperties!.lokatie,
+                        'Inhoud': e.first.customCalendarProperties!.inhoud,
+                        'originalInfoType': e.first.customCalendarProperties!.rawInfotypeOriginal,
+                        'originalStatus': e.first.customCalendarProperties!.rawStatusOriginal,
+                        'originalLokatie': e.first.customCalendarProperties!.lokatieOriginal,
+                        'originalInhoud': e.first.customCalendarProperties!.inhoudOriginal,
+                        'dateInfoType': e.first.customCalendarProperties!.infotypeChanged?.toIso8601String(),
+                        'dateStatus': e.first.customCalendarProperties!.statusChanged?.toIso8601String(),
+                        'dateLokatie': e.first.customCalendarProperties!.lokatieChanged?.toIso8601String(),
+                        'dateInhoud': e.first.customCalendarProperties!.inhoudChanged?.toIso8601String(),
+                      }
+                    : null,
               }..removeWhere((key, value) => value == null))
           .toList();
     }

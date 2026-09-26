@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:discipulus/screens/calendar/calendar_statistics/widgets/appie_receipt_export.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -104,13 +105,14 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
 
   bool get _useTransparency {
     if (kIsWeb) return false;
-    return Platform.isMacOS || Platform.isWindows;
+    return isDesktopTransparencySupported;
   }
 
   double get _platformTopCornerRadius {
     if (kIsWeb) return 0.0;
-    if (Platform.isWindows)
-      return 8.0; // Windows 11 default window corner radius
+    if (Platform.isWindows) {
+      return isWindowsMicaSupported ? 8.0 : 0.0; // Windows 11 default window corner radius
+    }
     if (Platform.isMacOS) return 10.0; // macOS default window corner radius
     return 0.0;
   }

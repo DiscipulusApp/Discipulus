@@ -1,9 +1,156 @@
 package dev.harrydekat.discipulus.wear.models
 
+import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.Serializable
 import java.util.Date
+
+data class CustomCalendarProperties(
+    val status: Int? = null,
+    val statusOriginal: Int? = null,
+    val statusChanged: String? = null,
+    val infoType: Int? = null,
+    val infoTypeOriginal: Int? = null,
+    val infoTypeChanged: String? = null,
+    val inhoud: String? = null,
+    val inhoudOriginal: String? = null,
+    val inhoudChanged: String? = null,
+    val lokatie: String? = null,
+    val lokatieOriginal: String? = null,
+    val lokatieChanged: String? = null
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+
+        fun fromAantekening(aantekening: String): CustomCalendarProperties? {
+            if (aantekening.isBlank()) return null
+            return try {
+                val decodedBytes = Base64.decode(aantekening.trim(), Base64.DEFAULT)
+                val jsonStr = String(decodedBytes, Charsets.UTF_8)
+                fromJson(JSONObject(jsonStr))
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        fun fromJson(json: JSONObject): CustomCalendarProperties {
+            val status = if (json.has("Status") && !json.isNull("Status")) {
+                json.optString("Status").toIntOrNull()
+            } else null
+
+            val statusOriginal = if (json.has("originalStatus") && !json.isNull("originalStatus")) {
+                json.optString("originalStatus").toIntOrNull()
+            } else null
+
+            val infoType = if (json.has("InfoType") && !json.isNull("InfoType")) {
+                json.optString("InfoType").toIntOrNull()
+            } else null
+
+            val infoTypeOriginal = if (json.has("originalInfoType") && !json.isNull("originalInfoType")) {
+                json.optString("originalInfoType").toIntOrNull()
+            } else null
+
+            val inhoud = json.optString("Inhoud").takeIf { json.has("Inhoud") && !json.isNull("Inhoud") }
+            val inhoudOriginal = json.optString("originalInhoud").takeIf { json.has("originalInhoud") && !json.isNull("originalInhoud") }
+
+            val lokatie = json.optString("Lokatie").takeIf { json.has("Lokatie") && !json.isNull("Lokatie") }
+            val lokatieOriginal = json.optString("originalLokatie").takeIf { json.has("originalLokatie") && !json.isNull("originalLokatie") }
+
+            return CustomCalendarProperties(
+                status = status,
+                statusOriginal = statusOriginal,
+                statusChanged = json.optString("dateStatus").takeIf { it.isNotEmpty() },
+                infoType = infoType,
+                infoTypeOriginal = infoTypeOriginal,
+                infoTypeChanged = json.optString("dateInfoType").takeIf { it.isNotEmpty() },
+                inhoud = inhoud,
+                inhoudOriginal = inhoudOriginal,
+                inhoudChanged = json.optString("dateInhoud").takeIf { it.isNotEmpty() },
+                lokatie = lokatie,
+                lokatieOriginal = lokatieOriginal,
+                lokatieChanged = json.optString("dateLokatie").takeIf { it.isNotEmpty() }
+            )
+        }
+
+        fun fromMap(map: Map<String, Any?>): CustomCalendarProperties {
+            return CustomCalendarProperties(
+                status = (map["Status"] as? Number)?.toInt(),
+                statusOriginal = (map["originalStatus"] as? Number)?.toInt(),
+                statusChanged = map["dateStatus"] as? String,
+                infoType = (map["InfoType"] as? Number)?.toInt(),
+                infoTypeOriginal = (map["originalInfoType"] as? Number)?.toInt(),
+                infoTypeChanged = map["dateInfoType"] as? String,
+                inhoud = map["Inhoud"] as? String,
+                inhoudOriginal = map["originalInhoud"] as? String,
+                inhoudChanged = map["dateInhoud"] as? String,
+                lokatie = map["Lokatie"] as? String,
+                lokatieOriginal = map["originalLokatie"] as? String,
+                lokatieChanged = map["dateLokatie"] as? String
+            )
+        }
+    }
+
+    fun resolveStatus(rawStatus: Int): Int {
+        if (status == null || statusOriginal == null) return rawStatus
+        return if (statusOriginal == rawStatus) status else rawStatus
+    }
+
+    fun resolveInfoType(rawInfoType: Int): Int {
+        if (infoType == null || infoTypeOriginal == null) return rawInfoType
+        return if (infoTypeOriginal == rawInfoType) infoType else rawInfoType
+    }
+
+    fun resolveInhoud(rawInhoud: String?): String? {
+        if (inhoud == null) return rawInhoud?.takeIf { it.isNotBlank() }
+        val rawClean = rawInhoud?.takeIf { it.isNotBlank() }
+        val origClean = inhoudOriginal?.takeIf { it.isNotBlank() }
+        return if (rawClean == origClean) {
+            inhoud.takeIf { it.isNotBlank() } ?: rawClean
+        } else {
+            rawClean
+        }
+    }
+
+    fun resolveLokatie(rawLokatie: String?): String? {
+        if (lokatie == null) return rawLokatie?.takeIf { it.isNotBlank() }
+        val rawClean = rawLokatie?.takeIf { it.isNotBlank() }
+        val origClean = lokatieOriginal?.takeIf { it.isNotBlank() }
+        return if (rawClean == origClean) {
+            lokatie.takeIf { it.isNotBlank() } ?: rawClean
+        } else {
+            rawClean
+        }
+    }
+
+    fun toJson(): JSONObject {
+        return JSONObject().apply {
+            status?.let { put("Status", it) }
+            statusOriginal?.let { put("originalStatus", it) }
+            statusChanged?.let { put("dateStatus", it) }
+            infoType?.let { put("InfoType", it) }
+            infoTypeOriginal?.let { put("originalInfoType", it) }
+            infoTypeChanged?.let { put("dateInfoType", it) }
+            inhoud?.let { put("Inhoud", it) }
+            inhoudOriginal?.let { put("originalInhoud", it) }
+            inhoudChanged?.let { put("dateInhoud", it) }
+            lokatie?.let { put("Lokatie", it) }
+            lokatieOriginal?.let { put("originalLokatie", it) }
+            lokatieChanged?.let { put("dateLokatie", it) }
+        }
+    }
+
+    fun toAantekening(): String? {
+        val hasAny = status != null || infoType != null || !lokatie.isNullOrEmpty() || !inhoud.isNullOrEmpty()
+        if (!hasAny) return null
+        return try {
+            val jsonStr = toJson().toString()
+            Base64.encodeToString(jsonStr.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
 
 data class ScheduleEvent(
     val id: Int,
@@ -18,7 +165,8 @@ data class ScheduleEvent(
     val endHourIndicator: Int?,
     val startTime: Date,
     val endTime: Date,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val customCalendarProperties: CustomCalendarProperties? = null
 ) : Serializable {
     val isCanceled: Boolean
         get() = status in 4..5
@@ -54,6 +202,20 @@ data class ScheduleEvent(
                     }
                 }.takeIf { it.isNotEmpty() }
 
+                val customProperties = when {
+                    json.has("customCalendarProperties") && !json.isNull("customCalendarProperties") -> {
+                        val cpObj = json.optJSONObject("customCalendarProperties")
+                        if (cpObj != null) CustomCalendarProperties.fromJson(cpObj) else null
+                    }
+                    json.has("aantekening") && !json.isNull("aantekening") -> {
+                        CustomCalendarProperties.fromAantekening(json.getString("aantekening"))
+                    }
+                    json.has("Aantekening") && !json.isNull("Aantekening") -> {
+                        CustomCalendarProperties.fromAantekening(json.getString("Aantekening"))
+                    }
+                    else -> null
+                }
+
                 ScheduleEvent(
                     id = json.getInt("id"),
                     name = json.getString("name"),
@@ -67,7 +229,8 @@ data class ScheduleEvent(
                     endHourIndicator = endHour,
                     startTime = Date(json.getLong("startTime")),
                     endTime = Date(json.getLong("endTime")),
-                    isCompleted = json.optBoolean("isCompleted", false)
+                    isCompleted = json.optBoolean("isCompleted", false),
+                    customCalendarProperties = customProperties
                 )
             } catch (e: Exception) {
                 null
@@ -98,6 +261,20 @@ data class ScheduleEvent(
                 val endTime = Date((map["endTime"] as? Number)?.toLong() ?: return null)
                 val isCompleted = map["isCompleted"] as? Boolean ?: false
 
+                @Suppress("UNCHECKED_CAST")
+                val customProperties = when {
+                    map["customCalendarProperties"] is Map<*, *> -> {
+                        CustomCalendarProperties.fromMap(map["customCalendarProperties"] as Map<String, Any?>)
+                    }
+                    map["aantekening"] is String -> {
+                        CustomCalendarProperties.fromAantekening(map["aantekening"] as String)
+                    }
+                    map["Aantekening"] is String -> {
+                        CustomCalendarProperties.fromAantekening(map["Aantekening"] as String)
+                    }
+                    else -> null
+                }
+
                 ScheduleEvent(
                     id = id,
                     name = name,
@@ -111,7 +288,8 @@ data class ScheduleEvent(
                     endHourIndicator = endHour,
                     startTime = startTime,
                     endTime = endTime,
-                    isCompleted = isCompleted
+                    isCompleted = isCompleted,
+                    customCalendarProperties = customProperties
                 )
             } catch (e: Exception) {
                 null
@@ -134,6 +312,9 @@ data class ScheduleEvent(
             put("startTime", startTime.time)
             put("endTime", endTime.time)
             put("isCompleted", isCompleted)
+            customCalendarProperties?.let {
+                put("customCalendarProperties", it.toJson())
+            }
         }
     }
 }

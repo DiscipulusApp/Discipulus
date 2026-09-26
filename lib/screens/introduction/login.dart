@@ -122,8 +122,7 @@ Future<TokenSet?> showMagisterLoginDialog(
             final uri = Uri.parse(requestUrl);
             if (uri.scheme == "m6loapp" ||
                 requestUrl.contains("#code") ||
-                requestUrl.contains("?code") ||
-                requestUrl.contains("oauth2redirect")) {
+                requestUrl.contains("?code")) {
               redirectUrl.value = uri;
               try {
                 webview.close();

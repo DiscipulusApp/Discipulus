@@ -230,43 +230,46 @@ class _GradeInformationState extends State<GradeInformation> {
           title: Text("Wat als?"),
         ),
         FutureBuilder(
-            future: grades.newGradeFromAverage(
-                appSettings.sufficientFrom, widget.grade.weight ?? 1,
-                grades: [DummyGrade(grade: appSettings.sufficientFrom)],
-                ignoredGradeUUID: widget.grade.uuid),
-            builder: (context, snapshot) => (snapshot.data != null &&
-                    snapshot.data! > widget.grade.grade &&
-                    grades.findAllSync().average < appSettings.sufficientFrom)
-                ? CustomCard(
-                    child: ListTile(
-                        leading: const Icon(Icons.auto_awesome_outlined),
-                        title: const Text(
-                            "Benodigd herkansingscijfer voor voldoende"),
-                        subtitle: Text(snapshot.data!.displayNumber())))
-                : const SizedBox()),
-        CustomCard(
-            child: GradeCalculationCard(
-                toNewAverage: true,
-                ignoredGradeUUID: widget.grade.uuid,
-                weight: widget.grade.weight,
-                grades: grades,
-                onResult: (grade, average, weight) => WidgetsBinding.instance
-                    .addPostFrameCallback((_) => highlightGrade.value =
-                        HighlightGrade(
-                            id: widget.grade.id,
-                            customGrade: grade,
-                            customWeight: weight)))),
-        CustomCard(
-            child: GradeCalculationCard(
-                ignoredGradeUUID: widget.grade.uuid,
-                weight: widget.grade.weight,
-                grades: grades,
-                onResult: (grade, average, weight) => WidgetsBinding.instance
-                    .addPostFrameCallback((_) => highlightGrade.value =
-                        HighlightGrade(
-                            id: widget.grade.id,
-                            customGrade: grade,
-                            customWeight: weight)))),
+          future: grades.newGradeFromAverage(
+              appSettings.sufficientFrom, widget.grade.weight ?? 1,
+              grades: [DummyGrade(grade: appSettings.sufficientFrom)],
+              ignoredGradeUUID: widget.grade.uuid),
+          builder: (context, snapshot) => (snapshot.data != null &&
+                  snapshot.data! > widget.grade.grade &&
+                  grades.findAllSync().average < appSettings.sufficientFrom)
+              ? CustomCard(
+                  child: ListTile(
+                      leading: const Icon(Icons.auto_awesome_outlined),
+                      title: const Text(
+                          "Benodigd herkansingscijfer voor voldoende"),
+                      subtitle: Text(snapshot.data!.displayNumber())))
+              : const SizedBox(),
+        ),
+        GradeCalculationCard(
+          toNewAverage: true,
+          ignoredGradeUUID: widget.grade.uuid,
+          weight: widget.grade.weight,
+          grades: grades,
+          onResult: (gradesList, average) =>
+              WidgetsBinding.instance.addPostFrameCallback(
+            (_) => highlightGrade.value = HighlightGrade.fromGrades(
+              id: widget.grade.id,
+              grades: gradesList,
+            ),
+          ),
+        ),
+        GradeCalculationCard(
+          ignoredGradeUUID: widget.grade.uuid,
+          weight: widget.grade.weight,
+          grades: grades,
+          onResult: (gradesList, average) =>
+              WidgetsBinding.instance.addPostFrameCallback(
+            (_) => highlightGrade.value = HighlightGrade.fromGrades(
+              id: widget.grade.id,
+              grades: gradesList,
+            ),
+          ),
+        ),
         const ListTile(
           leading: Icon(Icons.settings_outlined),
           title: Text("Instellingen"),

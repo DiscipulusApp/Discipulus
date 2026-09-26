@@ -22,11 +22,57 @@ class HighlightGrade {
 
   /// This value should not be zero for obvious reasons
   final double? customWeight;
+
+  /// Additional extra grades (e.g. multiple dynamic grades or static grades)
+  final List<DummyGrade> extraGrades;
+
   HighlightGrade({
     required this.id,
     this.customGrade,
     this.customWeight,
+    this.extraGrades = const [],
   });
+
+  /// Factory to construct a HighlightGrade from a list of grades
+  factory HighlightGrade.fromGrades({
+    int? id,
+    required List<DummyGrade> grades,
+  }) {
+    if (grades.isEmpty) {
+      return HighlightGrade(id: id);
+    }
+    return HighlightGrade(
+      id: id,
+      customGrade: grades.first.grade,
+      customWeight: grades.first.weight,
+      extraGrades: grades.length > 1 ? grades.sublist(1) : const [],
+    );
+  }
+
+  /// All grades represented as DummyGrades
+  List<DummyGrade> get allGrades => [
+        if (customGrade != null && customWeight != null)
+          DummyGrade(grade: customGrade!, weight: customWeight!),
+        ...extraGrades,
+      ];
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HighlightGrade &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          customGrade == other.customGrade &&
+          customWeight == other.customWeight &&
+          const DeepCollectionEquality().equals(extraGrades, other.extraGrades);
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        customGrade,
+        customWeight,
+        const DeepCollectionEquality().hash(extraGrades),
+      );
 }
 
 class GradesLineChart extends StatefulWidget {
@@ -108,7 +154,15 @@ class _GradesLineChartState extends State<GradesLineChart> {
             id: 0,
             cijferKolom: CijferKolom(),
             cijferStr: widget.highlightGrade!.customGrade.toString(),
-            weight: widget.highlightGrade?.customWeight)
+            weight: widget.highlightGrade?.customWeight),
+      if (widget.highlightGrade != null &&
+          widget.highlightGrade!.extraGrades.isNotEmpty)
+        for (final extra in widget.highlightGrade!.extraGrades)
+          Grade(
+              id: 0,
+              cijferKolom: CijferKolom(),
+              cijferStr: extra.grade.toString(),
+              weight: extra.weight),
     ];
     gradeSpots = exGrades
         .asMap()
@@ -117,7 +171,8 @@ class _GradesLineChartState extends State<GradesLineChart> {
             FlSpot(
                 index.toDouble(),
                 widget.highlightGrade?.id != null &&
-                        widget.highlightGrade!.id == q.id
+                        widget.highlightGrade!.id == q.id &&
+                        q.id != 0
                     ? widget.highlightGrade!.customGrade ?? q.grade
                     : q.grade)))
         .values
@@ -129,11 +184,13 @@ class _GradesLineChartState extends State<GradesLineChart> {
               index,
               FlSpot(
                   index.toDouble(),
-                  widget.highlightGrade?.customGrade == null
+                  widget.highlightGrade?.customGrade == null &&
+                          (widget.highlightGrade?.extraGrades.isEmpty ?? true)
                       ? exGrades.take(index + 1).average
                       : exGrades.take(index + 1).map<double>((e) {
                             if (widget.highlightGrade?.customGrade != null &&
-                                widget.highlightGrade?.id == e.id) {
+                                widget.highlightGrade?.id == e.id &&
+                                e.id != 0) {
                               //Custom grade
                               return widget.highlightGrade!.customGrade! *
                                   (widget.highlightGrade!.customWeight ??
@@ -144,7 +201,8 @@ class _GradesLineChartState extends State<GradesLineChart> {
                           }).sum /
                           exGrades.take(index + 1).map((e) {
                             if (widget.highlightGrade?.customWeight != null &&
-                                widget.highlightGrade?.id == e.id) {
+                                widget.highlightGrade?.id == e.id &&
+                                e.id != 0) {
                               //Custom grade weight
                               return widget.highlightGrade!.customWeight!;
                             } else {
@@ -209,8 +267,10 @@ class _GradesLineChartState extends State<GradesLineChart> {
           show: appSettings.pietjePrecies || widget.highlightGrade != null,
           getDotPainter: (spot, percent, barData, index) {
             Grade? grade = spotToGrade(spot.x.toInt());
+            final isExtra = spot.x.toInt() >= grades.length;
             final isHighlighted = widget.highlightGrade != null &&
-                ((widget.highlightGrade!.id == null && grade == null) ||
+                (isExtra ||
+                    (widget.highlightGrade!.id == null && grade == null) ||
                     (grade != null && grade.id == widget.highlightGrade?.id));
             return FlDotCirclePainter(
               color: isHighlighted
@@ -227,8 +287,10 @@ class _GradesLineChartState extends State<GradesLineChart> {
           },
           checkToShowDot: (spot, barData) {
             if (appSettings.pietjePrecies) return true;
-            Grade? grade = spotToGrade(spot.x.toInt());
+            final isExtra = spot.x.toInt() >= grades.length;
             if (widget.highlightGrade != null) {
+              if (isExtra) return true;
+              Grade? grade = spotToGrade(spot.x.toInt());
               if (widget.highlightGrade!.id == null && grade == null) {
                 //New calculated grade
                 return true;

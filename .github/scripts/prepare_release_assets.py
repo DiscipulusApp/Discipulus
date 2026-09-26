@@ -5,6 +5,8 @@ Categorizes assets by platform prefix ('Windows - ', 'Android - ', 'macOS - ', '
 and groups developer/unsigned/bundle files under 'ZDev - ' so they sort to the bottom.
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import shutil
@@ -62,8 +64,17 @@ def classify_asset(filepath: Path) -> str | None:
 
     # 4. Linux Assets
     if name_lower.endswith(".flatpak"):
+        if "aarch64" in name_lower or "arm64" in name_lower:
+            return "Linux - Discipulus_aarch64.flatpak"
+        if "x86_64" in name_lower or "x64" in name_lower:
+            return "Linux - Discipulus_x86_64.flatpak"
         return "Linux - Discipulus.flatpak"
+
     if name_lower.endswith(".tar.gz") and ("linux" in name_lower or "linux" in path_str):
+        if "aarch64" in name_lower or "arm64" in name_lower:
+            return "Linux - Discipulus_aarch64.tar.gz"
+        if "x86_64" in name_lower or "x64" in name_lower:
+            return "Linux - Discipulus_x86_64.tar.gz"
         return "Linux - Discipulus.tar.gz"
 
     # 5. macOS Assets

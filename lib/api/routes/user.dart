@@ -19,7 +19,7 @@ class UserRoute extends MagisterBase {
   /// 'magister.ecs, https://accounts.magister.net/resources' is invalid"]
   /// ```
   /// Adding the scopes from the online version results in incorrect scopes
-  /// THough I am not completely sure, there is a possibility that this has just
+  /// Though I am not completely sure, there is a possibility that this has just
   /// forcefully been disabled for the native Magister apps.
   ///
   Future<List<CalendarEvent>> additionalAppointments(

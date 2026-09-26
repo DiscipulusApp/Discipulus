@@ -1,6 +1,7 @@
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
+import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/material.dart';
 
 class UpcomingSpecialEventTile extends StatelessWidget {
@@ -57,7 +58,7 @@ class _OncomingSpecialEventSubtileState
         events: [widget.event],
         callback: () => setState(() {}),
       ),
-      child: Card.outlined(
+      child: CustomCard(
         child: Row(
           children: [
             Padding(

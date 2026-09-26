@@ -13,10 +13,10 @@ import 'package:discipulus/models/account.dart';
 part 'settings.g.dart';
 
 Settings get appSettings {
-  if (isar.settings.countSync() == 0) {
-    isar.writeTxnSync(() => isar.settings.putSync(Settings()));
-  }
-  return isar.settings.where().findFirstSync()!;
+    if (isar.settings.countSync() == 0) {
+      isar.writeTxnSync(() => isar.settings.putSync(Settings()));
+    }
+    return isar.settings.where().findFirstSync()!;
 }
 
 @collection
