@@ -372,10 +372,11 @@ packages:
   desktop_webview_window:
     dependency: "direct main"
     description:
-      name: desktop_webview_window
-      sha256: b6fdae2cbf9571879b1761c12f27facaf82e22d0bdc74d049907c2a09a432957
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/desktop_webview_window"
+      ref: HEAD
+      resolved-ref: "58733d56720b2fb690ad5ec83f1f20913f6ab5f0"
+      url: "https://github.com/DiscipulusApp/desktop_webview_window.git"
+    source: git
     version: "0.3.0"
   device_info_plus:
     dependency: "direct overridden"

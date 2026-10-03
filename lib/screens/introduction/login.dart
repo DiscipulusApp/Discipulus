@@ -23,6 +23,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+Webview? _activeLoginWebview;
+
 Future<TokenSet?> showMagisterLoginDialog(
   BuildContext context, {
   String? tenant,
@@ -82,6 +84,19 @@ Future<TokenSet?> showMagisterLoginDialog(
         await WebviewWindow.isWebviewAvailable() &&
         !Platform.isMacOS &&
         !Platform.isLinux) {
+      if (_activeLoginWebview != null) {
+        try {
+          await _activeLoginWebview!.bringToForeground();
+          _activeLoginWebview!.launch(
+            loginUri.toString(),
+            triggerOnUrlRequestEvent: false,
+          );
+          return;
+        } catch (_) {
+          _activeLoginWebview = null;
+        }
+      }
+
       try {
         final webviewDataFolder = p.join(
             (await getApplicationSupportDirectory()).path,
@@ -97,21 +112,27 @@ Future<TokenSet?> showMagisterLoginDialog(
             windowHeight: 700,
             title: 'Login met Magister',
             titleBarTopPadding: Platform.isMacOS ? 30 : 0,
-            titleBarHeight: Platform.isWindows ? 0 : 40,
+            titleBarHeight: 40,
             useWindowPositionAndSize: false,
             userDataFolderWindows: webviewDataFolder,
+            singleInstance: true,
           ),
         );
+        _activeLoginWebview = webview;
 
         // If deep link stream triggers, make sure webview is closed
         void onRedirect() {
           try {
-            webview.close();
+            _activeLoginWebview?.close();
+            _activeLoginWebview = null;
           } catch (_) {}
         }
 
         redirectUrl.addListener(onRedirect);
         webview.onClose.whenComplete(() {
+          if (_activeLoginWebview == webview) {
+            _activeLoginWebview = null;
+          }
           redirectUrl.removeListener(onRedirect);
         });
 
@@ -126,6 +147,7 @@ Future<TokenSet?> showMagisterLoginDialog(
               redirectUrl.value = uri;
               try {
                 webview.close();
+                _activeLoginWebview = null;
               } catch (_) {}
               return false;
             }
@@ -168,6 +190,10 @@ Future<TokenSet?> showMagisterLoginDialog(
   Future<void> returnWithTokenSet(Uri redirectURL) async {
     if (hasReturned) return;
     hasReturned = true;
+    try {
+      _activeLoginWebview?.close();
+      _activeLoginWebview = null;
+    } catch (_) {}
     await browserLinkSub?.cancel();
     TokenSet? tokenSet = await auth.returnURLToTokenSet(redirectURL);
     if (context.mounted) {

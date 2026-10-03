@@ -53,7 +53,10 @@ dependencies:
   vsc_quill_delta_to_html: ^1.0.3
   webview_flutter: ^4.4.1
   # kalender: ^0.4.1
-  desktop_webview_window: ^0.3.0
+  desktop_webview_window:
+    git:
+      url: https://github.com/DiscipulusApp/desktop_webview_window.git
+      path: packages/desktop_webview_window
   silky_scroll: ^2.6.4
 
   # Plugins
