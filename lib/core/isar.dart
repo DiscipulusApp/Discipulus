@@ -62,6 +62,30 @@ Future<void> initIsar([disableInspector = false]) async {
           Abi.linuxArm64: isarFile.path,
         },
       );
+    } else if (Platform.isWindows && Abi.current() == Abi.windowsArm64) {
+      final isarFile = File('${storageDir!.path}/isar_windows_arm64.dll');
+      try {
+        final byteData =
+            await rootBundle.load('assets/isar/isar_windows_arm64.dll');
+        final bytes = byteData.buffer.asUint8List(
+          byteData.offsetInBytes,
+          byteData.lengthInBytes,
+        );
+        if (!await isarFile.exists() ||
+            (await isarFile.length()) != bytes.length) {
+          await isarFile.writeAsBytes(bytes, flush: true);
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Failed to extract isar_windows_arm64.dll from assets: $e");
+        }
+      }
+
+      await Isar.initializeIsarCore(
+        libraries: {
+          Abi.windowsArm64: isarFile.path,
+        },
+      );
     }
 
     isar = await Isar.open(
