@@ -24,7 +24,6 @@ import mobile_scanner
 import network_info_plus
 import open_file_mac
 import package_info_plus
-import path_provider_foundation
 import share_plus
 import super_native_extensions
 import url_launcher_macos
@@ -51,7 +50,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   NetworkInfoPlusPlugin.register(with: registry.registrar(forPlugin: "NetworkInfoPlusPlugin"))
   OpenFilePlugin.register(with: registry.registrar(forPlugin: "OpenFilePlugin"))
   FPPPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FPPPackageInfoPlusPlugin"))
-  PathProviderPlugin.register(with: registry.registrar(forPlugin: "PathProviderPlugin"))
   SharePlusMacosPlugin.register(with: registry.registrar(forPlugin: "SharePlusMacosPlugin"))
   SuperNativeExtensionsPlugin.register(with: registry.registrar(forPlugin: "SuperNativeExtensionsPlugin"))
   UrlLauncherPlugin.register(with: registry.registrar(forPlugin: "UrlLauncherPlugin"))

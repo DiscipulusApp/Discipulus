@@ -92,7 +92,7 @@ void main(List<String> args) async {
         },
       ),
     );
-    return;
+    exit(0);
   }
 
   appLinks = AppLinks();

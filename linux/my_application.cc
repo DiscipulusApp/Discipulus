@@ -29,11 +29,6 @@ static gboolean has_mcp_argument(char** arguments) {
   return FALSE;
 }
 
-static gint headless_command_line_cb(GApplication* application,
-                                     GApplicationCommandLine* command_line,
-                                     gpointer user_data) {
-  return 0;
-}
 
 static void header_bar_method_call_cb(FlMethodChannel* channel,
                                       FlMethodCall* method_call,
@@ -154,10 +149,6 @@ static gboolean my_application_local_command_line(GApplication* application, gch
   // Strip out the first argument as it is the binary name.
   self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
 
-  if (has_mcp_argument(self->dart_entrypoint_arguments)) {
-    g_signal_connect(application, "command-line",
-                     G_CALLBACK(headless_command_line_cb), nullptr);
-  }
 
   g_autoptr(GError) error = nullptr;
   if (!g_application_register(application, nullptr, &error)) {
