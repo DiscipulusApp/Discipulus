@@ -6,15 +6,34 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+#include "headless_plugin_registrant.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  GtkWidget* headless_window;
+  FlView* headless_view;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 static GtkCssProvider* headerbar_css_provider = nullptr;
+
+static gboolean has_mcp_argument(char** arguments) {
+  for (char** argument = arguments; argument != nullptr && *argument != nullptr;
+       argument++) {
+    if (g_strcmp0(*argument, "--mcp") == 0) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gint headless_command_line_cb(GApplication* application,
+                                     GApplicationCommandLine* command_line,
+                                     gpointer user_data) {
+  return 0;
+}
 
 static void header_bar_method_call_cb(FlMethodChannel* channel,
                                       FlMethodCall* method_call,
@@ -71,6 +90,10 @@ static void header_bar_method_call_cb(FlMethodChannel* channel,
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+  if (self->headless_view != nullptr) {
+    return;
+  }
+
   GList* windows = gtk_application_get_windows(GTK_APPLICATION(application));
   if (windows) {
     gtk_window_present(GTK_WINDOW(windows->data));
@@ -131,11 +154,40 @@ static gboolean my_application_local_command_line(GApplication* application, gch
   // Strip out the first argument as it is the binary name.
   self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
 
+  if (has_mcp_argument(self->dart_entrypoint_arguments)) {
+    g_signal_connect(application, "command-line",
+                     G_CALLBACK(headless_command_line_cb), nullptr);
+  }
+
   g_autoptr(GError) error = nullptr;
   if (!g_application_register(application, nullptr, &error)) {
      g_warning("Failed to register: %s", error->message);
      *exit_status = 1;
      return TRUE;
+  }
+
+  if (has_mcp_argument(self->dart_entrypoint_arguments)) {
+    g_autoptr(FlDartProject) project = fl_dart_project_new();
+    fl_dart_project_set_dart_entrypoint_arguments(
+        project, self->dart_entrypoint_arguments);
+
+    self->headless_window = gtk_offscreen_window_new();
+    self->headless_view = fl_view_new(project);
+    if (self->headless_window == nullptr || self->headless_view == nullptr) {
+      g_warning("Failed to create the headless Flutter view");
+      *exit_status = 1;
+      return TRUE;
+    }
+
+    gtk_container_add(GTK_CONTAINER(self->headless_window),
+                      GTK_WIDGET(self->headless_view));
+    gtk_widget_show(GTK_WIDGET(self->headless_view));
+    gtk_widget_show(self->headless_window);
+    fl_register_headless_plugins(FL_PLUGIN_REGISTRY(self->headless_view));
+    g_application_hold(application);
+    g_application_activate(application);
+    *exit_status = 0;
+    return FALSE;
   }
 
   g_application_activate(application);
@@ -148,6 +200,8 @@ static gboolean my_application_local_command_line(GApplication* application, gch
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->headless_view);
+  g_clear_object(&self->headless_window);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
@@ -157,7 +211,10 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {}
+static void my_application_init(MyApplication* self) {
+  self->headless_window = nullptr;
+  self->headless_view = nullptr;
+}
 
 MyApplication* my_application_new() {
   return MY_APPLICATION(g_object_new(my_application_get_type(),
