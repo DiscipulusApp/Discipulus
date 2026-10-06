@@ -4,15 +4,34 @@ import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/grades/widgets/graphs/line_chart.dart';
 import 'package:discipulus/screens/grades/widgets/tiles.dart';
+import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/csv_export.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:discipulus/widgets/global/tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+
+extension on GradeBadgeTypes {
+  String get toName {
+    switch (this) {
+      case GradeBadgeTypes.change:
+        return "Vak cijfer verandering";
+      case GradeBadgeTypes.globalChange:
+        return "Globale cijfer verandering";
+      case GradeBadgeTypes.pta:
+        return "PTA";
+      case GradeBadgeTypes.weight:
+        return "Cijfer weging";
+      case GradeBadgeTypes.date:
+        return "Invoerdatum";
+    }
+  }
+}
 
 class GradesSettingsPage extends StatefulWidget {
   const GradesSettingsPage({super.key});
@@ -45,30 +64,33 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
             ),
           ),
         ),
-        ListTile(
-          leading: const Icon(Icons.info),
-          title: const Text("Informative badges"),
-          subtitle: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: SegmentedButton<GradeBadgeTypes>(
-                showSelectedIcon: false,
-                emptySelectionAllowed: true,
-                multiSelectionEnabled: true,
-                onSelectionChanged: (set) => setState(() {
-                      appSettings
-                        ..enabledGradeBadgeTypes = set.toList()
-                        ..save();
-                    }),
-                segments: [
-                  ...GradeBadgeTypes.values.map(
-                    (e) => ButtonSegment(
-                      value: e,
-                      label: e.title,
-                    ),
-                  )
-                ],
-                selected: appSettings.enabledGradeBadgeTypes.toSet()),
-          ),
+        SwitchListTile(
+          value: appSettings.pietjePrecies,
+          secondary: const Icon(Icons.straighten_rounded),
+          title: const Text("Pietje precies"),
+          subtitle: const Text(
+              "Toont duidelijke assen met schaalverdeling, dunnere strakke lijnen en hoeken voor maximale nauwkeurigheid"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..pietjePrecies = value
+                ..save();
+            });
+          },
+        ),
+        SwitchListTile(
+          value: !appSettings.disableGradeReveal,
+          secondary: const Icon(Icons.stars_rounded),
+          title: const Text("Cijfer onthullingen"),
+          subtitle: const Text(
+              "Onthul nieuwe cijfers met een animatie en statistieken"),
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..disableGradeReveal = !value
+                ..save();
+            });
+          },
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -134,48 +156,66 @@ class _GradesSettingsPageState extends State<GradesSettingsPage> {
             });
           },
         ),
-        SwitchListTile(
-          value: appSettings.pietjePrecies,
-          secondary: const Icon(Icons.straighten_rounded),
-          title: const Text("Pietje precies"),
-          subtitle: const Text(
-              "Toont duidelijke assen met schaalverdeling, dunnere strakke lijnen en hoeken voor maximale nauwkeurigheid"),
-          onChanged: (value) {
-            setState(() {
-              appSettings
-                ..pietjePrecies = value
-                ..save();
-            });
-          },
+        ListTile(
+          leading: const Icon(Icons.info),
+          title: const Text("Informative badges"),
+          subtitle: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                children: <CustomCard>[
+                  for (GradeBadgeTypes type in GradeBadgeTypes.values)
+                    CustomCard(
+                      margin: EdgeInsets.zero,
+                      color: appSettings.enabledGradeBadgeTypes.contains(type)
+                          ? context.cs.primaryContainer
+                          : null,
+                      child: InkWell(
+                        onTap: () {
+                          // Toggle type
+                          if (appSettings.enabledGradeBadgeTypes
+                              .contains(type)) {
+                            appSettings..enabledGradeBadgeTypes.remove(type)..save();
+                          } else {
+                            appSettings..enabledGradeBadgeTypes.add(type)..save();
+                          }
+                          setState(() {});
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(type.toName),
+                                ],
+                              ),
+                              if (appSettings.enabledGradeBadgeTypes
+                                  .contains(type))
+                                Icon(Icons.check_rounded)
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                ].toMaterial3List(seperation: 2),
+              )),
         ),
-        SwitchListTile(
-          value: !appSettings.disableGradeReveal,
-          secondary: const Icon(Icons.stars_rounded),
-          title: const Text("Cijfer onthullingen"),
-          subtitle: const Text(
-              "Onthul nieuwe cijfers met een animatie en statistieken"),
-          onChanged: (value) {
-            setState(() {
-              appSettings
-                ..disableGradeReveal = !value
-                ..save();
-            });
-          },
-        ),
-        SwitchListTile(
-          value: appSettings.showCalcCardsInGlobalAverageList,
-          secondary: const Icon(Icons.calculate_rounded),
-          title: const Text("Rekenkaarten in globaal gemiddelde"),
-          subtitle: const Text(
-              "Door dit aan te zetten worden de rekenkaarten ook in het globale gemiddelde getoont"),
-          onChanged: (value) {
-            setState(() {
-              appSettings
-                ..showCalcCardsInGlobalAverageList = value
-                ..save();
-            });
-          },
-        ),
+        // This is no longer used.
+        // SwitchListTile(
+        //   value: appSettings.showCalcCardsInGlobalAverageList,
+        //   secondary: const Icon(Icons.calculate_rounded),
+        //   title: const Text("Rekenkaarten in globaal gemiddelde"),
+        //   subtitle: const Text(
+        //       "Door dit aan te zetten worden de rekenkaarten ook in het globale gemiddelde getoont"),
+        //   onChanged: (value) {
+        //     setState(() {
+        //       appSettings
+        //         ..showCalcCardsInGlobalAverageList = value
+        //         ..save();
+        //     });
+        //   },
+        // ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.inventory_2_outlined),
@@ -477,8 +517,7 @@ class _ArchivedGradesSettingsPageState
                         ],
                       ),
                     ),
-                    if (i < archivedGrades.length - 1)
-                      const Divider(height: 1),
+                    if (i < archivedGrades.length - 1) const Divider(height: 1),
                   ]
                 ],
               ),
