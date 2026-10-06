@@ -66,7 +66,7 @@ class StreaksAndPressureCard extends StatelessWidget {
     final Map<String, List<CalendarEvent>> testsPerWeek = {};
     for (final e in events) {
       if (e.isTest || e.infoType == InfoType.test || e.infoType == InfoType.exam) {
-        final weekKey = "${e.start.year}-W${e.start.weekNumber.toString().padLeft(2, '0')}";
+        final weekKey = "${e.start.weekYear}-W${e.start.weekNumber.toString().padLeft(2, '0')}";
         testsPerWeek.putIfAbsent(weekKey, () => []).add(e);
       }
     }
@@ -109,7 +109,7 @@ class StreaksAndPressureCard extends StatelessWidget {
           title: "Meeste toetsen in 1 week",
           value: "$maxTestsInWeek toetsen",
           subtitle:
-              "Week ${firstPeakTest.start.weekNumber} (${firstPeakTest.start.year}) • ${DateFormat('d MMM', 'nl_NL').format(firstPeakTest.start)} - ${DateFormat('d MMM yyyy', 'nl_NL').format(peakWeekTests.last.start)}",
+              "Week ${firstPeakTest.start.weekNumber} (${firstPeakTest.start.weekYear}) • ${DateFormat('d MMM', 'nl_NL').format(firstPeakTest.start)} - ${DateFormat('d MMM yyyy', 'nl_NL').format(peakWeekTests.last.start)}",
           onTap: () => CalendarDayView(
             displayedDay: firstPeakTest.start,
           ).push(context),

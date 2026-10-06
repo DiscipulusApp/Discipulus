@@ -171,29 +171,28 @@ extension CalenderEventExt on CalendarEvent {
 
 extension DateTimeHelper on List<DateTime> {
   int get weeks {
-    return map((e) => e.dayOnly).toSet().where((e) => e.day == 1).length;
+    return map((e) => e.startOfWeek).toSet().length;
   }
 }
 
 extension DateTimeHelp on DateTime {
   int get weekNumber {
-    final startOfYear = DateTime(year, 1, 1);
-    final dayOfYear = difference(startOfYear).inDays + 1;
+    // The Thursday in the current week determines the ISO week number and year (something something ISO 8601)
+    final dateUtc = DateTime.utc(year, month, day);
+    final thursday = dateUtc.add(Duration(days: 4 - dateUtc.weekday));
 
-    // Get the first Monday of the year
-    final firstMonday =
-        startOfYear.add(Duration(days: (1 - startOfYear.weekday + 7) % 7));
+    // The first Thursday of the ISO year is always in Week 1.
+    final firstDayOfYear = DateTime.utc(thursday.year, 1, 1);
+    final firstThursday = firstDayOfYear
+        .add(Duration(days: (4 - firstDayOfYear.weekday + 7) % 7));
 
-    // Calculate the number of weeks that have passed since the first Monday
-    if (firstMonday.isAfter(this)) {
-      // If the first Monday is after the given date, it's part of the last week's range
-      return 1;
-    }
+    // The week number is 1 + the number of full weeks between firstThursday and thursday.
+    return 1 + (thursday.difference(firstThursday).inDays ~/ 7);
+  }
 
-    final weeksPassed =
-        ((dayOfYear - (firstMonday.difference(startOfYear).inDays)) / 7).ceil();
-
-    return weeksPassed + 1; // Adding 1 as week number starts from 1
+  int get weekYear {
+    final dateUtc = DateTime.utc(year, month, day);
+    return dateUtc.add(Duration(days: 4 - dateUtc.weekday)).year;
   }
 
   String get formattedDate {
@@ -223,16 +222,14 @@ extension DateTimeHelp on DateTime {
       DateTime.now().day == day;
 
   DateTimeRange get weekRange {
-    DateTime day = dayOnly;
     return DateTimeRange(
-      start: day.subtract(Duration(days: weekday - 1)),
-      end: day.add(Duration(days: 7 - weekday)),
+      start: DateTime(year, month, day - (weekday - 1)),
+      end: DateTime(year, month, day + (7 - weekday)),
     );
   }
 
   DateTime get startOfWeek {
-    final dayOfWeek = weekday;
-    return subtract(Duration(days: dayOfWeek - 1)).dayOnly;
+    return DateTime(year, month, day - (weekday - 1));
   }
 }
 
