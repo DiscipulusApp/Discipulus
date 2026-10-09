@@ -11,6 +11,7 @@ import 'package:discipulus/screens/introduction/login.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
 
 Map<int, Dio> dioInstances = {};
 
@@ -89,7 +90,7 @@ class Magister {
   }
 
   Dio _createDioInstance() {
-    return Dio()
+    return Dio()..httpClientAdapter = NativeAdapter()
       ..interceptors.addAll([
         QueuedInterceptorsWrapper(
           onRequest: (options, handler) async {
