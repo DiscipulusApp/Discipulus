@@ -229,8 +229,24 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
             margin: widget.scrollTile ? EdgeInsets.zero : null,
             color: colour,
             shape: shape,
-            child:
+            child: Stack(
+              children: [
                 widget.scrollTile ? _buildScrollTile() : _buildNormalTile(),
+                if (widget.event.any((e) => e.isChanged))
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

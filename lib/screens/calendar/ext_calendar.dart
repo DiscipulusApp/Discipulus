@@ -141,6 +141,8 @@ extension CalenderEventExt on CalendarEvent {
   }
 
   bool get isCanceled => [4, 5].contains(status.index);
+  bool get isChanged =>
+      [Status.moved, Status.changedAndMoved, Status.moved].contains(status);
   bool get isTest => [2, 3, 4, 5].contains(infoType.index);
   bool get hasHomework =>
       infoType == InfoType.homework ||

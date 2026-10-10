@@ -23,6 +23,7 @@ class TimeGridEventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isCanceled = events.every((e) => e.isCanceled);
+    final isChanged = events.any((e) => e.isChanged);
     final isDone = events.every((e) => e.afgerond);
     final isTest = events.any((e) => e.isTest);
     final hasHomework = events.any((e) =>
@@ -71,9 +72,9 @@ class TimeGridEventCard extends StatelessWidget {
     if (first.lesuurVan != null) {
       final endUur = last.lesuurTotMet ?? last.lesuurVan;
       if (endUur != null && endUur != first.lesuurVan) {
-        lesuurText = "${first.lesuurVan}e - ${endUur}e";
+        lesuurText = "${first.lesuurVan}/${endUur}u";
       } else {
-        lesuurText = "${first.lesuurVan}e";
+        lesuurText = "${first.lesuurVan}u";
       }
     }
 
@@ -104,57 +105,81 @@ class TimeGridEventCard extends StatelessWidget {
               decoration: isCanceled ? TextDecoration.lineThrough : null,
             );
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: ClipRect(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title & Lesuur
-                    Row(
+            return Stack(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 4,
+                    top: 2,
+                    bottom: 2,
+                    right: isChanged ? 8 : 4,
+                  ),
+                  child: ClipRect(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Text(
-                            first.title,
-                            maxLines: titleMaxLines,
-                            overflow: TextOverflow.ellipsis,
-                            style: titleStyle,
-                          ),
-                        ),
-                        if (lesuurText.isNotEmpty && cardHeight >= 32 && !isNarrow)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: Text(
-                              lesuurText,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: subTextColor,
+                        // Title & Lesuur
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                first.title,
+                                maxLines: titleMaxLines,
+                                overflow: TextOverflow.ellipsis,
+                                style: titleStyle,
                               ),
                             ),
+                            if (lesuurText.isNotEmpty && cardHeight >= 32 && !isNarrow)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Text(
+                                  lesuurText,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: subTextColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        // Time & Location / Teacher
+                        if (showDetails) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            [
+                              "${localStart.formattedTime} - ${localEnd.formattedTime}",
+                              if (first.lokatie != null && first.lokatie!.isNotEmpty)
+                                first.lokatie!,
+                              if (first.docenten?.isNotEmpty == true)
+                                first.docenten!.first.naam ?? "",
+                            ].join(" • "),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: subTextColor,
+                            ),
                           ),
+                        ],
                       ],
                     ),
-                    // Time & Location / Teacher
-                    if (showDetails) ...[
-                      const SizedBox(height: 1),
-                      Text(
-                        [
-                          "${localStart.formattedTime} - ${localEnd.formattedTime}",
-                          if (first.lokatie != null && first.lokatie!.isNotEmpty)
-                            first.lokatie!,
-                          if (first.docenten?.isNotEmpty == true)
-                            first.docenten!.first.naam ?? "",
-                        ].join(" • "),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: subTextColor,
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
-              ),
+                if (isChanged)
+                  Positioned(
+                    top: 3,
+                    right: 3,
+                    child: Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: isCanceled
+                            ? textColor
+                            : theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
