@@ -63,6 +63,7 @@ import 'package:discipulus/utils/update_checker.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/layout.dart';
+export 'package:discipulus/utils/mapping_logger.dart';
 
 part 'core/background_tasks.dart';
 part 'core/background_tasks_alarms.dart';
@@ -142,6 +143,14 @@ void main(List<String> args) async {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     errors.add(details);
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    errors.add(FlutterErrorDetails(
+      exception: error,
+      stack: stack,
+    ));
+    return false;
   };
 
   runApp(const MainApp());

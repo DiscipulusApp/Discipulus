@@ -1,7 +1,11 @@
+import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/settings/pages/debug_settings.dart';
 import 'package:discipulus/screens/settings/pages/diagnostic_check.dart';
+import 'package:discipulus/screens/settings/pages/mapping_errors.dart';
 import 'package:discipulus/utils/app_info.dart';
 import 'package:discipulus/utils/extensions.dart';
+import 'package:discipulus/widgets/global/card.dart';
+import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -33,68 +37,106 @@ class _InfoSettingsPageState extends State<InfoSettingsPage> {
         title: const Text("Informatie"),
       ),
       children: [
-        ListTile(
-          leading: const Icon(Icons.history_edu),
-          title: const Text("Bekijk Licenties"),
-          subtitle: const Text("Licenties van alle gebruikte externe code"),
-          trailing: const Icon(Icons.navigate_next),
-          onTap: () async {
-            final version = _version ?? await AppInfo.version;
-            if (!context.mounted) return;
-            showLicensePage(
-              context: context,
-              applicationIcon: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.query_stats_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 64,
-                ),
+        ...[
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.history_edu),
+              title: const Text("Bekijk Licenties"),
+              subtitle: const Text("Licenties van alle gebruikte externe code"),
+              trailing: const Icon(Icons.navigate_next),
+              onTap: () async {
+                final version = _version ?? await AppInfo.version;
+                if (!context.mounted) return;
+                showLicensePage(
+                  context: context,
+                  applicationIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.query_stats_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 64,
+                    ),
+                  ),
+                  applicationName: "Discipulus",
+                  applicationVersion: version,
+                );
+              },
+              onLongPress: () => const DebugSettingsPage().push(context),
+            ),
+          ),
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.forum_rounded),
+              title: const Text("Discord"),
+              subtitle: const Text("Praat mee in de community server"),
+              trailing: const Icon(Icons.open_in_browser),
+              onTap: () => launchUrl(
+                Uri.parse("https://discord.gg/3VA54yr4Vv"),
+                mode: LaunchMode.externalApplication,
               ),
-              applicationName: "Discipulus",
-              applicationVersion: version,
-            );
-          },
-          onLongPress: () => const DebugSettingsPage().push(context),
-        ),
-        ListTile(
-          leading: const Icon(Icons.troubleshoot_rounded),
-          title: const Text("Diagnostische check"),
-          subtitle: const Text("Controleer of de verbindingen en endpoints goed werken"),
-          trailing: const Icon(Icons.navigate_next),
-          onTap: () => const DiagnosticCheckPage().push(context),
-        ),
-        ListTile(
-          leading: const Icon(Icons.forum_rounded),
-          title: const Text("Discord"),
-          subtitle: const Text("Praat mee in de community server"),
-          trailing: const Icon(Icons.open_in_browser),
-          onTap: () => launchUrl(
-            Uri.parse("https://discord.gg/3VA54yr4Vv"),
-            mode: LaunchMode.externalApplication,
+            ),
           ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.device_hub_rounded),
-          title: const Text("Github"),
-          subtitle: const Text("Alle broncode voor Discipulus"),
-          trailing: const Icon(Icons.open_in_browser),
-          onTap: () => launchUrl(
-            Uri.https('github.com', 'DiscipulusApp/Discipulus'),
-            mode: LaunchMode.externalApplication,
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.device_hub_rounded),
+              title: const Text("Github"),
+              subtitle: const Text("Alle broncode voor Discipulus"),
+              trailing: const Icon(Icons.open_in_browser),
+              onTap: () => launchUrl(
+                Uri.https('github.com', 'DiscipulusApp/Discipulus'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
           ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.mail),
-          title: const Text("Developer"),
-          subtitle: const Text("Stuur een mailtje"),
-          trailing: const Icon(Icons.open_in_browser),
-          onTap: () => launchUrl(
-            Uri(scheme: "mailto", path: "harry@harrydekat.dev"),
-            mode: LaunchMode.externalApplication,
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.mail),
+              title: const Text("Developer"),
+              subtitle: const Text("Stuur een mailtje"),
+              trailing: const Icon(Icons.open_in_browser),
+              onTap: () => launchUrl(
+                Uri(scheme: "mailto", path: "harry@harrydekat.dev"),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
           ),
-        ),
-        if (_version != null)
+        ].toMaterial3List(
+            overridemargin: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            seperation: 2),
+         ListTitle(child: Text("Diagnostische dingetjes")),
+                  ...[
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.troubleshoot_rounded),
+              title: const Text("Diagnostische check"),
+              subtitle: const Text(
+                  "Controleer of de verbindingen en endpoints goed werken"),
+              trailing: const Icon(Icons.navigate_next),
+              onTap: () => const DiagnosticCheckPage().push(context),
+            ),
+          ),
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.error_outline_rounded),
+              title: const Text("Geregistreerde app-fouten"),
+              subtitle: Text("Zie Flutter fouten"),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => const ErrorsListScreen().push(context),
+            ),
+          ),
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.data_object_rounded),
+              title: const Text("Geregistreerde mapping-fouten"),
+              subtitle: Text("Zie mapping fouten"),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => const MappingErrorsListScreen().push(context),
+            ),
+          ),
+        ].toMaterial3List(
+            overridemargin: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            seperation: 2),
+           if (_version != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24.0),
             child: Center(

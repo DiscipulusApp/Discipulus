@@ -52,7 +52,7 @@ body:
     id: app_version
     attributes:
       label: "Discipulus versie / App version"
-      description: "Welke versie van Discipulus gebruik je? (Te vinden in Discipulus bij Instellingen > Over"
+      description: "Welke versie van Discipulus gebruik je? (Te vinden in Discipulus bij Instellingen > Over Discipulus)"
       placeholder: "bijv. 0.2.8"
     validations:
       required: true
@@ -100,7 +100,13 @@ body:
     id: logs
     attributes:
       label: "Relevante logs of foutmeldingen / Logs or error output"
-      description: "Voeg eventuele foutmeldingen of stacktraces toe (indien beschikbaar)."
+      description: |
+        Voeg eventuele foutmeldingen, stacktraces of mapping-logs toe (indien beschikbaar).
+
+        **Hoe vind je logs in Discipulus? / How to find logs in Discipulus:**
+        - **App-fouten (crashes / UI-fouten):** Ga naar `Instellingen` > `Over Discipulus` > `Geregistreerde app-fouten` (of `Instellingen` > `Debug`), klap de fout uit en kopieer de stacktrace.
+        - **Mapping-fouten (Magister gegevens):** Ga naar `Instellingen` > `Over Discipulus` > `Geregistreerde mapping-fouten` en gebruik de kopieerknop rechtsboven om het rapport te kopiëren.
+      placeholder: "Plak hier eventuele foutmeldingen, stacktraces of gekopieerde mapping-logs..."
       render: shell
     validations:
       required: false

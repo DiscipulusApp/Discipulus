@@ -15,6 +15,7 @@ import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/post_login.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
+import 'package:discipulus/screens/settings/pages/mapping_errors.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/utils/login_logger.dart';
@@ -257,6 +258,15 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   subtitle: Text("${errors.length} fouten gelogd"),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => const ErrorsListScreen().push(context),
+                ),
+              ),
+              CustomCard(
+                child: ListTile(
+                  leading: const Icon(Icons.data_object_rounded),
+                  title: const Text("Geregistreerde mapping-fouten"),
+                  subtitle: Text("${mappingErrors.length} fouten gelogd"),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => const MappingErrorsListScreen().push(context),
                 ),
               ),
               CustomCard(
