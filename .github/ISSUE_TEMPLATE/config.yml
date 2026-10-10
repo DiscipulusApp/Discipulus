@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Discord"
+    url: "https://discord.gg/3VA54yr4Vv"
+    about: "Heb je een algemene vraag, zoek je hulp of wil je meepraten? Discord is de plek."
+  - name: "Mail"
+    url: "mailto://harry@harrydekat.dev"
+    about: "Voor direct contact met mij 🤗"

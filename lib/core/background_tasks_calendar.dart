@@ -391,7 +391,7 @@ Future<void> scheduleReminders(Profile profile) async {
             .subtract(const Duration(days: 1))
             .add(const Duration(hours: 16, minutes: 30)),
         content: NativeNotification(
-          id: 0,
+          id: assignment.uuid,
           channel: NotificationChannel.reminders,
           title: "Morgen moet er een opdracht worden ingeleverd!",
           body:

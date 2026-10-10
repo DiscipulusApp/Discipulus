@@ -1,0 +1,43 @@
+name: "Feature Request / Functieverzoek"
+description: "Stel een idee of nieuwe functie voor Discipulus voor"
+title: "⚡️: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Voor als je een fantastisch idee hebt, dat gewoon in Discipulus _moet_ zitten
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Controleer vooraf / Checklist"
+      options:
+        - label: "Ik heb gezocht tussen de [bestaande issues](https://github.com/DiscipulusApp/Discipulus/issues) en dit verzoek is nog niet eerder ingediend."
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Beschrijving van het idee / Feature description"
+      description: "Wat zou je graag toegevoegd willen zien in Discipulus?"
+      placeholder: "Beschrijf duidelijk wat voor functie je zou willen zien..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: "Waarom is dit nuttig? / Use case"
+      description: "Welk probleem lost dit op of hoe verbetert dit het dagelijks gebruik van Discipulus?"
+      placeholder: "Dit is nuttig omdat..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatieven of ideeën / Alternatives"
+      description: "Zijn er alternatieve manieren of oplossingen waar je al aan gedacht hebt?"
+    validations:
+      required: false

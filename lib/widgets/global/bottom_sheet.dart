@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/app_platform.dart';
 import 'dart:ui';
 
 import 'package:discipulus/core/routes.dart';
@@ -90,7 +90,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
 
   if (modelSheet) {
     // Set activity
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isApple) {
       activity?.becomeCurrent();
     }
 
@@ -120,7 +120,7 @@ Future<T?> showScrollableModalBottomSheet<T>(
     );
 
     // Remove the activity
-    if (activity != null && (Platform.isIOS || Platform.isMacOS)) {
+    if (activity != null && AppPlatform.isApple) {
       await FlutterAppleHandoff.updateActivity(null);
     }
 

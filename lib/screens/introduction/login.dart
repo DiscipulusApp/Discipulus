@@ -34,7 +34,7 @@ Future<TokenSet?> showMagisterLoginDialog(
   Authentication auth = Authentication();
 
   //The cookies have to be cleared otherwise you will not be able to login multiple times.
-  if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+  if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS) {
     WebViewCookieManager().clearCookies();
   }
 
@@ -82,8 +82,8 @@ Future<TokenSet?> showMagisterLoginDialog(
 
     if (!noWebview &&
         await WebviewWindow.isWebviewAvailable() &&
-        !Platform.isMacOS &&
-        !Platform.isLinux) {
+        !AppPlatform.isMacOS &&
+        !AppPlatform.isLinux) {
       if (_activeLoginWebview != null) {
         try {
           await _activeLoginWebview!.bringToForeground();
@@ -96,7 +96,6 @@ Future<TokenSet?> showMagisterLoginDialog(
           _activeLoginWebview = null;
         }
       }
-
       try {
         final webviewDataFolder = p.join(
             (await getApplicationSupportDirectory()).path,
@@ -111,7 +110,7 @@ Future<TokenSet?> showMagisterLoginDialog(
             windowWidth: 450,
             windowHeight: 700,
             title: 'Login met Magister',
-            titleBarTopPadding: Platform.isMacOS ? 30 : 0,
+            titleBarTopPadding: AppPlatform.isMacOS ? 30 : 0,
             titleBarHeight: 40,
             useWindowPositionAndSize: false,
             userDataFolderWindows: webviewDataFolder,
@@ -182,7 +181,7 @@ Future<TokenSet?> showMagisterLoginDialog(
     }
   }
 
-  if (!Platform.isAndroid && !Platform.isIOS && !Platform.isMacOS) {
+  if (!AppPlatform.isAndroid && !AppPlatform.isIOS && !AppPlatform.isMacOS) {
     // This automatically opens the webview in a sperate window for desktop platforms, but, since macOS does support webviews, we will not do this for macOS.
     loginWithBrowser();
   }
@@ -210,9 +209,9 @@ Future<TokenSet?> showMagisterLoginDialog(
         child: Scaffold(
           appBar: AppBar(
             title: const Text("Inloggen"),
-            actions: (Platform.isAndroid ||
-                    Platform.isIOS ||
-                    Platform
+            actions: (AppPlatform.isAndroid ||
+                    AppPlatform.isIOS ||
+                    AppPlatform
                         .isMacOS) //Only iOS, macOS & Android are supported for logging in with a webview
                 ? [
                     IconButton(
@@ -236,7 +235,7 @@ Future<TokenSet?> showMagisterLoginDialog(
                   return const Center(child: CircleLoaderLoopWidget());
                 }
                 // Waiting for redirectUrl
-                if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+                if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS) {
                   return WebViewWidget(controller: webViewController);
                 } else {
                   return AlertDialog(
@@ -248,8 +247,8 @@ Future<TokenSet?> showMagisterLoginDialog(
                         icon: const Icon(Icons.open_in_browser),
                         label: const Text("Openen in browser"),
                       ),
-                      if (!Platform.isMacOS &&
-                          !Platform
+                      if (!AppPlatform.isMacOS &&
+                          !AppPlatform
                               .isLinux) // This does not work in macOS or Linux (see comment above).
                         FilledButton.icon(
                           onPressed: () => loginWithBrowser(),

@@ -11,6 +11,9 @@ import 'package:html/parser.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mime/mime.dart' show lookupMimeType;
+import 'package:discipulus/utils/app_platform.dart';
+
+export 'package:discipulus/utils/app_platform.dart';
 
 extension FileExtension on File {
   bool get canPreview {
@@ -251,9 +254,8 @@ extension ColorExtension on Color {
 }
 
 extension PlatformExtension on Platform {
-  static bool isApple = Platform.isIOS || Platform.isMacOS;
-  static bool isDesktop =
-      Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  static bool get isApple => AppPlatform.isApple;
+  static bool get isDesktop => AppPlatform.isDesktop;
 }
 
 extension ContactListExtension on Iterable<Contact> {
@@ -298,13 +300,13 @@ extension BuildContextExt on BuildContext {
 
 /// Checks whether the running Windows version supports the Mica effect (Windows 11 build 22000+).
 bool get isWindowsMicaSupported {
-  if (kIsWeb || !Platform.isWindows) return false;
+  if (kIsWeb || !AppPlatform.isWindows) return false;
   final match =
-      RegExp(r'Build (\d+)').firstMatch(Platform.operatingSystemVersion);
+      RegExp(r'Build (\d+)').firstMatch(AppPlatform.operatingSystemVersion);
   final build = int.tryParse(match?.group(1) ?? '') ?? 0;
   return build >= 22000;
 }
 
 /// Checks whether desktop window transparency (Mica / macOS vibrancy) is supported.
 bool get isDesktopTransparencySupported =>
-    Platform.isMacOS || isWindowsMicaSupported;
+    AppPlatform.isMacOS || isWindowsMicaSupported;

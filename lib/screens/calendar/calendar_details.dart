@@ -426,8 +426,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
       shortcuts: {
         // Save on Ctrl + S
         SingleActivator(
-            meta: Platform.isIOS || Platform.isMacOS,
-            control: !(Platform.isIOS || Platform.isMacOS),
+            meta: AppPlatform.isApple,
+            control: !AppPlatform.isApple,
             LogicalKeyboardKey.keyS): const CalendarSaveIntent()
       },
       child: Actions(

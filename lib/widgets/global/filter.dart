@@ -2,6 +2,7 @@ import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/grades.dart';
 import 'package:discipulus/api/models/subjects.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -30,6 +31,28 @@ class CalendarSubjectFilter extends CalendarFilter {
   CalendarSubjectFilter(super.uuid, {super.schoolyearUuid});
 }
 
+class CalendarClassroomFilter extends CalendarFilter {
+  CalendarClassroomFilter(
+    super.uuid, {
+    required this.classroom,
+    super.schoolyearUuid,
+  });
+
+  final String classroom;
+}
+
+class CalendarInfoTypeFilter extends CalendarFilter {
+  CalendarInfoTypeFilter(
+    super.uuid, {
+    required this.infoType,
+    this.name,
+    super.schoolyearUuid,
+  });
+
+  final InfoType infoType;
+  final String? name;
+}
+
 extension CalendarFilterExtension
     on QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition> {
   QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
@@ -52,9 +75,8 @@ extension CalendarFilterExtension
       (q) => q.anyOf(
         activeFilters.whereType<CalendarTeacherFilter>(),
         (q, element) => q.docentenElement(
-          (q) => q
-              .naamEqualTo(element.name)
-              .optional(element.code != null, (q) => q.or().docentcodeEqualTo(element.code)),
+          (q) => q.naamEqualTo(element.name).optional(element.code != null,
+              (q) => q.or().docentcodeEqualTo(element.code)),
         ),
       ),
     );
@@ -78,22 +100,104 @@ extension CalendarEventListFilterExtension on Iterable<CalendarEvent> {
 
     if (activeFilters.isEmpty) return toList();
 
+    final teacherFilters =
+        activeFilters.whereType<CalendarTeacherFilter>().toList();
+    final classroomFilters =
+        activeFilters.whereType<CalendarClassroomFilter>().toList();
+    final infoTypeFilters =
+        activeFilters.whereType<CalendarInfoTypeFilter>().toList();
+
     return where((event) {
-      final teacherFilters =
-          activeFilters.whereType<CalendarTeacherFilter>().toList();
+      // 1. Teacher match (OR within category)
       if (teacherFilters.isNotEmpty) {
         final docenten = event.docenten ?? [];
-        final matches = teacherFilters.any((tf) => docenten.any((d) =>
-            (d.naam != null && d.naam == tf.name) ||
-            (tf.code != null && d.docentcode != null && d.docentcode == tf.code) ||
-            (d.naam == null && d.docentcode != null && d.docentcode == tf.name)));
+        final matches = teacherFilters.any((tf) {
+          final tfName = tf.name.trim().toLowerCase();
+          final tfCode = tf.code?.trim().toLowerCase();
+
+          // Check in docenten list
+          final inDocenten = docenten.any((d) {
+            final dNaam = d.naam?.trim().toLowerCase();
+            final dCode = d.docentcode?.trim().toLowerCase();
+            if (dNaam != null &&
+                (dNaam == tfName ||
+                    dNaam.contains(tfName) ||
+                    tfName.contains(dNaam))) {
+              return true;
+            }
+            if (tfCode != null && dCode != null && dCode == tfCode) {
+              return true;
+            }
+            if (dCode != null &&
+                (dCode == tfName ||
+                    tfCode == dNaam ||
+                    dCode.contains(tfName))) {
+              return true;
+            }
+            return false;
+          });
+          if (inDocenten) return true;
+
+          // Check in event.omschrijving (e.g. "WI - LOO - 101")
+          if (event.omschrijving != null) {
+            final parts =
+                event.omschrijving!.toLowerCase().split(RegExp(r'[\s\-/,()]+'));
+            if (parts.contains(tfName) ||
+                (tfCode != null && parts.contains(tfCode))) {
+              return true;
+            }
+          }
+          return false;
+        });
         if (!matches) return false;
       }
+
+      // 2. Classroom match (OR within category)
+      if (classroomFilters.isNotEmpty) {
+        final matches = classroomFilters.any((cf) {
+          final target = cf.classroom.trim().toLowerCase();
+          if (event.lokatie != null) {
+            final parts = event.lokatie!.toLowerCase().split(RegExp(r'[,/ ]+'));
+            if (parts.contains(target) ||
+                event.lokatie!.trim().toLowerCase() == target) {
+              return true;
+            }
+          }
+          if (event.rawLokatie != null) {
+            final parts =
+                event.rawLokatie!.toLowerCase().split(RegExp(r'[,/ ]+'));
+            if (parts.contains(target) ||
+                event.rawLokatie!.trim().toLowerCase() == target) {
+              return true;
+            }
+          }
+          if (event.lokalen != null) {
+            if (event.lokalen!
+                .any((l) => l.naam?.trim().toLowerCase() == target)) {
+              return true;
+            }
+          }
+          if (event.omschrijving != null) {
+            final parts =
+                event.omschrijving!.toLowerCase().split(RegExp(r'[\s\-/,()]+'));
+            if (parts.contains(target)) return true;
+          }
+          return false;
+        });
+        if (!matches) return false;
+      }
+
+      // 3. Infotype match (OR within category)
+      if (infoTypeFilters.isNotEmpty) {
+        final matches =
+            infoTypeFilters.any((itf) => itf.infoType == event.infoType);
+        if (!matches) return false;
+      }
+
       return true;
     }).toList();
   }
 }
-
 
 abstract class GradeFilter {
   final int uuid;

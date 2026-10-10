@@ -55,3 +55,6 @@ build_secrets_base64.txt
 key.properties
 # Widget Preview related
 .widget_preview/
+
+# Screenshots
+/test/screenshots

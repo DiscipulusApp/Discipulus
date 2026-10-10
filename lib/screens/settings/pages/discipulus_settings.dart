@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/api/models/permissions.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/main.dart';
@@ -104,7 +105,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
         //  Vormgeving
         //
         const ListTitle(child: Text("Vormgeving")),
-        if (Platform.isAndroid)
+        if (AppPlatform.isAndroid)
           SwitchListTile(
             value: appSettings.drawerOnBack,
             secondary: const Icon(Icons.arrow_back),
@@ -228,7 +229,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
                         Navigator.popUntil(context, (route) => route.isFirst);
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
                           builder: (context) => (!kIsWeb &&
-                                  (Platform.isAndroid || Platform.isIOS))
+                                  AppPlatform.isMobile)
                               ? const ExpressiveIntroductionScreen()
                               : const VerticalIntroductionScreen(),
                         ));
@@ -385,7 +386,7 @@ class PersonalColorSetting extends StatefulWidget {
 }
 
 class _PersonalColorSettingState extends State<PersonalColorSetting> {
-  bool hasDynamicColoring = Platform.isAndroid;
+  bool hasDynamicColoring = AppPlatform.isAndroid;
   final Map<String, Color> material3Colors = {
     'Red': const Color(0xFFE57373),
     'Orange': const Color(0xFFFF8A65),

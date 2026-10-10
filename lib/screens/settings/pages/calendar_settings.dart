@@ -396,6 +396,18 @@ class _CalendarSettingsPageState extends State<CalendarSettingsPage> {
               ..save();
           }),
         ),
+        SwitchListTile(
+          value: appSettings.autoOpenNextFilledDay,
+          secondary: const Icon(Icons.next_plan_outlined),
+          title: const Text("Automatisch naar volgende lesdag"),
+          subtitle: const Text(
+              "Open de eerstvolgende gevulde dag als vandaag leeg is of voorbij is"),
+          onChanged: (value) => setState(() {
+            appSettings
+              ..autoOpenNextFilledDay = value
+              ..save();
+          }),
+        ),
         ListTile(
           leading: const Icon(Icons.sync_rounded),
           title: const Text("Volledige schoolcarrière synchroniseren"),

@@ -59,183 +59,188 @@ const SettingsSchema = CollectionSchema(
       type: IsarType.objectList,
       target: r'AndroidAlarm',
     ),
-    r'autoRemoveDate': PropertySchema(
+    r'autoOpenNextFilledDay': PropertySchema(
       id: 8,
+      name: r'autoOpenNextFilledDay',
+      type: IsarType.bool,
+    ),
+    r'autoRemoveDate': PropertySchema(
+      id: 9,
       name: r'autoRemoveDate',
       type: IsarType.long,
     ),
     r'brightness': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'brightness',
       type: IsarType.byte,
       enumMap: _SettingsbrightnessEnumValueMap,
     ),
     r'coloredFinishedTests': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'coloredFinishedTests',
       type: IsarType.bool,
     ),
     r'coloredsufficientFromLine': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'coloredsufficientFromLine',
       type: IsarType.bool,
     ),
     r'combineDoublePeriods': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'combineDoublePeriods',
       type: IsarType.bool,
     ),
     r'curvedGraphs': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'curvedGraphs',
       type: IsarType.bool,
     ),
     r'customGatewayUrl': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'customGatewayUrl',
       type: IsarType.string,
     ),
     r'disableGradeReveal': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'disableGradeReveal',
       type: IsarType.bool,
     ),
     r'dndTurnedOnTime': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'dndTurnedOnTime',
       type: IsarType.dateTime,
     ),
     r'drawerOnBack': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'drawerOnBack',
       type: IsarType.bool,
     ),
     r'drawerOpenOnRight': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'drawerOpenOnRight',
       type: IsarType.bool,
     ),
     r'enabledGradeBadgeTypes': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'enabledGradeBadgeTypes',
       type: IsarType.byteList,
       enumMap: _SettingsenabledGradeBadgeTypesEnumValueMap,
     ),
     r'hasConfiguredAi': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'hasConfiguredAi',
       type: IsarType.bool,
     ),
     r'hideEventswithoutHours': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'hideEventswithoutHours',
       type: IsarType.bool,
     ),
     r'isAiConfigured': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'isAiConfigured',
       type: IsarType.bool,
     ),
     r'lastWatchSync': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'lastWatchSync',
       type: IsarType.dateTime,
     ),
     r'openAfterDownload': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'openAfterDownload',
       type: IsarType.bool,
     ),
     r'pietjePrecies': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'pietjePrecies',
       type: IsarType.bool,
     ),
     r'saveVirtualFiles': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'saveVirtualFiles',
       type: IsarType.bool,
     ),
     r'sendCrashInfo': PropertySchema(
-      id: 27,
+      id: 28,
       name: r'sendCrashInfo',
       type: IsarType.bool,
     ),
     r'shortBronTitle': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'shortBronTitle',
       type: IsarType.bool,
     ),
     r'showAutoCancelledEvents': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'showAutoCancelledEvents',
       type: IsarType.bool,
     ),
     r'showBronExtension': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'showBronExtension',
       type: IsarType.bool,
     ),
     r'showCalcCardsInGlobalAverageList': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'showCalcCardsInGlobalAverageList',
       type: IsarType.bool,
     ),
     r'showEmptySpaceBetweenLessons': PropertySchema(
-      id: 32,
+      id: 33,
       name: r'showEmptySpaceBetweenLessons',
       type: IsarType.bool,
     ),
     r'subjectSortType': PropertySchema(
-      id: 33,
+      id: 34,
       name: r'subjectSortType',
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
     r'themeVariant': PropertySchema(
-      id: 34,
+      id: 35,
       name: r'themeVariant',
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'timeGridDefaultDayView': PropertySchema(
-      id: 35,
+      id: 36,
       name: r'timeGridDefaultDayView',
       type: IsarType.bool,
     ),
     r'tips': PropertySchema(
-      id: 36,
+      id: 37,
       name: r'tips',
       type: IsarType.object,
       target: r'Tips',
     ),
     r'useHandoff': PropertySchema(
-      id: 37,
+      id: 38,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
     r'useMaterialYou': PropertySchema(
-      id: 38,
+      id: 39,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'useSideView': PropertySchema(
-      id: 39,
+      id: 40,
       name: r'useSideView',
       type: IsarType.bool,
     ),
     r'useTimeGridCalendar': PropertySchema(
-      id: 40,
+      id: 41,
       name: r'useTimeGridCalendar',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 41,
+      id: 42,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 42,
+      id: 43,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -307,47 +312,48 @@ void _settingsSerialize(
     AndroidAlarmSchema.serialize,
     object.alarms,
   );
-  writer.writeLong(offsets[8], object.autoRemoveDate);
-  writer.writeByte(offsets[9], object.brightness.index);
-  writer.writeBool(offsets[10], object.coloredFinishedTests);
-  writer.writeBool(offsets[11], object.coloredsufficientFromLine);
-  writer.writeBool(offsets[12], object.combineDoublePeriods);
-  writer.writeBool(offsets[13], object.curvedGraphs);
-  writer.writeString(offsets[14], object.customGatewayUrl);
-  writer.writeBool(offsets[15], object.disableGradeReveal);
-  writer.writeDateTime(offsets[16], object.dndTurnedOnTime);
-  writer.writeBool(offsets[17], object.drawerOnBack);
-  writer.writeBool(offsets[18], object.drawerOpenOnRight);
+  writer.writeBool(offsets[8], object.autoOpenNextFilledDay);
+  writer.writeLong(offsets[9], object.autoRemoveDate);
+  writer.writeByte(offsets[10], object.brightness.index);
+  writer.writeBool(offsets[11], object.coloredFinishedTests);
+  writer.writeBool(offsets[12], object.coloredsufficientFromLine);
+  writer.writeBool(offsets[13], object.combineDoublePeriods);
+  writer.writeBool(offsets[14], object.curvedGraphs);
+  writer.writeString(offsets[15], object.customGatewayUrl);
+  writer.writeBool(offsets[16], object.disableGradeReveal);
+  writer.writeDateTime(offsets[17], object.dndTurnedOnTime);
+  writer.writeBool(offsets[18], object.drawerOnBack);
+  writer.writeBool(offsets[19], object.drawerOpenOnRight);
   writer.writeByteList(
-      offsets[19], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
-  writer.writeBool(offsets[20], object.hasConfiguredAi);
-  writer.writeBool(offsets[21], object.hideEventswithoutHours);
-  writer.writeBool(offsets[22], object.isAiConfigured);
-  writer.writeDateTime(offsets[23], object.lastWatchSync);
-  writer.writeBool(offsets[24], object.openAfterDownload);
-  writer.writeBool(offsets[25], object.pietjePrecies);
-  writer.writeBool(offsets[26], object.saveVirtualFiles);
-  writer.writeBool(offsets[27], object.sendCrashInfo);
-  writer.writeBool(offsets[28], object.shortBronTitle);
-  writer.writeBool(offsets[29], object.showAutoCancelledEvents);
-  writer.writeBool(offsets[30], object.showBronExtension);
-  writer.writeBool(offsets[31], object.showCalcCardsInGlobalAverageList);
-  writer.writeBool(offsets[32], object.showEmptySpaceBetweenLessons);
-  writer.writeByte(offsets[33], object.subjectSortType.index);
-  writer.writeByte(offsets[34], object.themeVariant.index);
-  writer.writeBool(offsets[35], object.timeGridDefaultDayView);
+      offsets[20], object.enabledGradeBadgeTypes.map((e) => e.index).toList());
+  writer.writeBool(offsets[21], object.hasConfiguredAi);
+  writer.writeBool(offsets[22], object.hideEventswithoutHours);
+  writer.writeBool(offsets[23], object.isAiConfigured);
+  writer.writeDateTime(offsets[24], object.lastWatchSync);
+  writer.writeBool(offsets[25], object.openAfterDownload);
+  writer.writeBool(offsets[26], object.pietjePrecies);
+  writer.writeBool(offsets[27], object.saveVirtualFiles);
+  writer.writeBool(offsets[28], object.sendCrashInfo);
+  writer.writeBool(offsets[29], object.shortBronTitle);
+  writer.writeBool(offsets[30], object.showAutoCancelledEvents);
+  writer.writeBool(offsets[31], object.showBronExtension);
+  writer.writeBool(offsets[32], object.showCalcCardsInGlobalAverageList);
+  writer.writeBool(offsets[33], object.showEmptySpaceBetweenLessons);
+  writer.writeByte(offsets[34], object.subjectSortType.index);
+  writer.writeByte(offsets[35], object.themeVariant.index);
+  writer.writeBool(offsets[36], object.timeGridDefaultDayView);
   writer.writeObject<Tips>(
-    offsets[36],
+    offsets[37],
     allOffsets,
     TipsSchema.serialize,
     object.tips,
   );
-  writer.writeBool(offsets[37], object.useHandoff);
-  writer.writeBool(offsets[38], object.useMaterialYou);
-  writer.writeBool(offsets[39], object.useSideView);
-  writer.writeBool(offsets[40], object.useTimeGridCalendar);
-  writer.writeBool(offsets[41], object.workWeek);
-  writer.writeBool(offsets[42], object.zoomLineGraph);
+  writer.writeBool(offsets[38], object.useHandoff);
+  writer.writeBool(offsets[39], object.useMaterialYou);
+  writer.writeBool(offsets[40], object.useSideView);
+  writer.writeBool(offsets[41], object.useTimeGridCalendar);
+  writer.writeBool(offsets[42], object.workWeek);
+  writer.writeBool(offsets[43], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -373,58 +379,59 @@ Settings _settingsDeserialize(
         AndroidAlarm(),
       ) ??
       [];
-  object.autoRemoveDate = reader.readLong(offsets[8]);
+  object.autoOpenNextFilledDay = reader.readBool(offsets[8]);
+  object.autoRemoveDate = reader.readLong(offsets[9]);
   object.brightness =
-      _SettingsbrightnessValueEnumMap[reader.readByteOrNull(offsets[9])] ??
+      _SettingsbrightnessValueEnumMap[reader.readByteOrNull(offsets[10])] ??
           ThemeBrightness.system;
-  object.coloredFinishedTests = reader.readBool(offsets[10]);
-  object.coloredsufficientFromLine = reader.readBool(offsets[11]);
-  object.combineDoublePeriods = reader.readBool(offsets[12]);
-  object.curvedGraphs = reader.readBool(offsets[13]);
-  object.customGatewayUrl = reader.readStringOrNull(offsets[14]);
-  object.disableGradeReveal = reader.readBool(offsets[15]);
-  object.dndTurnedOnTime = reader.readDateTimeOrNull(offsets[16]);
-  object.drawerOnBack = reader.readBool(offsets[17]);
-  object.drawerOpenOnRight = reader.readBool(offsets[18]);
+  object.coloredFinishedTests = reader.readBool(offsets[11]);
+  object.coloredsufficientFromLine = reader.readBool(offsets[12]);
+  object.combineDoublePeriods = reader.readBool(offsets[13]);
+  object.curvedGraphs = reader.readBool(offsets[14]);
+  object.customGatewayUrl = reader.readStringOrNull(offsets[15]);
+  object.disableGradeReveal = reader.readBool(offsets[16]);
+  object.dndTurnedOnTime = reader.readDateTimeOrNull(offsets[17]);
+  object.drawerOnBack = reader.readBool(offsets[18]);
+  object.drawerOpenOnRight = reader.readBool(offsets[19]);
   object.enabledGradeBadgeTypes = reader
-          .readByteList(offsets[19])
+          .readByteList(offsets[20])
           ?.map((e) =>
               _SettingsenabledGradeBadgeTypesValueEnumMap[e] ??
               GradeBadgeTypes.weight)
           .toList() ??
       [];
-  object.hasConfiguredAi = reader.readBool(offsets[20]);
-  object.hideEventswithoutHours = reader.readBool(offsets[21]);
+  object.hasConfiguredAi = reader.readBool(offsets[21]);
+  object.hideEventswithoutHours = reader.readBool(offsets[22]);
   object.id = id;
-  object.lastWatchSync = reader.readDateTimeOrNull(offsets[23]);
-  object.openAfterDownload = reader.readBool(offsets[24]);
-  object.pietjePrecies = reader.readBool(offsets[25]);
-  object.saveVirtualFiles = reader.readBool(offsets[26]);
-  object.sendCrashInfo = reader.readBool(offsets[27]);
-  object.shortBronTitle = reader.readBool(offsets[28]);
-  object.showAutoCancelledEvents = reader.readBool(offsets[29]);
-  object.showBronExtension = reader.readBool(offsets[30]);
-  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[31]);
-  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[32]);
+  object.lastWatchSync = reader.readDateTimeOrNull(offsets[24]);
+  object.openAfterDownload = reader.readBool(offsets[25]);
+  object.pietjePrecies = reader.readBool(offsets[26]);
+  object.saveVirtualFiles = reader.readBool(offsets[27]);
+  object.sendCrashInfo = reader.readBool(offsets[28]);
+  object.shortBronTitle = reader.readBool(offsets[29]);
+  object.showAutoCancelledEvents = reader.readBool(offsets[30]);
+  object.showBronExtension = reader.readBool(offsets[31]);
+  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[32]);
+  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[33]);
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
-          reader.readByteOrNull(offsets[33])] ??
+          reader.readByteOrNull(offsets[34])] ??
       SubjectSortType.alphabetical;
   object.themeVariant =
-      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[34])] ??
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[35])] ??
           ThemeVariant.system;
-  object.timeGridDefaultDayView = reader.readBool(offsets[35]);
+  object.timeGridDefaultDayView = reader.readBool(offsets[36]);
   object.tips = reader.readObjectOrNull<Tips>(
-        offsets[36],
+        offsets[37],
         TipsSchema.deserialize,
         allOffsets,
       ) ??
       Tips();
-  object.useHandoff = reader.readBool(offsets[37]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[38]);
-  object.useSideView = reader.readBoolOrNull(offsets[39]);
-  object.useTimeGridCalendar = reader.readBool(offsets[40]);
-  object.workWeek = reader.readBool(offsets[41]);
-  object.zoomLineGraph = reader.readBool(offsets[42]);
+  object.useHandoff = reader.readBool(offsets[38]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[39]);
+  object.useSideView = reader.readBoolOrNull(offsets[40]);
+  object.useTimeGridCalendar = reader.readBool(offsets[41]);
+  object.workWeek = reader.readBool(offsets[42]);
+  object.zoomLineGraph = reader.readBool(offsets[43]);
   return object;
 }
 
@@ -459,12 +466,12 @@ P _settingsDeserializeProp<P>(
           ) ??
           []) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 9:
+      return (reader.readLong(offset)) as P;
+    case 10:
       return (_SettingsbrightnessValueEnumMap[reader.readByteOrNull(offset)] ??
           ThemeBrightness.system) as P;
-    case 10:
-      return (reader.readBool(offset)) as P;
     case 11:
       return (reader.readBool(offset)) as P;
     case 12:
@@ -472,16 +479,18 @@ P _settingsDeserializeProp<P>(
     case 13:
       return (reader.readBool(offset)) as P;
     case 14:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 15:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 16:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 17:
       return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 18:
       return (reader.readBool(offset)) as P;
     case 19:
+      return (reader.readBool(offset)) as P;
+    case 20:
       return (reader
               .readByteList(offset)
               ?.map((e) =>
@@ -489,16 +498,14 @@ P _settingsDeserializeProp<P>(
                   GradeBadgeTypes.weight)
               .toList() ??
           []) as P;
-    case 20:
-      return (reader.readBool(offset)) as P;
     case 21:
       return (reader.readBool(offset)) as P;
     case 22:
       return (reader.readBool(offset)) as P;
     case 23:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 24:
       return (reader.readBool(offset)) as P;
+    case 24:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 25:
       return (reader.readBool(offset)) as P;
     case 26:
@@ -516,33 +523,35 @@ P _settingsDeserializeProp<P>(
     case 32:
       return (reader.readBool(offset)) as P;
     case 33:
+      return (reader.readBool(offset)) as P;
+    case 34:
       return (_SettingssubjectSortTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
-    case 34:
+    case 35:
       return (_SettingsthemeVariantValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeVariant.system) as P;
-    case 35:
-      return (reader.readBool(offset)) as P;
     case 36:
+      return (reader.readBool(offset)) as P;
+    case 37:
       return (reader.readObjectOrNull<Tips>(
             offset,
             TipsSchema.deserialize,
             allOffsets,
           ) ??
           Tips()) as P;
-    case 37:
-      return (reader.readBool(offset)) as P;
     case 38:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 39:
       return (reader.readBoolOrNull(offset)) as P;
     case 40:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 41:
       return (reader.readBool(offset)) as P;
     case 42:
+      return (reader.readBool(offset)) as P;
+    case 43:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1459,6 +1468,16 @@ extension SettingsQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      autoOpenNextFilledDayEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'autoOpenNextFilledDay',
+        value: value,
+      ));
     });
   }
 
@@ -2582,6 +2601,19 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByAutoOpenNextFilledDay() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoOpenNextFilledDay', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByAutoOpenNextFilledDayDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoOpenNextFilledDay', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByAutoRemoveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoRemoveDate', Sort.asc);
@@ -3085,6 +3117,19 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByAutoOpenNextFilledDay() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoOpenNextFilledDay', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByAutoOpenNextFilledDayDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'autoOpenNextFilledDay', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByAutoRemoveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'autoRemoveDate', Sort.asc);
@@ -3559,6 +3604,13 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct>
+      distinctByAutoOpenNextFilledDay() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'autoOpenNextFilledDay');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctByAutoRemoveDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'autoRemoveDate');
@@ -3829,6 +3881,13 @@ extension SettingsQueryProperty
       alarmsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'alarms');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations>
+      autoOpenNextFilledDayProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'autoOpenNextFilledDay');
     });
   }
 

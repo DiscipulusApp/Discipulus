@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/messages.dart';
 import 'package:discipulus/api/models/permissions.dart';
@@ -7,6 +8,7 @@ import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:isar/isar.dart';
 
 extension CalenderEventListExt on Iterable<CalendarEvent> {
   /// Splits a list of events into a map with the day as key and the events of that day as value
@@ -231,6 +233,15 @@ extension DateTimeHelp on DateTime {
   DateTime get startOfWeek {
     return DateTime(year, month, day - (weekday - 1));
   }
+
+  /// Returns this date, or the upcoming Monday if this date falls on a weekend and workWeek is active.
+  DateTime toWorkDay({bool? workWeek}) {
+    final useWorkWeek = workWeek ?? appSettings.workWeek;
+    if (useWorkWeek && weekday > 5) {
+      return add(Duration(days: 8 - weekday));
+    }
+    return this;
+  }
 }
 
 class FormattedDuration {
@@ -288,3 +299,116 @@ extension DurationExtension on Duration {
     }
   }
 }
+
+extension CalendarEventFilterExtension
+    on QueryBuilder<CalendarEvent, CalendarEvent, QFilterCondition> {
+  /// Filters out full-day events, cancelled events (if configured), and lessons without hours (if configured).
+  QueryBuilder<CalendarEvent, CalendarEvent, QAfterFilterCondition>
+      validLessons() {
+    return duurtHeleDagEqualTo(false)
+        .optional(
+          !appSettings.showAutoCancelledEvents,
+          (q) => q
+              .not()
+              .statusEqualTo(Status.automaticallyCanceled)
+              .and()
+              .not()
+              .statusEqualTo(Status.manuallyCanceled),
+        )
+        .optional(
+          appSettings.hideEventswithoutHours,
+          (q) => q.lesuurVanIsNotNull(),
+        );
+  }
+}
+
+/// Determines the initial date for calendar views.
+///
+/// If [explicitDate] is provided, it is returned (dayOnly, optionally adjusted for workweek weekends via [adjustWeekend]).
+/// If [appSettings.autoOpenNextFilledDay] is enabled, it checks whether
+/// today has already passed all of its events or does not contain any events at all.
+/// If so, it looks forward to find the next filled day (events or assignments),
+/// respecting [appSettings.workWeek].
+DateTime getInitialCalendarDate({
+  DateTime? explicitDate,
+  DateTime? now,
+  bool adjustWeekend = false,
+}) {
+  if (explicitDate != null) {
+    return adjustWeekend
+        ? explicitDate.dayOnly.toWorkDay()
+        : explicitDate.dayOnly;
+  }
+
+  final currentTime = now ?? DateTime.now();
+  final today = currentTime.dayOnly;
+
+  if (!appSettings.autoOpenNextFilledDay) {
+    return today.toWorkDay();
+  }
+
+  final profile = activeProfileNullable;
+  if (profile == null) return today.toWorkDay();
+
+  try {
+    final todayEnd = today.add(const Duration(days: 1));
+
+    // 1. If today has any ongoing or upcoming event, stay on today.
+    final hasActiveEventToday = profile.calendarEvents
+            .filter()
+            .startLessThan(todayEnd)
+            .eindeGreaterThan(currentTime)
+            .validLessons()
+            .findFirstSync() !=
+        null;
+
+    if (hasActiveEventToday) {
+      return today.toWorkDay();
+    }
+
+    // 2. Today has no ongoing or upcoming events. Look ahead for the next filled day.
+    // Fetch only the earliest few events rather than scanning the entire database.
+    final futureEvents = profile.calendarEvents
+        .filter()
+        .startGreaterThan(todayEnd, include: true)
+        .validLessons()
+        .sortByStart()
+        .limit(appSettings.workWeek ? 7 : 1)
+        .findAllSync();
+
+    DateTime? nextFilledDay;
+    for (final event in futureEvents) {
+      final day = event.start.dayOnly;
+      if (appSettings.workWeek && day.weekday > 5) continue;
+      nextFilledDay = day;
+      break;
+    }
+
+    // 3. Check future assignments.
+    try {
+      final futureAssignments = profile.assignments
+          .filter()
+          .inleverenVoorGreaterThan(todayEnd, include: true)
+          .sortByInleverenVoor()
+          .limit(appSettings.workWeek ? 7 : 1)
+          .findAllSync();
+
+      for (final assignment in futureAssignments) {
+        final day = assignment.inleverenVoor.dayOnly;
+        if (appSettings.workWeek && day.weekday > 5) continue;
+        if (nextFilledDay == null || day.isBefore(nextFilledDay)) {
+          nextFilledDay = day;
+        }
+        break;
+      }
+    } catch (_) {}
+
+    if (nextFilledDay != null) {
+      return nextFilledDay;
+    }
+  } catch (_) {}
+
+  // If no future filled day is found, return today adjusted for workWeek.
+  return today.toWorkDay();
+}
+

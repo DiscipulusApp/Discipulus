@@ -391,7 +391,7 @@ class _RevealGradeAvatarState extends State<RevealGradeAvatar>
   Future<void> _playHapticRevealPattern() async {
     try {
       await Vibration.cancel();
-      if (Platform.isAndroid) {
+      if (AppPlatform.isAndroid) {
         await Vibration.vibrateWaveform(
           timings: const [
             // Phase 1: Continuous Smooth Launch (0 - 1200ms) - No pauses, smooth purr

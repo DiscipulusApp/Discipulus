@@ -86,7 +86,10 @@ fun ContentView(
                 // Rooster button
                 item {
                     Button(
-                        onClick = onNavigateToSchedule,
+                        onClick = {
+                            viewModel.requestSchedule()
+                            onNavigateToSchedule()
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(

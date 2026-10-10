@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/external_bron.dart';
@@ -23,24 +24,25 @@ class PersonRoute extends MagisterBase {
   SchoolyearsRoute schoolyear({int? schoolyearId}) =>
       SchoolyearsRoute(magister, id: schoolyearId, personId: personId);
 
-  Future<List<CalendarEvent>> calendarEvents(DateTimeRange range) async {
+  Future<List<CalendarEvent>> calendarEvents(DateTimeRange range, {bool includeAbsences = true}) async {
     //Download data
     var data = await Future.wait([
       magister.dio.get(
           "personen/$personId/afspraken?tot=${DateFormat("yyyy-MM-dd").format(range.end)}&van=${DateFormat("yyyy-MM-dd").format(range.start)}"),
+      if (includeAbsences)
       magister.dio.get(
           "personen/$personId/absenties?tot=${DateFormat("yyyy-MM-dd").format(range.end)}&van=${DateFormat("yyyy-MM-dd").format(range.start)}")
     ]);
     //Cast data
     List<CalendarEvent> calendarEvents = List<CalendarEvent>.from(
         data.first.data["Items"].map((x) => CalendarEvent.fromMap(x)));
-    List<Absence> absence = List<Absence>.from(
-        data.last.data["Items"].map((x) => Absence.fromMap(x)));
+    List<Absence> absence = includeAbsences ? List<Absence>.from(
+        data.last.data["Items"].map((x) => Absence.fromMap(x))) : [];
     //Merge data
     for (var absence in absence) {
       calendarEvents
-          .firstWhere((e) => e.id == absence.rawAfspraak?.id)
-          .afwezigheid = absence;
+          .firstWhereOrNull((e) => e.id == absence.rawAfspraak?.id)
+          ?.afwezigheid = absence;
     }
     //Return Data
     return calendarEvents;

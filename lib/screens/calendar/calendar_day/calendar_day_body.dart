@@ -6,6 +6,7 @@ import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/calendar_day/calendar_bottom_pull_launcher.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
 import 'package:discipulus/utils/account_manager.dart';
@@ -15,6 +16,7 @@ import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
@@ -89,10 +91,7 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
     }
     try {
       await activeProfile.getEvents(
-        DateTimeRange(
-          start: widget.day,
-          end: widget.day.add(const Duration(days: 1)),
-        ),
+        getHeaderWeekRange(widget.day),
       );
     } catch (e) {
       // Continue
@@ -106,20 +105,7 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
       nextEvent = await activeProfile.calendarEvents
           .filter()
           .startGreaterThan(DateTime.now())
-          .duurtHeleDagEqualTo(false)
-          .optional(
-            !appSettings.showAutoCancelledEvents,
-            (q) => q
-                .not()
-                .statusEqualTo(Status.automaticallyCanceled)
-                .or()
-                .not()
-                .statusEqualTo(Status.manuallyCanceled),
-          )
-          .optional(
-            appSettings.hideEventswithoutHours,
-            (q) => q.lesuurVanIsNotNull(),
-          )
+          .validLessons()
           .sortByStart()
           .limit(5)
           .findFirst();
@@ -128,20 +114,7 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
     return (await activeProfile.calendarEvents
             .filter()
             .startGreaterThan(dateFrom)
-            .duurtHeleDagEqualTo(false)
-            .optional(
-              !appSettings.showAutoCancelledEvents,
-              (q) => q
-                  .not()
-                  .statusEqualTo(Status.automaticallyCanceled)
-                  .and()
-                  .not()
-                  .statusEqualTo(Status.manuallyCanceled),
-            )
-            .optional(
-              appSettings.hideEventswithoutHours,
-              (q) => q.lesuurVanIsNotNull(),
-            )
+            .validLessons()
             .sortByStart()
             .findFirst())
         ?.start;
@@ -204,52 +177,53 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
         screenType: CalendarDayView,
         extraInfo: {"date": widget.day.toIso8601String()},
       ),
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          // Content
-          CustomScrollView(
-            slivers: [
-              SliverOverlapInjector(
-                handle:
-                    NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-              ),
-              // Peek at cancelled events button
-              if (events.any((e) => e.isCanceled))
-                SliverToBoxAdapter(
-                  child: AppearAnimation(
-                    child: (animation) => FadeTransition(
-                      opacity: animation,
-                      child: CustomCard(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
+      child: CalendarBottomPullLauncher(
+        day: widget.day,
+        selectedDay: widget.selectedDay,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            SliverOverlapInjector(
+              handle:
+                  NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            ),
+            // Peek at cancelled events button
+            if (events.any((e) => e.isCanceled))
+              SliverToBoxAdapter(
+                child: AppearAnimation(
+                  child: (animation) => FadeTransition(
+                    opacity: animation,
+                    child: CustomCard(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      child: ListTile(
+                        leading: const Icon(Icons.cancel_presentation),
+                        title: const Text(
+                          "Uitgevallen lessen gevonden",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: ListTile(
-                          leading: const Icon(Icons.cancel_presentation),
-                          title: const Text(
-                            "Uitgevallen lessen gevonden",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: ElasticAnimation(
-                            child: FilledButton(
-                              key: ValueKey(
-                                  "cancelled${appSettings.showAutoCancelledEvents}"),
-                              onPressed: () async {
-                                appSettings
-                                  ..showAutoCancelledEvents =
-                                      !appSettings.showAutoCancelledEvents
-                                  ..save();
-                                await setNextEvent();
-                                setState(() {});
-                              },
-                              child: Text(
-                                appSettings.showAutoCancelledEvents
-                                    ? "Verbergen"
-                                    : "Spieken",
-                              ),
+                        trailing: ElasticAnimation(
+                          child: FilledButton(
+                            key: ValueKey(
+                                "cancelled${appSettings.showAutoCancelledEvents}"),
+                            onPressed: () async {
+                              appSettings
+                                ..showAutoCancelledEvents =
+                                    !appSettings.showAutoCancelledEvents
+                                ..save();
+                              await setNextEvent();
+                              setState(() {});
+                            },
+                            child: Text(
+                              appSettings.showAutoCancelledEvents
+                                  ? "Verbergen"
+                                  : "Spieken",
                             ),
                           ),
                         ),
@@ -257,58 +231,58 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
                     ),
                   ),
                 ),
-              for (Assignment assignment in assignments)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: AssignmentCalendarTile(assignment: assignment),
-                  ),
+              ),
+            for (Assignment assignment in assignments)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: AssignmentCalendarTile(assignment: assignment),
                 ),
-              for (Activity activity in activities)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: ActivityCalendarTile(activity: activity),
-                  ),
+              ),
+            for (Activity activity in activities)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ActivityCalendarTile(activity: activity),
                 ),
-              if (events.isNotEmpty) eventBuilder(),
-              if (events.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: CustomAnimatedSize(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text("Whoohoo, geen lessen! 🎉"),
-                          ),
-                          if (nextFullDate != null &&
-                              widget.selectedDay != null)
-                            AppearAnimation(
-                              child: (animation) => FadeTransition(
-                                opacity: animation,
-                                child: TextButton.icon(
-                                  onPressed: () =>
-                                      widget.selectedDay!.value = nextFullDate!,
-                                  icon: const Icon(Icons.navigate_next),
-                                  label: const Text(
-                                      "Ga naar eerstvolgende lesdag"),
-                                ),
+              ),
+            if (events.isNotEmpty) eventBuilder(),
+            if (events.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CustomAnimatedSize(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Whoohoo, geen lessen! 🎉"),
+                        ),
+                        if (nextFullDate != null &&
+                            widget.selectedDay != null)
+                          AppearAnimation(
+                            child: (animation) => FadeTransition(
+                              opacity: animation,
+                              child: TextButton.icon(
+                                onPressed: () =>
+                                    widget.selectedDay!.value = nextFullDate!,
+                                icon: const Icon(Icons.navigate_next),
+                                label: const Text(
+                                    "Ga naar eerstvolgende lesdag"),
                               ),
-                            )
-                        ],
-                      ),
+                            ),
+                          )
+                      ],
                     ),
                   ),
                 ),
-              const SliverToBoxAdapter(
-                child: BottomSheetBottomContentPadding(),
-              )
-            ],
-          ),
-        ],
+              ),
+            const SliverToBoxAdapter(
+              child: BottomSheetBottomContentPadding(),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -360,13 +334,16 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
           if (height >= 5 && appSettings.showEmptySpaceBetweenLessons) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Card.outlined(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: height.clamp(20, 50).toDouble(),
-                  child: Center(
-                    child: Text(
-                      "$height min",
+              child: Hero(
+                tag: "emptySpace${list[index].last.id}",
+                child: Card.outlined(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: height.clamp(20, 50).toDouble(),
+                    child: Center(
+                      child: Text(
+                        "$height min",
+                      ),
                     ),
                   ),
                 ),

@@ -31,9 +31,9 @@ class ActivityInterceptor extends DemoInterceptor {
         "Id": index + activityId * 100, // Unique id based on activity
         "StartInschrijfdatum": startDate.toIso8601String(),
         "EindeInschrijfdatum": endDate.toIso8601String(),
-        "Titel": "Activity Element ${index + 1}",
+        "Titel": "Keuzeonderdeel ${index + 1}",
         "Volgnummer": index + 1,
-        "Details": "Details for element ${index + 1}",
+        "Details": "Details en toelichting voor onderdeel ${index + 1}",
         "ActiviteitId": activityId,
         "MaxAantalDeelnemers": places, // Example
         "MinAantalDeelnemers": 0, // Example

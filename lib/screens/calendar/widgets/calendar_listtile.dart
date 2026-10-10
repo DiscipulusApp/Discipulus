@@ -4,6 +4,7 @@ import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/handoff.dart';
+import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/assignments/assignment_details.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart';
@@ -21,6 +22,10 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:super_context_menu/super_context_menu.dart';
 
+/// Type that the [SimpleDayViewEventTile] can take in the scrollable calendar view.
+/// This is used to determine the shape of the event tile.
+enum ScrollCalendarTileTypePosition { top, middle, end, single }
+
 class SimpleDayViewEventTile extends StatefulWidget {
   const SimpleDayViewEventTile({
     super.key,
@@ -30,6 +35,8 @@ class SimpleDayViewEventTile extends StatefulWidget {
     this.callback,
     this.onTapOverride,
     this.navigationTile = true,
+    this.scrollTile = false,
+    this.tileType = ScrollCalendarTileTypePosition.single,
   });
 
   /// Can be a combination of multiple events;
@@ -55,6 +62,13 @@ class SimpleDayViewEventTile extends StatefulWidget {
   /// calendar details will not work.
   final bool navigationTile;
 
+  /// When this value is true the event tile will be used in a scrollable list
+  /// and will have a different design.
+  final bool scrollTile;
+
+  /// When this value is set, the event tile will have a different design
+  /// depending on the position of the tile in the scrollable list.
+  final ScrollCalendarTileTypePosition tileType;
   @override
   State<SimpleDayViewEventTile> createState() => _SimpleDayViewEventTileState();
 }
@@ -139,6 +153,46 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
 
   @override
   Widget build(BuildContext context) {
+    Color? colour;
+    ShapeBorder? shape;
+
+    if (widget.scrollTile) {
+      if (widget.event.first.isCanceled ||
+          !(widget.event.first.afwezigheid?.geoorloofd ?? true)) {
+        colour = Theme.of(context).colorScheme.errorContainer;
+      } else if (widget.event.first.isTest) {
+        colour = Theme.of(context).colorScheme.tertiaryContainer;
+      } else if (widget.event.first.infoType == InfoType.homework) {
+        colour = Theme.of(context).colorScheme.secondaryContainer;
+      }
+
+      // The first and last cards will have a rounded shape at their edges,
+      // the middle cards will have a more rectangular shape.
+      if (widget.tileType == ScrollCalendarTileTypePosition.top) {
+        shape = const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(12),
+            bottom: Radius.circular(4),
+          ),
+        );
+      } else if (widget.tileType == ScrollCalendarTileTypePosition.middle) {
+        shape = const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+        );
+      } else if (widget.tileType == ScrollCalendarTileTypePosition.end) {
+        shape = const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(4),
+            bottom: Radius.circular(12),
+          ),
+        );
+      } else if (widget.tileType == ScrollCalendarTileTypePosition.single) {
+        shape = const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        );
+      }
+    }
+
     return CustomContextMenuWidget(
       liftBuilder: (context, child) => CustomCard(
         margin: EdgeInsets.zero,
@@ -153,184 +207,235 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
         ),
         child: Hero(
           tag: widget.event.map((e) => e.id.isNegative ? e.id : e.uuid).join(),
+          flightShuttleBuilder: (
+            flightContext,
+            animation,
+            flightDirection,
+            fromHeroContext,
+            toHeroContext,
+          ) {
+            final Hero toHero = toHeroContext.widget as Hero;
+            final toMediaQuery = MediaQuery.maybeOf(toHeroContext);
+            final Widget flyingWidget = Material(
+              type: MaterialType.transparency,
+              child: toHero.child,
+            );
+            return toMediaQuery != null
+                ? MediaQuery(data: toMediaQuery, child: flyingWidget)
+                : flyingWidget;
+          },
           child: CustomCard(
-            // color: Theme.of(context).colorScheme.surfaceContainerLow,
-            child: Column(
+            clipBehavior: Clip.antiAlias,
+            margin: widget.scrollTile ? EdgeInsets.zero : null,
+            color: colour,
+            shape: shape,
+            child:
+                widget.scrollTile ? _buildScrollTile() : _buildNormalTile(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScrollTile() {
+    String hourText = widget.event.first.lesuurVan == null
+        ? ""
+        : widget.event.first.lesuurVan != widget.event.last.lesuurTotMet
+            ? "${widget.event.first.lesuurVan}/${widget.event.last.lesuurTotMet}u"
+            : "${widget.event.first.lesuurVan}u";
+
+    return Stack(
+      children: [
+        if (widget.event.first.lesuurVan != null)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "$hourText - ${widget.event.first.start.formattedTime}",
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (widget.tileType == ScrollCalendarTileTypePosition.end ||
+                      widget.tileType == ScrollCalendarTileTypePosition.single)
+                    Text(
+                      widget.event.last.einde.formattedTime,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ListTile(
+          title: Text(
+            widget.event.first.title.capitalized,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          subtitle: _buildSubtitle(disableTime: true, shortNames: true),
+          trailing: const SizedBox(width: 50), // This is so the title does not overflow into the time
+          minTileHeight: (widget.event.first.lesuurVan != widget.event.last.lesuurTotMet) ? 128 : null,
+          onTap: widget.onTapOverride ??
+              () => showCalendarEventDetailsSheet(
+                    context,
+                    events: widget.event,
+                    callback: widget.callback,
+                    showSeeInContext: false,
+                  ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNormalTile() {
+    return ClipRect(
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            CustomAnimatedSize(
+              child: CountDownWidget(
+                countDownTime: widget.event.first.start,
+                builder: (countdown) {
+                  bool shoudlDisplay =
+                      !countdown.time.isNegative && widget.displayCountdown;
+                  return SizedBox(
+                    height: shoudlDisplay ? null : 0,
+                    child: CustomCard(
+                      margin: const EdgeInsets.all(8).copyWith(bottom: 0),
+                      elevation: 0,
+                      child: ListTile(
+                        leading:
+                            shoudlDisplay ? const Icon(Icons.access_time) : null,
+                        title: Text("Start in ${countdown.time} ${countdown.unit}"),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Table(
+              columnWidths: [
+                if (widget.event.first.lesuurVan != null)
+                  const FixedColumnWidth(48.0),
+                if (widget.size == CalendarEventSize.large || widget.size == null)
+                  const FixedColumnWidth(0),
+                const FlexColumnWidth(),
+                const FixedColumnWidth(48.0)
+              ].asMap(),
               children: [
-                CustomAnimatedSize(
-                  child: CountDownWidget(
-                    countDownTime: widget.event.first.start,
-                    builder: (countdown) {
-                      bool shoudlDisplay =
-                          !countdown.time.isNegative && widget.displayCountdown;
-                      return SizedBox(
-                        height: shoudlDisplay ? null : 0,
-                        child: CustomCard(
-                          margin: const EdgeInsets.all(8).copyWith(bottom: 0),
-                          elevation: 0,
-                          child: ListTile(
-                            leading: shoudlDisplay
-                                ? const Icon(Icons.access_time)
-                                : null,
-                            title: Text(
-                                "Start in ${countdown.time} ${countdown.unit}"),
+                TableRow(
+                  children: [
+                    if (widget.event.first.lesuurVan != null)
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.middle,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0).copyWith(right: 0),
+                          child: HourIndicator(
+                            from: widget.event.first.lesuurVan!,
+                            to: widget.event.last.lesuurTotMet,
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                Table(
-                  columnWidths: [
-                    if (widget.event.first.lesuurVan != null)
-                      const FixedColumnWidth(48.0),
+                      ),
                     if (widget.size == CalendarEventSize.large ||
                         widget.size == null)
-                      const FixedColumnWidth(0),
+                      TableCell(
+                        child: SizedBox(
+                          height: widget.event.first.duurtHeleDag
+                              ? 50
+                              : widget.size != null
+                                  ? 100
+                                  : widget.event.duration.inMinutes
+                                      .clamp(30, 200)
+                                      .toDouble(),
+                        ),
+                      ),
+                    TableCell(
+                      verticalAlignment: TableCellVerticalAlignment.middle,
+                      child: ListTile(
+                        dense: widget.size == CalendarEventSize.small,
+                        title: Text(widget.event.first.title.capitalized),
+                        subtitle: _buildSubtitle(),
+                      ),
+                    ),
+                    if (widget.navigationTile)
+                      TableCell(
+                        verticalAlignment: TableCellVerticalAlignment.fill,
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.only(top: 8, right: 8, bottom: 8),
+                          child: SizedBox(
+                            child: IconButton.filledTonal(
+                              onPressed: widget.onTapOverride ??
+                                  () => showCalendarEventDetailsSheet(
+                                        context,
+                                        events: widget.event,
+                                        callback: widget.callback,
+                                        showSeeInContext: false,
+                                      ),
+                              icon: const Icon(Icons.navigate_next),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            if (widget.event.first.inhoud != null &&
+                !widget.event.first.inhoud!.isEmptyHTML)
+              Padding(
+                padding: const EdgeInsets.all(4.0).copyWith(top: 0),
+                child: Table(
+                  columnWidths: [
+                    if (widget.event.first.isEditable) const FixedColumnWidth(48.0),
                     const FlexColumnWidth(),
-                    const FixedColumnWidth(48.0)
                   ].asMap(),
                   children: [
                     TableRow(
                       children: [
-                        if (widget.event.first.lesuurVan != null)
-                          TableCell(
-                            verticalAlignment:
-                                TableCellVerticalAlignment.middle,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.all(8.0).copyWith(right: 0),
-                              child: HourIndicator(
-                                from: widget.event.first.lesuurVan!,
-                                to: widget.event.last.lesuurTotMet,
-                              ),
-                            ),
-                          ),
-                        if (widget.size == CalendarEventSize.large ||
-                            widget.size == null)
-                          TableCell(
-                            child: SizedBox(
-                              height: widget.event.first.duurtHeleDag
-                                  ? 50
-                                  : widget.size != null
-                                      ? 100
-                                      : widget.event.duration.inMinutes
-                                          .clamp(30, 200)
-                                          .toDouble(),
-                            ),
-                          ),
-                        TableCell(
-                          verticalAlignment: TableCellVerticalAlignment.middle,
-                          child: ListTile(
-                            dense: widget.size == CalendarEventSize.small,
-                            title: Text(widget.event.first.title.capitalized),
-                            subtitle: Text(
-                              maxLines: widget.event.first.lesuurVan ==
-                                      widget.event.last.lesuurTotMet
-                                  ? 1
-                                  : 2,
-                              overflow: TextOverflow.ellipsis,
-                              [
-                                // Location
-                                widget.event.first.lokatie ??
-                                    widget.event.first.lokalen
-                                        ?.map((e) => e.naam)
-                                        .formattedJoin,
-                                // Absence
-                                widget.event
-                                        .map((e) => e.afwezigheid)
-                                        .nonNulls
-                                        .isNotEmpty
-                                    ? "Afwezig"
-                                    : null,
-                                //Time
-                                widget.event.first.duurtHeleDag
-                                    ? "${widget.event.last.einde.difference(widget.event.first.start).inDays} dag(en)"
-                                    : "${widget.event.first.start.formattedTime} - ${widget.event.last.einde.formattedTime}",
-                                // Special things
-                                if (widget.event.first.isCanceled)
-                                  widget.event.first.status.toName,
-                                // Infotype
-                                if (widget.event.first.infoType.index != 0)
-                                  widget.event.first.infoType.toName,
-                                // Teacher
-                                widget.event.first.docenten
-                                    ?.map((e) => e.naam)
-                                    .formattedJoin,
-                              ].where((e) => e != null && e != "").join(" • "),
-                            ),
-                          ),
-                        ),
-                        if (widget.navigationTile)
+                        if (widget.event.first.isEditable)
                           TableCell(
                             verticalAlignment: TableCellVerticalAlignment.fill,
                             child: Padding(
-                              padding: const EdgeInsets.only(
-                                  top: 8, right: 8, bottom: 8),
-                              child: SizedBox(
-                                child: IconButton.filledTonal(
-                                  onPressed: widget.onTapOverride ??
-                                      () => showCalendarEventDetailsSheet(
-                                            context,
-                                            events: widget.event,
-                                            callback: widget.callback,
-                                            showSeeInContext: false,
-                                          ),
-                                  icon: const Icon(Icons.navigate_next),
-                                ),
+                              padding: const EdgeInsets.all(4),
+                              child: _buildDoneButton(),
+                            ),
+                          ),
+                        CustomCard(
+                          child: ExpandableEventBody(
+                            constraints: widget.navigationTile
+                                ? const BoxConstraints(maxHeight: 128)
+                                : const BoxConstraints(maxHeight: 128 * 2),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: HTMLDisplay(
+                                html: widget.event.first.inhoud!,
                               ),
                             ),
                           ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                if (widget.event.first.inhoud != null &&
-                    !widget.event.first.inhoud!.isEmptyHTML)
-                  Padding(
-                    padding: const EdgeInsets.all(4.0).copyWith(top: 0),
-                    child: Table(
-                      columnWidths: [
-                        if (widget.event.first.isEditable)
-                          const FixedColumnWidth(48.0),
-                        const FlexColumnWidth(),
-                      ].asMap(),
-                      children: [
-                        TableRow(
-                          children: [
-                            if (widget.event.first.isEditable)
-                              TableCell(
-                                verticalAlignment:
-                                    TableCellVerticalAlignment.fill,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: _buildDoneButton(),
-                                ),
-                              ),
-                            CustomCard(
-                              child: ExpandableEventBody(
-                                constraints: widget.navigationTile
-                                    ? const BoxConstraints(maxHeight: 128)
-                                    : const BoxConstraints(maxHeight: 128 * 2),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  child: HTMLDisplay(
-                                    html: widget.event.first.inhoud!,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -339,9 +444,45 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
   Future<void> toggleAfgerond() async {
     widget.event.first.afgerond = !widget.event.first.afgerond;
     widget.event.first.save();
+    WatchService().sendEventCompletion(
+        widget.event.first.id, widget.event.first.afgerond);
     await widget.event.first.sync();
     widget.callback?.call();
-    setState(() {});
+    if (mounted) setState(() {});
+  }
+
+  Text _buildSubtitle({bool disableTime = false, bool shortNames = false}) {
+    return Text(
+      maxLines: widget.event.first.lesuurVan == widget.event.last.lesuurTotMet
+          ? 1
+          : 2,
+      overflow: TextOverflow.ellipsis,
+      [
+        // Location
+        widget.event.first.lokatie ??
+            widget.event.first.lokalen?.map((e) => e.naam).formattedJoin,
+        // Absence
+        widget.event.map((e) => e.afwezigheid).nonNulls.isNotEmpty
+            ? "Afwezig"
+            : null,
+        //Time
+        if (!disableTime)
+          widget.event.first.duurtHeleDag
+              ? "${widget.event.last.einde.difference(widget.event.first.start).inDays} dag(en)"
+              : "${widget.event.first.start.formattedTime} - ${widget.event.last.einde.formattedTime}",
+        // Special things
+        if (widget.event.first.isCanceled) widget.event.first.status.toName,
+        // Infotype
+        if (widget.event.first.infoType.index != 0)
+          shortNames
+              ? widget.event.first.infoType.toShort
+              : widget.event.first.infoType.toName,
+        // Teacher
+        shortNames
+            ? widget.event.first.docenten?.map((e) => e.docentcode).formattedJoin
+            : widget.event.first.docenten?.map((e) => e.naam).formattedJoin,
+      ].where((e) => e != null && e != "").join(" • "),
+    );
   }
 
   Widget _buildDoneButton() {
@@ -548,9 +689,7 @@ class _ExpandableEventBodyState extends State<ExpandableEventBody> {
                         _isExpanded = !_isExpanded;
                       }),
                       icon: Icon(
-                        _isExpanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
+                        _isExpanded ? Icons.expand_less : Icons.expand_more,
                       ),
                     ),
                   ),
@@ -652,6 +791,7 @@ class AssignmentCalendarTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomCard(
+      margin: EdgeInsets.zero,
       color: Theme.of(context).colorScheme.tertiaryContainer,
       child: ListTile(
         onTap: () =>

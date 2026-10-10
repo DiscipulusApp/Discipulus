@@ -353,10 +353,11 @@ Widget? leadingAppBarButton(BuildContext context) {
   final bool isRootPage =
       currentRoute?.isFirst ?? !Navigator.of(context).canPop();
 
-  if (!Layout.of(context)!.persistantDrawer && isRootPage) {
+  final layout = Layout.of(context);
+  if (layout != null && !layout.persistantDrawer && isRootPage) {
     return Center(
       child: IconButton(
-        onPressed: () => Layout.of(context)!.drawerController.toggleDrawer(),
+        onPressed: () => layout.drawerController.toggleDrawer(),
         icon: const Icon(Icons.menu),
       ),
     );

@@ -86,6 +86,21 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
             });
           },
         ),
+        if (activeProfile.settings.gradesNotfications)
+          SwitchListTile(
+            secondary: const Icon(Icons.visibility_outlined),
+            title: const Text("Toon cijfer in notificatie"),
+            subtitle: const Text(
+                "Toon het behaalde cijfer direct in de notificatie"),
+            value: activeProfile.settings.spoilerGradeNotfications,
+            onChanged: (value) {
+              setState(() {
+                activeProfile
+                  ..settings.spoilerGradeNotfications = value
+                  ..save();
+              });
+            },
+          ),
         SwitchListTile(
           secondary: const Icon(Icons.person_remove_alt_1_outlined),
           title: const Text("Absentie notificaties"),

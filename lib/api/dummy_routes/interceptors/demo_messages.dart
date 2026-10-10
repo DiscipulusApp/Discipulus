@@ -1,8 +1,5 @@
-import 'dart:math';
-
 import 'package:dio/dio.dart';
 import 'package:discipulus/api/dummy_routes/interceptors.dart';
-import 'package:html_unescape/html_unescape.dart';
 
 class MessagesInterceptor extends DemoInterceptor {
   MessagesInterceptor(super.options, super.handler);
@@ -22,8 +19,8 @@ class MessagesInterceptor extends DemoInterceptor {
             "isGelezen": true, // Concepten are considered read
             "verzondenOp": DateTime.now().toIso8601String(),
             "links": {
-              "self": "/api/berichten/concepten/$index",
-              "map": "/api/berichten/concepten"
+              "self": {"href": "/api/berichten/concepten/$index"},
+              "map": {"href": "/api/berichten/concepten"}
             }
           };
         }),
@@ -38,8 +35,44 @@ class MessagesInterceptor extends DemoInterceptor {
         options.path.contains("count")) {
       //Get concept count
       return {"count": 14};
+    } else if (options.path.contains("berichten/mappen/alle")) {
+      // Get all message folders
+      return {
+        "items": [
+          {
+            "id": 1,
+            "naam": "Postvak in",
+            "aantalOngelezen": 2,
+            "bovenliggendeId": 0,
+            "links": {
+              "berichten": {"href": "/api/berichten/postvakin"}
+            }
+          },
+          {
+            "id": 2,
+            "naam": "Verzonden items",
+            "aantalOngelezen": 0,
+            "bovenliggendeId": 0,
+            "links": {
+              "berichten": {"href": "/api/berichten/verzonden"}
+            }
+          },
+          {
+            "id": 3,
+            "naam": "Verwijderde items",
+            "aantalOngelezen": 0,
+            "bovenliggendeId": 0,
+            "links": {
+              "berichten": {"href": "/api/berichten/verwijderd"}
+            }
+          }
+        ]
+      };
     } else if ((options.path.contains("berichten/mappen") ||
-        options.path == "berichten/postvakin")) {
+        options.path.contains("berichten/postvakin") ||
+        options.path.contains("berichten/verzonden") ||
+        options.path.contains("berichten/verwijderd") ||
+        options.path.contains("berichten/dummy"))) {
       // Get messages for a specific folder (inbox, sent, etc.): berichten/mappen/{mapId}/berichten
       return {
         "items": _generateDummyMessages(options, 12),
@@ -84,26 +117,96 @@ class MessagesInterceptor extends DemoInterceptor {
 
   List<Map<String, dynamic>> _generateDummyMessages(
       RequestOptions options, int count) {
-    int mapId = int.tryParse(options.path.split("/")[1]) ?? 1;
+    int mapId = 1;
+    if (options.path.contains("verzonden")) {
+      mapId = 2;
+    } else if (options.path.contains("verwijderd")) {
+      mapId = 3;
+    } else {
+      mapId = int.tryParse(options.path
+              .split("/")
+              .where((p) => int.tryParse(p) != null)
+              .firstOrNull ??
+          "") ??
+          1;
+    }
+
+    final predefined = [
+      (
+        sender: "M. Eijkelkamp (Ekl)",
+        subject: "Practicum Natuurkunde: Valversnelling & Meetverslagen",
+        body:
+            "<p>Beste leerlingen,</p><p>Denk eraan om morgen je grafische rekenmachine en practicumboek mee te nemen naar lokaal N003. We gaan aan de slag met de valbeweging en energiebehoud. Zorg dat je de theorie hebt doorgelezen.</p><p>Met vriendelijke groet,<br>M. Eijkelkamp</p>",
+        priority: true,
+        daysAgo: 0,
+      ),
+      (
+        sender: "M. Eijkelkamp (Ekl)",
+        subject: "Mentorupdate: Voortgangsgesprekken en profielkeuze",
+        body:
+            "<p>Beste klas,</p><p>Komende week starten we met de individuele mentor-voortgangsgesprekken. Schrijf je in voor een tijdslot via het intekenformulier.</p><p>Hartelijke groet,<br>M. Eijkelkamp (mentor 5 VWO)</p>",
+        priority: false,
+        daysAgo: 1,
+      ),
+      (
+        sender: "Maarten van Rossem (ros)",
+        subject: "Geschiedenis H4: De Koude Oorlog en het tijdperk",
+        body:
+            "<p>Beste leerlingen,</p><p>Voor de les van woensdag verwacht ik dat iedereen paragraaf 4.2 grondig heeft bestudeerd. Verwacht geen gemakkelijke toets; het vereist daadwerkelijk historisch inzicht.</p><p>M. van Rossem</p>",
+        priority: false,
+        daysAgo: 2,
+      ),
+      (
+        sender: "Freek Vonk (vnk)",
+        subject: "Practicum Biologie: Veldwerk & Microscopie in B012",
+        body:
+            "<p>Hoi allemaal!</p><p>Morgen gaan we cellen en preparaten onderzoeken met de microscopen in B012! Zorg dat je op tijd bent en je practicumjas meeneemt!</p><p>Groeten,<br>Freek Vonk</p>",
+        priority: false,
+        daysAgo: 3,
+      ),
+      (
+        sender: "René Descartes (des)",
+        subject: "Wiskunde B: Uitwerkingen hoofdstuk 4 online",
+        body:
+            "<p>Beste leerlingen,</p><p>De modeluitwerkingen voor Goniometrie en Differentiëren zijn toegevoegd aan de studiewijzer. Bestudeer vooral opgave 24 en 27 goed ter voorbereiding op het SE.</p><p>R. Descartes</p>",
+        priority: false,
+        daysAgo: 5,
+      ),
+      (
+        sender: "Schoolleiding",
+        subject: "Inschrijving Schoolreis Berlijn 5 VWO geopend",
+        body:
+            "<p>Beste leerlingen en ouders,</p><p>De inschrijving voor de jaarlijkse culturele reis naar Berlijn is geopend. Schrijf je in via het Activiteiten-overzicht in Discipulus.</p><p>Met vriendelijke groet,<br>Schoolleiding</p>",
+        priority: true,
+        daysAgo: 7,
+      ),
+    ];
 
     return List.generate(count, (index) {
-      DateTime date = DateTime.now().subtract(Duration(days: index));
+      final msg = predefined[index % predefined.length];
+      DateTime date = DateTime.now().subtract(Duration(days: msg.daysAgo + (index ~/ predefined.length) * 7));
       return {
-        "id": index + mapId * 1000, // Unique id based on folder
-        "onderwerp": HtmlUnescape().convert("Bericht $index van map $mapId"),
+        "id": index + mapId * 1000,
+        "onderwerp": msg.subject,
         "mapId": mapId,
-        "afzender": {"id": index * 5, "naam": "Afzender $index"},
-        "heeftPrioriteit": Random().nextBool(),
-        "heeftBijlagen": Random().nextBool(),
-        "isGelezen": Random().nextBool(),
+        "afzender": {"id": (index + 1) * 10, "naam": msg.sender},
+        "heeftPrioriteit": msg.priority,
+        "heeftBijlagen": index % 2 == 0,
+        "isGelezen": index > 1,
         "verzondenOp": date.toIso8601String(),
         "links": {
-          "self": "/api/berichten/${index == 1 ? "postvakin" : index}",
-          "map": "/api/berichten/${index == 1 ? "postvakin" : index}",
-          "bijlagen":
-              "/api/berichten/${index == 1 ? "postvakin" : index}/bijlagen",
+          "self": {
+            "href": "/api/berichten/${index == 1 ? "postvakin" : index}"
+          },
+          "map": {
+            "href": "/api/berichten/${index == 1 ? "postvakin" : index}"
+          },
+          "bijlagen": {
+            "href":
+                "/api/berichten/${index == 1 ? "postvakin" : index}/bijlagen"
+          },
         },
-        "inhoud": "<h1>Inhoud van bericht $index van map $mapId</h1>"
+        "inhoud": msg.body,
       };
     });
   }

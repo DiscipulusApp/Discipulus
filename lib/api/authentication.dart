@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:native_dio_adapter/native_dio_adapter.dart';
 import 'package:pointycastle/export.dart' as castle;
 import 'package:dio/dio.dart';
 import 'package:discipulus/models/account.dart';
@@ -61,7 +62,7 @@ class Authentication {
 
     LoginLogger.instance.step("Inwisselen van autorisatiecode voor tokens");
     try {
-      Response<Map> res = await Dio().post(
+      Response<Map> res = await (Dio()..httpClientAdapter = NativeAdapter()).post(
         "https://accounts.magister.net/connect/token",
         options: Options(
           contentType: "application/x-www-form-urlencoded",

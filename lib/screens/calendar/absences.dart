@@ -239,7 +239,7 @@ class AbsenceStatisticalTilesHeader extends StatelessWidget {
                                       maxLines: 1,
                                     ),
                                   ),
-                                  subtitle: Text(tile.label),
+                                  subtitle: Text(tile.label, maxLines: 1, overflow: TextOverflow.ellipsis,),
                                 ),
                               ),
                             ))

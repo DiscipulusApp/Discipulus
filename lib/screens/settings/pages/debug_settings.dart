@@ -8,7 +8,9 @@ import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/calendar/calendar_scroll/calendar_scroll.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/messages/tiles.dart';
 import 'package:discipulus/screens/grades/grade_extensions.dart';
 import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/post_login.dart';
@@ -105,16 +107,17 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
           const ListTitle(child: Text("Accounts & Profielen")),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: CustomCard(
-              child: Column(
-                children: [
-                  for (int i = 0; i < profiles.length; i++) ...[
-                    ListTile(
+            child: Column(
+              children: [
+                for (int i = 0; i < profiles.length; i++)
+                  CustomCard(
+                    child: ListTile(
                       leading: ProfilePicture(
                         base64ProfilePicture: profiles[i].base64ProfilePicture,
                       ),
                       title: Text(profiles[i].name),
-                      subtitle: Text("ID: ${profiles[i].id} | UUID: ${profiles[i].uuid}"),
+                      subtitle: Text(
+                          "ID: ${profiles[i].id} | UUID: ${profiles[i].uuid}"),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -161,9 +164,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                         ],
                       ),
                     ),
-                    if (i < profiles.length - 1) const Divider(height: 1),
-                  ]
-                ],
+                  ),
+              ].toMaterial3List(
+                seperation: 2,
+                overridemargin: EdgeInsets.zero,
               ),
             ),
           ),
@@ -175,10 +179,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
         const ListTitle(child: Text("UI & Onboarding Previews")),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: CustomCard(
-            child: Column(
-              children: [
-                ListTile(
+          child: Column(
+            children: [
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.auto_awesome_rounded),
                   title: const Text("Material 3 Expressive Intro"),
                   subtitle: const Text("Bekijk de nieuwe onboarding flow"),
@@ -186,8 +190,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   onTap: () =>
                       const ExpressiveIntroductionScreen().push(context),
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.celebration_rounded),
                   title: const Text("Material 3 Expressive Post-Login"),
                   subtitle:
@@ -195,8 +200,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => const PostLoginScreen().push(context),
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.interests_rounded),
                   title: const Text("Klassieke introductie"),
                   subtitle: const Text("Herstart de verticale introductie"),
@@ -208,7 +214,20 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     makeFirst: false,
                   ),
                 ),
-              ],
+              ),
+              CustomCard(
+                child: ListTile(
+                  leading: const Icon(Icons.calendar_view_day_outlined),
+                  title: const Text("Scroll Kalender (Eindeloos)"),
+                  subtitle:
+                      const Text("Experimentele tweerichtings scrollkalender"),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => const ScrollCalendar().push(context),
+                ),
+              ),
+            ].toMaterial3List(
+              seperation: 2,
+              overridemargin: EdgeInsets.zero,
             ),
           ),
         ),
@@ -219,10 +238,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
         const ListTitle(child: Text("Diagnostiek & Logboeken")),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: CustomCard(
-            child: Column(
-              children: [
-                ListTile(
+          child: Column(
+            children: [
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.assignment_outlined),
                   title: const Text("Login diagnostisch logboek"),
                   subtitle:
@@ -230,16 +249,18 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => _showLoginDiagnosticSheet(context),
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.error_outline_rounded),
                   title: const Text("Geregistreerde app-fouten"),
                   subtitle: Text("${errors.length} fouten gelogd"),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => const ErrorsListScreen().push(context),
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.import_export_rounded),
                   title: const Text("Exporteer lokale database"),
                   subtitle: const Text("Kopieer isar.isar naar tijdelijke map"),
@@ -257,7 +278,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-              ],
+              ),
+            ].toMaterial3List(
+              seperation: 2,
+              overridemargin: EdgeInsets.zero,
             ),
           ),
         ),
@@ -268,10 +292,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
         const ListTitle(child: Text("Achtergrondtaken & Systeem")),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: CustomCard(
-            child: Column(
-              children: [
-                ListTile(
+          child: Column(
+            children: [
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.alarm_add_rounded),
                   title: const Text("Slimme wekker test"),
                   subtitle: const Text("Bereken en test de volgende wektijd"),
@@ -325,8 +349,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.widgets_outlined),
                   title: const Text("Update widgets"),
                   subtitle: const Text("Werk home-screen widgets bij"),
@@ -341,8 +366,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.sync_rounded),
                   title: const Text("Achtergrondverversing uitvoeren"),
                   subtitle: const Text("Voer een geforceerde sync uit"),
@@ -360,8 +386,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.notifications_active_outlined),
                   title: const Text("Test notificatie plannen"),
                   subtitle: const Text("Ontvang testmelding na 30 seconden"),
@@ -384,8 +411,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.do_not_disturb_on_outlined),
                   title: const Text("Niet Storen (DND) schakelen"),
                   subtitle: const Text("Toggle actieve DND modus"),
@@ -404,8 +432,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.schedule_rounded),
                   title: const Text("DND achtergrondevent plannen"),
                   subtitle: const Text("Plan DND alarm na 15 seconden"),
@@ -428,7 +457,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-              ],
+              ),
+            ].toMaterial3List(
+              seperation: 2,
+              overridemargin: EdgeInsets.zero,
             ),
           ),
         ),
@@ -439,10 +471,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
         const ListTitle(child: Text("Gegevens & Cache Beheer")),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: CustomCard(
-            child: Column(
-              children: [
-                ListTile(
+          child: Column(
+            children: [
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.grade_outlined),
                   title: const Text("Verwijder meest recente cijfer"),
                   subtitle: const Text("Handig voor het testen van notificaties"),
@@ -476,8 +508,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     }
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.inventory_2_outlined),
                   title: const Text("Simuleer toetsweek (archiveer cijfers)"),
                   subtitle: const Text(
@@ -538,8 +571,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     }
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.unarchive_outlined),
                   title: const Text("Herstel alle gearchiveerde cijfers"),
                   subtitle: const Text(
@@ -577,8 +611,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     }
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.filter_alt_outlined),
                   title: const Text("Wis cijferfilters"),
                   subtitle: Text("${Settings.activeGradeFilters.length} filters actief"),
@@ -594,8 +629,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: const Icon(Icons.cleaning_services_outlined),
                   title: const Text("Wis tijdelijke bestanden (Cache)"),
                   subtitle: const Text("Verwijder tijdelijke downloads en cache"),
@@ -611,8 +647,9 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     );
                   },
                 ),
-                const Divider(height: 1),
-                ListTile(
+              ),
+              CustomCard(
+                child: ListTile(
                   leading: Icon(
                     Icons.delete_forever_rounded,
                     color: colorScheme.error,
@@ -658,7 +695,10 @@ class _DebugSettingsPageState extends State<DebugSettingsPage> {
                     }
                   },
                 ),
-              ],
+              ),
+            ].toMaterial3List(
+              seperation: 2,
+              overridemargin: EdgeInsets.zero,
             ),
           ),
         ),

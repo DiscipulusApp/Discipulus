@@ -606,6 +606,14 @@ class _ExpressiveNotificationToggleButtonState
     );
 
     _checkPermission();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _requestInitialPermissions();
+    });
+  }
+
+  Future<void> _requestInitialPermissions() async {
+    await NotificationController.requestPermissions();
+    await _checkPermission();
   }
 
   @override

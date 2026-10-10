@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:discipulus/utils/app_platform.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
@@ -281,7 +281,7 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
                                   strokeCap: StrokeCap.round,
                                 ),
                               )
-                            : (Platform.isAndroid || Platform.isIOS)
+                            : AppPlatform.isMobile
                                 ? const SizedBox()
                                 : const Icon(Icons.sync),
                     onPressed: value != 0 ? null : _fetch,
@@ -334,7 +334,7 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
       physics: BouncingScrollPhysics(
         parent:
             widget.fetch != null ? const AlwaysScrollableScrollPhysics() : null,
-        decelerationRate: Platform.isAndroid
+        decelerationRate: AppPlatform.isAndroid
             ? ScrollDecelerationRate.fast
             : ScrollDecelerationRate.normal,
       ),

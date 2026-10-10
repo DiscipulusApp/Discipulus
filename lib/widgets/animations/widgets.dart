@@ -10,6 +10,7 @@ class CustomAnimatedSize extends StatelessWidget {
     this.curve = Easing.standard,
     this.alignment = Alignment.topCenter,
     this.visible = true,
+    this.axis = Axis.vertical,
   });
 
   final Duration duration;
@@ -18,6 +19,7 @@ class CustomAnimatedSize extends StatelessWidget {
   final Alignment alignment;
 
   final bool visible;
+  final Axis? axis;
 
   /// Default aniamtion for Discipulus
   static AnimationStyle style({Duration? duration}) => AnimationStyle(
@@ -28,12 +30,18 @@ class CustomAnimatedSize extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
+      clipBehavior: Clip.hardEdge,
       alignment: alignment,
       curve: curve,
       duration: duration,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: visible ? double.infinity : 0,
+          maxHeight: (axis == null || axis == Axis.vertical) && !visible
+              ? 0
+              : double.infinity,
+          maxWidth: (axis == null || axis == Axis.horizontal) && !visible
+              ? 0
+              : double.infinity,
         ),
         child: visible ? child : const SizedBox.shrink(),
       ),

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -117,10 +116,22 @@ class _CalendarGridViewState extends State<CalendarGridView> {
   void initState() {
     super.initState();
     _mode = widget.initialMode ?? _defaultWeekMode;
-    _selectedDate = widget.initialDate?.dayOnly ?? DateTime.now().dayOnly;
+    _selectedDate = getInitialCalendarDate(
+      explicitDate: widget.initialDate,
+      adjustWeekend: _mode == CalendarGridDisplayMode.workWeek,
+    );
     final initialPage = _dateToPageIndex(_selectedDate, _mode);
     _lastReportedPage = initialPage;
+    _initControllersAndNotifiers(initialPage);
 
+    // Smart auto-scroll to optimal view showing events overview and now indicator
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToOptimalPosition();
+      _showDesktopScrollTipIfNeeded();
+    });
+  }
+
+  void _initControllersAndNotifiers(int initialPage) {
     final initialDayPage =
         _dateToPageIndex(_selectedDate, CalendarGridDisplayMode.day);
     final initialWeekPage =
@@ -136,12 +147,6 @@ class _CalendarGridViewState extends State<CalendarGridView> {
     _isTodayRangeNotifier = ValueNotifier(_isCurrentRangeToday(initialDays));
     _weekNumberNotifier = ValueNotifier(initialDays.first.weekNumber);
     _isFetchingNotifier = ValueNotifier(false);
-
-    // Smart auto-scroll to optimal view showing events overview and now indicator
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToOptimalPosition();
-      _showDesktopScrollTipIfNeeded();
-    });
   }
 
   void _showDesktopScrollTipIfNeeded() {
@@ -493,7 +498,7 @@ class _CalendarGridViewState extends State<CalendarGridView> {
               },
               child: Listener(
                 onPointerSignal: (event) {
-                  if (Platform.isMacOS &&
+                  if (AppPlatform.isMacOS &&
                       event is PointerScrollEvent &&
                       event.kind != PointerDeviceKind.trackpad &&
                       HardwareKeyboard.instance.isShiftPressed) {

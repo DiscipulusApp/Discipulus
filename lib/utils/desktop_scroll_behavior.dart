@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:math' as math;
+import 'package:discipulus/utils/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +73,7 @@ class GlobalScrollBehavior extends MaterialScrollBehavior {
 
     // Apply smooth mouse wheel scrolling on desktop platforms except for macOS, 
     // as they do know what they are doing it seems.
-    if (kIsWeb || Platform.isLinux || Platform.isWindows) {
+    if (kIsWeb || AppPlatform.isLinux || AppPlatform.isWindows) {
       result = _GlobalSmoothScrollWrapper(
         details: details,
         child: result,

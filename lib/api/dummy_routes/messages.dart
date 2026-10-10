@@ -20,14 +20,14 @@ class DummyMessagesRoute implements MessagesRoute {
           id: 2,
           bovenliggendeId: 0,
           naam: "Verzonden items",
-          berichtenLink: "/api/berichten/dummy",
+          berichtenLink: "/api/berichten/verzonden",
         ),
         MessagesFolder(
           aantalOngelezen: 0,
           id: 3,
           bovenliggendeId: 0,
           naam: "Verwijderde items",
-          berichtenLink: "/api/berichten/dummy",
+          berichtenLink: "/api/berichten/verwijderd",
         ),
       ]);
 

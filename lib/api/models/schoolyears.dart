@@ -140,9 +140,9 @@ class Schoolyear {
             .value
             ?.periods
             .addAll([if (e.period.value != null) e.period.value!])
-        ..weight = currentGrade?.weight
-        ..description = currentGrade?.description
-        ..testDate = currentGrade?.testDate
+        ..weight = currentGrade?.weight ?? e.weight
+        ..description = currentGrade?.description ?? e.description
+        ..testDate = currentGrade?.testDate ?? e.testDate
         ..wasRevealed = wasRevealed;
     }).toList();
 
@@ -184,7 +184,7 @@ class Schoolyear {
           .weightIsNull()
           .findAll();
       await Future.wait(
-          [for (Grade grade in gradesWithoutWeight) grade.fill()]);
+          [for (Grade grade in gradesWithoutWeight) (grade..schoolyear.value ??= this).fill()]);
     }
   }
 

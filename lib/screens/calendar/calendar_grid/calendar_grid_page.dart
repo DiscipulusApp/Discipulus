@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:discipulus/api/models/calendar.dart';
+import 'package:discipulus/core/watch_service.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_event_card.dart';
 import 'package:discipulus/screens/calendar/calendar_schedule.dart';
@@ -35,6 +37,11 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
   final Set<int> _cachedEventUuids = {};
   bool _initialCacheLoaded = false;
   Timer? _tickerTimer;
+  StreamSubscription? _calendarSub;
+
+  void _onCalendarChanged() {
+    _loadLocalEvents();
+  }
 
   @override
   void initState() {
@@ -47,6 +54,9 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
       _tickerTimer = Timer.periodic(const Duration(minutes: 1), (_) {
         if (mounted) setState(() {});
       });
+      _calendarSub =
+          isar.calendarEvents.watchLazy().listen((_) => _onCalendarChanged());
+      WatchService.calendarRefreshNotifier.addListener(_onCalendarChanged);
     }
   }
 
@@ -63,21 +73,14 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
 
   @override
   void dispose() {
+    _calendarSub?.cancel();
+    WatchService.calendarRefreshNotifier.removeListener(_onCalendarChanged);
     _tickerTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadEvents() async {
-    if (widget.exampleEvents != null) {
-      if (mounted) {
-        setState(() {
-          _events = widget.exampleEvents!;
-          _initialCacheLoaded = true;
-        });
-      }
-      return;
-    }
-    if (widget.days.isEmpty) return;
+  Future<void> _loadLocalEvents() async {
+    if (widget.exampleEvents != null || widget.days.isEmpty || !mounted) return;
 
     final rangeStart = DateTime(
       widget.days.first.year,
@@ -90,7 +93,6 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
       widget.days.last.day + 1,
     );
 
-    // 1. Fetch from local database (Isar)
     final localEvents = await activeProfile.calendarEvents
         .filter()
         .group((q) => q
@@ -117,6 +119,32 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
         }
       });
     }
+  }
+
+  Future<void> _loadEvents() async {
+    if (widget.exampleEvents != null) {
+      if (mounted) {
+        setState(() {
+          _events = widget.exampleEvents!;
+          _initialCacheLoaded = true;
+        });
+      }
+      return;
+    }
+    if (widget.days.isEmpty) return;
+
+    final rangeStart = DateTime(
+      widget.days.first.year,
+      widget.days.first.month,
+      widget.days.first.day,
+    );
+    final rangeEnd = DateTime(
+      widget.days.last.year,
+      widget.days.last.month,
+      widget.days.last.day + 1,
+    );
+
+    await _loadEvents();
 
     // 2. Fetch fresh data from Magister API in background
     widget.onLoadingChanged?.call(true);

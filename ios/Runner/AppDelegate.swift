@@ -18,9 +18,14 @@ import home_widget
     GeneratedPluginRegistrant.register(with: self)  // This has to be removed when using multiple views, because in that case the plugins will be registered per view
 
     //  Background refresh
-    WorkmanagerPlugin.registerTask(
-      withIdentifier: "dev.harrydekat.discipulus.discipulusQuickrefresh")
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: "dev.harrydekat.discipulus.discipulusQuickrefresh",
+      frequency: NSNumber(value: 30 * 60)
+    )
     WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+    FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
     }
     UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60 * 30))

@@ -119,6 +119,11 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
 
     fun selectEvent(event: ScheduleEvent?) {
         _selectedEvent.value = event
+        if (event != null && _isStandaloneMode.value && _standaloneAccount.value != null) {
+            viewModelScope.launch {
+                fetchStandaloneEventDetail(event.id)
+            }
+        }
     }
 
     fun setEventTimeDisplay(mode: Int) {
@@ -351,6 +356,181 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
         } ?: account
     }
 
+    private fun formatVakkenNames(names: List<String>): String {
+        val clean = names.filter { it.isNotBlank() }
+        return when (clean.size) {
+            0 -> ""
+            1 -> clean[0].replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            2 -> "${clean[0]} en ${clean[1]}".replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            else -> {
+                val head = clean.subList(0, clean.size - 1).joinToString(", ")
+                val last = clean.last()
+                "$head en $last".replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            }
+        }
+    }
+
+    private fun parseScheduleEvent(item: JSONObject, isoFormat: SimpleDateFormat): ScheduleEvent? {
+        val id = item.optInt("Id", item.optInt("id", -1))
+        val startStr = item.optString("Start", item.optString("start", ""))
+        val endStr = item.optString("Einde", item.optString("einde", ""))
+        if (id == -1 || startStr.isEmpty() || endStr.isEmpty()) return null
+
+        val cleanStart = startStr.substringBefore("Z").substringBefore("+")
+        val cleanEnd = endStr.substringBefore("Z").substringBefore("+")
+        val startDate = try { isoFormat.parse(cleanStart) } catch (e: Exception) { null } ?: return null
+        val endDate = try { isoFormat.parse(cleanEnd) } catch (e: Exception) { null } ?: return null
+
+        val vakken = item.optJSONArray("Vakken") ?: item.optJSONArray("vakken")
+        val vakkenNames = mutableListOf<String>()
+        val vakkenCodes = mutableListOf<String>()
+        if (vakken != null) {
+            for (v in 0 until vakken.length()) {
+                val vObj = vakken.optJSONObject(v) ?: continue
+                val vName = vObj.optString("Naam").ifEmpty { vObj.optString("naam", "") }
+                if (vName.isNotBlank()) vakkenNames.add(vName)
+                val vCode = vObj.optString("Afkorting").ifEmpty {
+                    vObj.optString("afkorting").ifEmpty {
+                        vObj.optString("Code", vObj.optString("code", ""))
+                    }
+                }
+                if (vCode.isNotBlank()) vakkenCodes.add(vCode)
+            }
+        }
+
+        val name = if (vakkenNames.isNotEmpty()) {
+            formatVakkenNames(vakkenNames)
+        } else {
+            val rawDesc = item.optString("Omschrijving").ifEmpty { item.optString("omschrijving", "") }
+            if (rawDesc.isNotBlank()) {
+                rawDesc.split(" - ").first().trim().replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            } else {
+                "Afspraak"
+            }
+        }
+
+        val shortName = when {
+            vakkenCodes.isNotEmpty() -> vakkenCodes.joinToString(", ")
+            vakkenNames.isNotEmpty() -> vakkenNames.first()
+            else -> null
+        }
+
+        val rawAantekening = item.optString("Aantekening").ifEmpty {
+            item.optString("aantekening", "")
+        }.takeIf { it.isNotEmpty() }
+
+        val customProperties = rawAantekening?.let {
+            CustomCalendarProperties.fromAantekening(it)
+        }
+
+        val rawLokatie = item.optString("Lokatie").ifEmpty {
+            item.optString("lokatie").ifEmpty {
+                val lokalen = item.optJSONArray("Lokalen") ?: item.optJSONArray("lokalen")
+                if (lokalen != null && lokalen.length() > 0) {
+                    val lokList = mutableListOf<String>()
+                    for (l in 0 until lokalen.length()) {
+                        val lObj = lokalen.optJSONObject(l) ?: continue
+                        val lName = lObj.optString("Naam").ifEmpty { lObj.optString("naam", "") }
+                        if (lName.isNotBlank()) lokList.add(lName)
+                    }
+                    lokList.joinToString(", ")
+                } else ""
+            }
+        }.takeIf { it.isNotBlank() }
+        val location = customProperties?.resolveLokatie(rawLokatie) ?: rawLokatie
+
+        // Inhoud/Opmerking is homework/content. DO NOT fallback to Omschrijving!
+        val rawInhoud = item.optString("Inhoud").ifEmpty {
+            item.optString("inhoud").ifEmpty {
+                item.optString("Opmerking", item.optString("opmerking", ""))
+            }
+        }.takeIf { it.isNotBlank() }
+        val description = customProperties?.resolveInhoud(rawInhoud) ?: rawInhoud
+
+        val docenten = item.optJSONArray("Docenten") ?: item.optJSONArray("docenten")
+        val docentNames = mutableListOf<String>()
+        if (docenten != null) {
+            for (d in 0 until docenten.length()) {
+                val dObj = docenten.optJSONObject(d) ?: continue
+                val dName = dObj.optString("Naam").ifEmpty {
+                    dObj.optString("naam").ifEmpty {
+                        dObj.optString("Docentcode", dObj.optString("docentcode", ""))
+                    }
+                }
+                if (dName.isNotBlank()) docentNames.add(dName)
+            }
+        }
+        val teacher = docentNames.takeIf { it.isNotEmpty() }?.joinToString(", ")
+
+        val startHour = when {
+            item.has("LesuurVan") && !item.isNull("LesuurVan") -> item.getInt("LesuurVan")
+            item.has("lesuurVan") && !item.isNull("lesuurVan") -> item.getInt("lesuurVan")
+            else -> null
+        }
+        val endHour = when {
+            item.has("LesuurTotMet") && !item.isNull("LesuurTotMet") -> item.getInt("LesuurTotMet")
+            item.has("lesuurTotMet") && !item.isNull("lesuurTotMet") -> item.getInt("lesuurTotMet")
+            else -> null
+        }
+        val rawInfoType = item.optInt("InfoType", item.optInt("infoType", 0))
+        val infoType = customProperties?.resolveInfoType(rawInfoType) ?: rawInfoType
+
+        val rawStatus = item.optInt("Status", item.optInt("status", 0))
+        val status = customProperties?.resolveStatus(rawStatus) ?: rawStatus
+
+        val isCompleted = item.optBoolean("Afgerond", item.optBoolean("afgerond", false))
+
+        return ScheduleEvent(
+            id = id,
+            name = name,
+            shortName = shortName,
+            location = location,
+            description = description,
+            teacher = teacher,
+            infoType = infoType,
+            status = status,
+            startHourIndicator = startHour,
+            endHourIndicator = endHour,
+            startTime = startDate,
+            endTime = endDate,
+            isCompleted = isCompleted,
+            customCalendarProperties = customProperties
+        )
+    }
+
+    private fun combineConsecutiveEvents(events: List<ScheduleEvent>): List<ScheduleEvent> {
+        if (events.isEmpty()) return emptyList()
+        val combined = mutableListOf<ScheduleEvent>()
+        for (event in events) {
+            if (combined.isEmpty()) {
+                combined.add(event)
+            } else {
+                val last = combined.last()
+                val gapMinutes = ((event.startTime.time - last.endTime.time) / (1000 * 60)).toInt()
+                val canCombine = gapMinutes in 0..5 &&
+                        event.status == last.status &&
+                        event.name.equals(last.name, ignoreCase = true) &&
+                        (event.location ?: "") == (last.location ?: "") &&
+                        (event.teacher ?: "") == (last.teacher ?: "") &&
+                        (event.infoType == last.infoType || (last.infoType in listOf(1, 6, 7) && event.infoType == 0)) &&
+                        !event.isAllDay && !last.isAllDay &&
+                        event.description.isNullOrBlank()
+
+                if (canCombine) {
+                    val merged = last.copy(
+                        endTime = event.endTime,
+                        endHourIndicator = event.endHourIndicator ?: event.startHourIndicator ?: last.endHourIndicator,
+                        description = last.description ?: event.description
+                    )
+                    combined[combined.size - 1] = merged
+                } else {
+                    combined.add(event)
+                }
+            }
+        }
+        return combined
+    }
+
     suspend fun fetchStandaloneSchedule() = executeWithNetwork {
         val account = ensureAccountDetails() ?: return@executeWithNetwork
         val token = ensureValidToken() ?: return@executeWithNetwork
@@ -385,96 +565,8 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
 
                 for (i in 0 until items.length()) {
                     val item = items.optJSONObject(i) ?: continue
-                    val id = item.optInt("Id", item.optInt("id", -1))
-                    val name = item.optString("Omschrijving").ifEmpty {
-                        item.optString("omschrijving").ifEmpty {
-                            val vakken = item.optJSONArray("Vakken")
-                            if (vakken != null && vakken.length() > 0) {
-                                vakken.getJSONObject(0).optString("Naam", "Afspraak")
-                            } else "Afspraak"
-                        }
-                    }
-                    val startStr = item.optString("Start", item.optString("start", ""))
-                    val endStr = item.optString("Einde", item.optString("einde", ""))
-                    if (id == -1 || startStr.isEmpty() || endStr.isEmpty()) continue
-
-                    val cleanStart = startStr.substringBefore("Z").substringBefore("+")
-                    val cleanEnd = endStr.substringBefore("Z").substringBefore("+")
-                    val startDate = try { isoFormat.parse(cleanStart) } catch (e: Exception) { null } ?: continue
-                    val endDate = try { isoFormat.parse(cleanEnd) } catch (e: Exception) { null } ?: continue
-
-                    var shortName: String? = null
-                    val vakken = item.optJSONArray("Vakken") ?: item.optJSONArray("vakken")
-                    if (vakken != null && vakken.length() > 0) {
-                        shortName = vakken.getJSONObject(0).optString("Afkorting").ifEmpty {
-                            vakken.getJSONObject(0).optString("afkorting", "")
-                        }.takeIf { it.isNotEmpty() }
-                    }
-
-                    val rawAantekening = item.optString("Aantekening").ifEmpty {
-                        item.optString("aantekening", "")
-                    }.takeIf { it.isNotEmpty() }
-
-                    val customProperties = rawAantekening?.let {
-                        CustomCalendarProperties.fromAantekening(it)
-                    }
-
-                    val rawLokatie = item.optString("Lokatie").ifEmpty { item.optString("lokatie", "") }.takeIf { it.isNotEmpty() }
-                    val location = customProperties?.resolveLokatie(rawLokatie) ?: rawLokatie
-
-                    val rawInhoud = item.optString("Inhoud").ifEmpty {
-                        item.optString("inhoud").ifEmpty {
-                            item.optString("Omschrijving", item.optString("omschrijving", ""))
-                        }
-                    }.takeIf { it.isNotEmpty() }
-                    val description = customProperties?.resolveInhoud(rawInhoud) ?: rawInhoud
-
-                    val docenten = item.optJSONArray("Docenten") ?: item.optJSONArray("docenten")
-                    val teacher = if (docenten != null && docenten.length() > 0) {
-                        val d = docenten.getJSONObject(0)
-                        d.optString("Naam").ifEmpty {
-                            d.optString("naam").ifEmpty {
-                                d.optString("Docentcode", d.optString("docentcode", ""))
-                            }
-                        }.takeIf { it.isNotEmpty() }
-                    } else null
-
-                    val startHour = when {
-                        item.has("LesuurVan") && !item.isNull("LesuurVan") -> item.getInt("LesuurVan")
-                        item.has("lesuurVan") && !item.isNull("lesuurVan") -> item.getInt("lesuurVan")
-                        else -> null
-                    }
-                    val endHour = when {
-                        item.has("LesuurTotMet") && !item.isNull("LesuurTotMet") -> item.getInt("LesuurTotMet")
-                        item.has("lesuurTotMet") && !item.isNull("lesuurTotMet") -> item.getInt("lesuurTotMet")
-                        else -> null
-                    }
-                    val rawInfoType = item.optInt("InfoType", item.optInt("infoType", 0))
-                    val infoType = customProperties?.resolveInfoType(rawInfoType) ?: rawInfoType
-
-                    val rawStatus = item.optInt("Status", item.optInt("status", 0))
-                    val status = customProperties?.resolveStatus(rawStatus) ?: rawStatus
-
-                    val isCompleted = item.optBoolean("Afgerond", item.optBoolean("afgerond", false))
-
-                    eventsList.add(
-                        ScheduleEvent(
-                            id = id,
-                            name = name,
-                            shortName = shortName,
-                            location = location,
-                            description = description,
-                            teacher = teacher,
-                            infoType = infoType,
-                            status = status,
-                            startHourIndicator = startHour,
-                            endHourIndicator = endHour,
-                            startTime = startDate,
-                            endTime = endDate,
-                            isCompleted = isCompleted,
-                            customCalendarProperties = customProperties
-                        )
-                    )
+                    val event = parseScheduleEvent(item, isoFormat) ?: continue
+                    eventsList.add(event)
                 }
 
                 val scheduleMap = mutableMapOf<String, List<ScheduleEvent>>()
@@ -485,7 +577,8 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                     list.add(ev)
                 }
                 scheduleMap.keys.forEach { k ->
-                    scheduleMap[k] = scheduleMap[k]!!.sortedBy { it.startTime }
+                    val sorted = scheduleMap[k]!!.sortedBy { it.startTime }
+                    scheduleMap[k] = combineConsecutiveEvents(sorted)
                 }
 
                 _schedule.value = scheduleMap
@@ -501,6 +594,67 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
             Log.e("WearViewModel", "Error in fetchStandaloneSchedule: ${e.message}", e)
         } finally {
             _isLoading.value = false
+        }
+    }
+
+    suspend fun fetchStandaloneEventDetail(eventId: Int) = executeWithNetwork {
+        val account = ensureAccountDetails() ?: return@executeWithNetwork
+        val token = ensureValidToken() ?: return@executeWithNetwork
+
+        try {
+            val rawEndpoint = account.apiEndpoint.trimEnd('/')
+            val endpoint = if (rawEndpoint.endsWith("/api")) rawEndpoint else "$rawEndpoint/api"
+            val personId = account.personId
+
+            val url = URL("$endpoint/personen/$personId/afspraken/$eventId")
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                setRequestProperty("Authorization", "Bearer $token")
+                setRequestProperty("Accept", "application/json")
+                connectTimeout = 10000
+                readTimeout = 10000
+            }
+
+            if (conn.responseCode in 200..299) {
+                val responseText = conn.inputStream.bufferedReader().use { it.readText() }
+                val item = JSONObject(responseText)
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+                val updated = parseScheduleEvent(item, isoFormat)
+                if (updated != null) {
+                    if (_selectedEvent.value?.id == eventId) {
+                        _selectedEvent.value = updated
+                    }
+                    val currentSchedule = _schedule.value.toMutableMap()
+                    for ((key, events) in currentSchedule) {
+                        val index = events.indexOfFirst { it.id == eventId }
+                        if (index != -1) {
+                            val updatedList = events.toMutableList()
+                            val existing = events[index]
+                            val mergedEvent = if (existing.endTime.after(updated.endTime)) {
+                                updated.copy(
+                                    endTime = existing.endTime,
+                                    endHourIndicator = existing.endHourIndicator
+                                )
+                            } else {
+                                updated
+                            }
+                            updatedList[index] = mergedEvent
+                            currentSchedule[key] = updatedList
+                            _schedule.value = currentSchedule
+                            if (_selectedEvent.value?.id == eventId) {
+                                _selectedEvent.value = mergedEvent
+                            }
+                            break
+                        }
+                    }
+                    updateCurrentEvent()
+                    saveToDisk()
+                }
+            } else {
+                Log.w("WearViewModel", "Failed to fetch standalone event detail for $eventId: HTTP ${conn.responseCode}")
+            }
+        } catch (e: Exception) {
+            Log.e("WearViewModel", "Error in fetchStandaloneEventDetail: ${e.message}", e)
         }
     }
 
@@ -585,6 +739,10 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
 
                             for (j in 0 until cItems.length()) {
                                 val gItem = cItems.optJSONObject(j) ?: continue
+                                val kolom = gItem.optJSONObject("CijferKolom") ?: gItem.optJSONObject("cijferKolom")
+                                val kolomSoort = kolom?.optInt("KolomSoort", kolom.optInt("kolomSoort", 0)) ?: 0
+                                if (kolomSoort != 1) continue
+
                                 val cijferStr = gItem.optString("CijferStr").ifEmpty { gItem.optString("cijferStr") }
                                 if (cijferStr.isEmpty()) continue
 
@@ -603,7 +761,6 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                                     gItem.has("weging") && !gItem.isNull("weging") -> gItem.getDouble("weging")
                                     else -> null
                                 }
-                                val kolom = gItem.optJSONObject("CijferKolom") ?: gItem.optJSONObject("cijferKolom")
                                 val description = kolom?.optString("KolomOmschrijving")?.ifEmpty { null }
                                     ?: kolom?.optString("kolomOmschrijving")?.ifEmpty { null }
                                     ?: kolom?.optString("KolomKop")?.ifEmpty { null }
@@ -706,13 +863,13 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
                 _selectedEvent.value = updatedEvent
             }
             saveToDisk()
-            if (!_isStandaloneMode.value) {
-                sendMessageToPhone("watch_connectivity", mapOf(
-                    "command" to "toggle_event",
-                    "id" to id,
-                    "completed" to updatedEvent.isCompleted
-                ))
-            } else {
+            // Always notify phone if reachable so phone stays in sync
+            sendMessageToPhone("watch_connectivity", mapOf(
+                "command" to "toggle_event",
+                "id" to id,
+                "completed" to updatedEvent.isCompleted
+            ))
+            if (_isStandaloneMode.value) {
                 viewModelScope.launch {
                     syncStandaloneEventCompletion(id, updatedEvent.isCompleted)
                 }
@@ -951,9 +1108,46 @@ class WearViewModel(application: Application) : AndroidViewModel(application), M
             val dataMap = deserialize(messageEvent.data) as? Map<String, Any> ?: return@launch
             try {
                 val json = JSONObject.wrap(dataMap) as? JSONObject ?: JSONObject()
-                val type = json.optString("type")
+                val type = json.optString("type").ifEmpty { json.optString("command") }
 
-                if (type == "tokenset") {
+                if (type == "event_completed" || json.optString("command") == "event_completed") {
+                    val eventId = json.optInt("id", (dataMap["id"] as? Number)?.toInt() ?: -1)
+                    val completed = when {
+                        json.has("completed") -> json.getBoolean("completed")
+                        json.has("isCompleted") -> json.getBoolean("isCompleted")
+                        dataMap["completed"] is Boolean -> dataMap["completed"] as Boolean
+                        dataMap["isCompleted"] is Boolean -> dataMap["isCompleted"] as Boolean
+                        else -> null
+                    }
+                    if (eventId != -1) {
+                        val currentSchedule = _schedule.value.toMutableMap()
+                        var found = false
+                        for ((key, events) in currentSchedule) {
+                            val index = events.indexOfFirst { it.id == eventId }
+                            if (index != -1) {
+                                val ev = events[index]
+                                val newCompleted = completed ?: !ev.isCompleted
+                                val updatedEv = ev.copy(isCompleted = newCompleted)
+                                val updatedList = events.toMutableList()
+                                updatedList[index] = updatedEv
+                                currentSchedule[key] = updatedList
+                                _schedule.value = currentSchedule
+                                if (_selectedEvent.value?.id == eventId) {
+                                    _selectedEvent.value = updatedEv
+                                }
+                                found = true
+                                break
+                            }
+                        }
+                        if (found) {
+                            updateCurrentEvent()
+                            scheduleReminders()
+                            saveToDisk()
+                        } else if (_isStandaloneMode.value) {
+                            requestSchedule()
+                        }
+                    }
+                } else if (type == "tokenset") {
                     val rawData = dataMap["data"]
                     val account = when (rawData) {
                         is Map<*, *> -> @Suppress("UNCHECKED_CAST") StandaloneAccount.fromMap(rawData as Map<String, Any?>)

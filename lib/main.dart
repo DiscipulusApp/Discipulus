@@ -316,11 +316,11 @@ class MainAppState extends State<MainApp> {
               data: MediaQuery.of(context).copyWith(
                 padding: MediaQuery.of(context).padding.copyWith(
                       top: MediaQuery.of(context).padding.top +
-                          (Platform.isMacOS ? 28 : 0),
+                          (AppPlatform.isMacOS ? 28 : 0),
                     ),
               ),
               child: ScrollConfiguration(
-                behavior: Platform.isIOS || Platform.isMacOS
+                behavior: AppPlatform.isApple
                     ? const CupertinoScrollBehavior().copyWith(scrollbars: false)
                     : const GlobalScrollBehavior(),
                 child: Layout(child: child!),

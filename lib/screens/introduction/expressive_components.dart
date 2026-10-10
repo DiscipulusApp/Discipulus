@@ -100,7 +100,7 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
 
   bool get _isDesktop {
     if (kIsWeb) return true;
-    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+    return AppPlatform.isMacOS || AppPlatform.isWindows || AppPlatform.isLinux;
   }
 
   bool get _useTransparency {
@@ -110,10 +110,10 @@ class _ExpressiveIntroScaffoldState extends State<ExpressiveIntroScaffold> {
 
   double get _platformTopCornerRadius {
     if (kIsWeb) return 0.0;
-    if (Platform.isWindows) {
+    if (AppPlatform.isWindows) {
       return isWindowsMicaSupported ? 8.0 : 0.0; // Windows 11 default window corner radius
     }
-    if (Platform.isMacOS) return 10.0; // macOS default window corner radius
+    if (AppPlatform.isMacOS) return 10.0; // macOS default window corner radius
     return 0.0;
   }
 

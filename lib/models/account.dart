@@ -404,7 +404,7 @@ class Profile {
   Future<List<CalendarEvent>> getEvents(DateTimeRange range) async {
     List<CalendarEvent> events = (await Future.wait([
       // First, we get the normal events
-      account.value!.api.person(id).calendarEvents(range),
+      account.value!.api.person(id).calendarEvents(range, includeAbsences: account.value!.permissions.hasPermissions(PermissionType.absenties)),
 
       // Secondly, we get the other 'new' events if the uuid has been set
       if (account.value!.magisterUuid != null)
@@ -513,6 +513,9 @@ class Profile {
   Future<List<Activity>> getActivities() async {
     List<Activity> newActivities =
         await account.value!.api.person(id).activiteiten;
+    for (final activity in newActivities) {
+      activity.profile.value = this;
+    }
 
     await isar.activitys.removeChecker(
       localUUIDs: activities.filter().uuidProperty().findAll(),

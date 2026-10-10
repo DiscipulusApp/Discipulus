@@ -14,9 +14,10 @@ class BackgroundRefresh {
         frequency: const Duration(minutes: 30),
       );
     } else if (Platform.isIOS) {
-      Workmanager().registerProcessingTask(
+      Workmanager().registerPeriodicTask(
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
         "dev.harrydekat.discipulus.discipulusQuickrefresh",
+        initialDelay: const Duration(minutes: 15),
         constraints: Constraints(networkType: NetworkType.connected),
       );
     }
@@ -266,6 +267,7 @@ void backgroundSync() {
   try {
     Workmanager().executeTask((task, inputData) async {
       try {
+        stderr.writeln("Background task triggered: $task");
         switch (task) {
           case Workmanager.iOSBackgroundTask:
             stderr.writeln("The iOS background fetch was triggered");
@@ -279,13 +281,13 @@ void backgroundSync() {
         ]);
         await BackgroundRefresh.quickRefresh(onlyRefreshNeeded: !kDebugMode);
         await isar.close();
-        return Future.value(true);
+        return true;
       } catch (e) {
         stderr.writeln(e);
       }
 
       await isar.close();
-      return Future.value(false);
+      return false;
     });
   } catch (e) {
     stderr.writeln(e);

@@ -32,6 +32,23 @@ int dateToIndex(DateTime date) {
   }
 }
 
+int getHeaderWeekNumber(DateTime date) {
+  return appSettings.workWeek
+      ? (dateToIndex(date.add(const Duration(days: 1))) ~/ 5)
+      : (dateToIndex(date) ~/ 7);
+}
+
+DateTimeRange getHeaderWeekRange(DateTime date) {
+  int pageIndex = getHeaderWeekNumber(date);
+  int dayCount = appSettings.workWeek ? 5 : 7;
+  DateTime firstDay = indexToDate(dayCount * pageIndex);
+  DateTime lastDay = indexToDate(dayCount * pageIndex + dayCount - 1);
+  return DateTimeRange(
+    start: DateTime(firstDay.year, firstDay.month, firstDay.day),
+    end: DateTime(lastDay.year, lastDay.month, lastDay.day + 1),
+  );
+}
+
 /// Shows a dayview of the calendar
 class CalendarDayView extends StatefulWidget {
   const CalendarDayView({super.key, this.displayedDay});
@@ -45,8 +62,8 @@ class CalendarDayView extends StatefulWidget {
 
 class _CalendarDayViewState extends State<CalendarDayView>
     with ExternalRefresh {
-  late final PageController pageViewContoller;
-  late final ValueNotifier<DateTime> selectedDay;
+  PageController? pageViewContoller;
+  ValueNotifier<DateTime>? selectedDay;
 
   /// Is used to check if the pageview is animating to a new page or not.
   /// When this is not used onPageChanged will fire multiple times, making it
@@ -60,9 +77,9 @@ class _CalendarDayViewState extends State<CalendarDayView>
   /// When the selected day changes the pageview should respond
   void dateListener() async {
     isAnimating = true;
-    if (!isFromDrag) {
-      await pageViewContoller.animateToPage(
-        dateToIndex(selectedDay.value),
+    if (!isFromDrag && pageViewContoller?.hasClients == true) {
+      await pageViewContoller!.animateToPage(
+        dateToIndex(selectedDay!.value),
         duration: Durations.medium4,
         curve: Easing.emphasizedDecelerate,
       );
@@ -70,19 +87,28 @@ class _CalendarDayViewState extends State<CalendarDayView>
     isAnimating = false;
   }
 
+  void _initDayView() {
+    if (selectedDay != null) return;
+    selectedDay = ValueNotifier(
+        getInitialCalendarDate(explicitDate: widget.displayedDay));
+    pageViewContoller =
+        PageController(initialPage: dateToIndex(selectedDay!.value));
+    selectedDay!.addListener(dateListener);
+  }
+
   @override
   void initState() {
-    selectedDay = ValueNotifier(widget.displayedDay ?? DateTime.now());
-    pageViewContoller =
-        PageController(initialPage: dateToIndex(selectedDay.value));
-    selectedDay.addListener(dateListener);
     super.initState();
+    if (!appSettings.useTimeGridCalendar) {
+      _initDayView();
+    }
   }
 
   @override
   void dispose() {
-    selectedDay.removeListener(dateListener);
-    selectedDay.dispose();
+    selectedDay?.removeListener(dateListener);
+    selectedDay?.dispose();
+    pageViewContoller?.dispose();
     super.dispose();
   }
 
@@ -97,6 +123,9 @@ class _CalendarDayViewState extends State<CalendarDayView>
       );
     }
 
+    _initDayView();
+    final currentSelectedDay = selectedDay!;
+
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -106,7 +135,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
               valueListenable: isLoadingExternally,
               builder: (context, loading, child) {
                 return ValueListenableBuilder(
-                  valueListenable: selectedDay,
+                  valueListenable: currentSelectedDay,
                   builder: (context, date, child) => SliverAppBar(
                     leading: leadingAppBarButton(context),
                     pinned: true,
@@ -141,14 +170,14 @@ class _CalendarDayViewState extends State<CalendarDayView>
                         if (date.dayOnly != DateTime.now().dayOnly)
                         IconButton(
                           onPressed: () async =>
-                              selectedDay.value = DateTime.now(),
+                              currentSelectedDay.value = DateTime.now(),
                           icon: const Icon(Icons.today),
                         ),
                       IconButton(
                         onPressed: () async {
                           DateTime? date = await showDatePicker(
                             context: context,
-                            initialDate: selectedDay.value,
+                            initialDate: currentSelectedDay.value,
                             firstDate: DateTime.now()
                                 .subtract(const Duration(days: 365)),
                             lastDate:
@@ -175,7 +204,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
                             },
                           );
                           // If the selected date is a day, go to that day
-                          if (date != null) selectedDay.value = date;
+                          if (date != null) currentSelectedDay.value = date;
                         },
                         icon: const Icon(Icons.date_range),
                       ),
@@ -183,7 +212,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
                         onPressed: () async {
                           DateTime? date = await showScheduleSheet(context);
                           if (date != null) {
-                            selectedDay.value = date;
+                            currentSelectedDay.value = date;
                           }
                         },
                         icon: const Icon(Icons.add),
@@ -192,7 +221,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
                     bottom: child! as PreferredSizeWidget,
                   ),
                   child: BottomDaySelectHeader(
-                    selectedDay: selectedDay,
+                    selectedDay: currentSelectedDay,
                   ),
                 );
               },
@@ -200,11 +229,11 @@ class _CalendarDayViewState extends State<CalendarDayView>
           ),
         ],
         body: PageView.builder(
-          controller: pageViewContoller,
+          controller: pageViewContoller!,
           onPageChanged: (index) {
             isFromDrag = true;
             if (!isAnimating) {
-              selectedDay.value = indexToDate(index);
+              currentSelectedDay.value = indexToDate(index);
             }
             HapticFeedback.selectionClick();
             isFromDrag = false;
@@ -214,7 +243,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
 
             return CalendarDayViewBody(
               day: day,
-              selectedDay: selectedDay,
+              selectedDay: currentSelectedDay,
             );
           },
         ),

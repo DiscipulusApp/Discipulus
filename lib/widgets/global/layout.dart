@@ -163,7 +163,7 @@ class LayoutState extends State<Layout>
       },
     );
 
-    if (Platform.isIOS && !makeFirst) {
+    if (AppPlatform.isIOS && !makeFirst) {
       // On iOS we would like to be able to show the previous page by swiping
       // from the side, so we will be using [CupertinoPageRoute] instead.
       newPage = CupertinoPageRoute(
@@ -277,7 +277,7 @@ class LayoutState extends State<Layout>
 
   EdgeInsets get padding => const EdgeInsets.all(24).copyWith(
         top: (0 +
-                (Platform.isMacOS ? 4 : 0) +
+                (AppPlatform.isMacOS ? 4 : 0) +
                 MediaQuery.of(context).padding.top)
             .toDouble()
             .clamp(24, double.infinity), // The title bar is hidden in macOS,
@@ -340,7 +340,7 @@ class LayoutState extends State<Layout>
       }
     }
 
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (AppPlatform.isApple) {
       activity?.becomeCurrent();
     }
 
@@ -360,7 +360,7 @@ class LayoutState extends State<Layout>
     });
 
     completer.future.whenComplete(() async {
-      if (activity != null && (Platform.isIOS || Platform.isMacOS)) {
+      if (activity != null && AppPlatform.isApple) {
         await FlutterAppleHandoff.updateActivity(null);
       }
     });
@@ -593,7 +593,7 @@ class LayoutState extends State<Layout>
     return RepaintBoundary(
       child: AdvancedDrawer(
         rtlOpening: appSettings.drawerOpenOnRight,
-        disabledGestures: Platform.isAndroid ? appSettings.drawerOnBack : false,
+        disabledGestures: AppPlatform.isAndroid ? appSettings.drawerOnBack : false,
         controller: drawerController,
         backdropColor: backgroundColor,
         openRatio: (304 / MediaQuery.of(context).size.width),
@@ -846,6 +846,7 @@ class BigDrawerBase extends StatelessWidget {
                                   ]).expand((element) => element),
                                   if (isar.profiles.countSync() > 1)
                                     CustomCard(
+                                      color: isDesktopTransparencySupported ? Colors.transparent : null,
                                       margin:
                                           const EdgeInsets.symmetric(horizontal: 0),
                                       child: ProfileChangeWidget(

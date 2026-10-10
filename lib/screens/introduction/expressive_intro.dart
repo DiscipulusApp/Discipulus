@@ -34,7 +34,7 @@ class _ExpressiveIntroductionScreenState
 
   bool get _isApple {
     if (kIsWeb) return false;
-    return Platform.isIOS || Platform.isMacOS;
+    return AppPlatform.isApple;
   }
 
   final ValueNotifier<HighlightGrade?> _highlightGrade =
@@ -73,7 +73,7 @@ class _ExpressiveIntroductionScreenState
                         ),
                   ),
                 ),
-                if (!kIsWeb && !Platform.isMacOS)
+                if (!kIsWeb && !AppPlatform.isMacOS)
                   CustomCard(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

@@ -39,11 +39,7 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
     );
   }
 
-  int getWeekNumber(DateTime date) {
-    return appSettings.workWeek
-        ? (dateToIndex(date.add(const Duration(days: 1))) ~/ 5)
-        : (dateToIndex(date) ~/ 7);
-  }
+  int getWeekNumber(DateTime date) => getHeaderWeekNumber(date);
 
   @override
   void initState() {
@@ -75,16 +71,16 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Table(
         columnWidths: [
-          if (!(Platform.isAndroid || Platform.isIOS))
+          if (!AppPlatform.isMobile)
             const FixedColumnWidth(52),
           const FlexColumnWidth(),
-          if (!(Platform.isAndroid || Platform.isIOS))
+          if (!AppPlatform.isMobile)
             const FixedColumnWidth(52)
         ].asMap(),
         children: [
           TableRow(
             children: [
-              if (!(Platform.isAndroid || Platform.isIOS))
+              if (!AppPlatform.isMobile)
                 TableCell(
                   verticalAlignment: TableCellVerticalAlignment.fill,
                   child: Padding(
@@ -102,7 +98,7 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
                 constraints: const BoxConstraints(maxHeight: 80),
                 child: pageviewBuilder(context),
               ),
-              if (!(Platform.isAndroid || Platform.isIOS))
+              if (!AppPlatform.isMobile)
                 TableCell(
                   verticalAlignment: TableCellVerticalAlignment.fill,
                   child: Padding(

@@ -77,6 +77,7 @@ class Settings {
   bool combineDoublePeriods = true;
   bool showEmptySpaceBetweenLessons = true;
   bool hideEventswithoutHours = false;
+  bool autoOpenNextFilledDay = true;
 
   // Grades
   @enumerated
@@ -218,11 +219,11 @@ enum GradeBadgeTypes { weight, date, pta, change, globalChange }
 class ProfileSettings {
   DateTime? lastRefresh = DateTime.now();
   bool messagesNotifications = false;
-  bool gradesNotfications = false;
+  bool gradesNotfications = true;
   bool spoilerGradeNotfications = false; // Shows the grade in the notification
-  bool eventsNotifications = false;
+  bool eventsNotifications = true;
   bool remindNotifications = true;
-  bool absenceNotifications = false;
+  bool absenceNotifications = true;
 
   // Spotlight item indexing
   bool spotlightIndexMessages = true;

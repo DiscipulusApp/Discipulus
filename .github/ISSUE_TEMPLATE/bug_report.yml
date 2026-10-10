@@ -1,0 +1,106 @@
+name: "Bug Report"
+description: "Meld een fout of probleem in Discipulus"
+title: "🐞: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bedankt voor het melden van een probleem! Vul het onderstaande formulier zo volledig mogelijk in, zodat het probleem onderzocht en opgelost kan worden.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Controleer vooraf / Checklist"
+      description: "Controleer alsjeblieft eerst of het probleem al bekend is."
+      options:
+        - label: "Ik heb gezocht tussen de [bestaande issues](https://github.com/DiscipulusApp/Discipulus/issues) en dit probleem is nog niet eerder gemeld."
+          required: true
+        - label: "Ik heb de [bekende problemen](https://github.com/DiscipulusApp/Discipulus#bekende-problemen) in de README gelezen (zoals achtergrondsynchronisatie en pushmeldingen)."
+          required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Besturingssysteem / OS"
+      description: "Op welk besturingssysteem gebruik je Discipulus?"
+      options:
+        - "Android"
+        - "iOS (iPhone)"
+        - "iPadOS (iPad)"
+        - "watchOS (Apple Watch)"
+        - "Wear OS (Smartwatch)"
+        - "macOS"
+        - "Windows"
+        - "Windows (ARM)"
+        - "Linux"
+        - "Linux (ARM)"
+        - "Ander besturingssysteem / Other"
+    validations:
+      required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: "Versie van besturingssysteem / OS version"
+      description: "Welke versie van het besturingssysteem gebruik je?"
+      placeholder: "bijv. iOS 18.0, Android 14, Windows 11, macOS 15.0, Ubuntu 24.04"
+    validations:
+      required: false
+
+  - type: input
+    id: app_version
+    attributes:
+      label: "Discipulus versie / App version"
+      description: "Welke versie van Discipulus gebruik je? (Te vinden in Discipulus bij Instellingen > Over"
+      placeholder: "bijv. 0.2.8"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Beschrijving van het probleem / Bug description"
+      description: "Een duidelijke beschrijving van wat er misgaat. Vermijd vage meldingen zoals alleen 'het werkt niet'."
+      placeholder: "Leg hier uit wat er gebeurt en wat er misgaat..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Stappen om te reproduceren / Steps to reproduce"
+      description: "Welke stappen moeten we volgen om het probleem na te bootsen?"
+      placeholder: |
+        1. Open de app
+        2. Ga naar '...'
+        3. Tik op '...'
+        4. Fout treedt op
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Wat verwachtte je dat er zou gebeuren? / Expected behavior"
+      description: "Wat had er moeten gebeuren in plaats van deze fout?"
+      placeholder: "Wat had er moeten gebeuren..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Schermafbeeldingen of schermopnames / Screenshots or recordings"
+      description: "Sleep afbeeldingen of video's hierheen als dat het probleem verduidelijkt."
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevante logs of foutmeldingen / Logs or error output"
+      description: "Voeg eventuele foutmeldingen of stacktraces toe (indien beschikbaar)."
+      render: shell
+    validations:
+      required: false

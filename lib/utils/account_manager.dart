@@ -64,7 +64,9 @@ set activeProfile(Profile profile) {
       ..save();
 
     // Update the drawer
-    Layout.of(navKey.currentContext!)?.update(profile);
+    if (navKey.currentContext != null) {
+      Layout.of(navKey.currentContext!)?.update(profile);
+    }
   }
 }
 

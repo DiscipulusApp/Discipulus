@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/animations/text.dart';
@@ -302,7 +301,7 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onLongPressStart: (details) {
-              if (Platform.isAndroid || !PlatformExtension.isDesktop) {
+              if (AppPlatform.isAndroid || !PlatformExtension.isDesktop) {
                 _showOverlay(context);
                 _handleTouchMove(details.globalPosition);
               }
@@ -497,7 +496,7 @@ class _DropDownChipState<T> extends State<DropDownChip<T>>
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
-            if (Platform.isAndroid)
+            if (AppPlatform.isAndroid)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Container(

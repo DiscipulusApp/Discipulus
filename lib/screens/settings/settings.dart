@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
@@ -19,7 +20,6 @@ import 'package:discipulus/screens/settings/pages/magister_settings.dart';
 import 'package:discipulus/screens/settings/pages/mail_settings.dart';
 import 'package:discipulus/screens/settings/pages/notification_settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
-import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
 import 'package:discipulus/widgets/global/bottom_sheet.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -83,21 +83,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     ]),
     SettingsPageSection(name: "Apparaat gerelateerde instellingen", pages: [
-      if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+      if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS)
         SettingsPage(
           name: "Notificaties & Achtergrond",
           desc: "Berichten over nieuwe cijfers/evenementen",
           icon: const Icon(Icons.notifications_none_rounded),
           page: const NotificationSettingsPage(),
         ),
-      if (Platform.isIOS || Platform.isMacOS)
+      if (AppPlatform.isApple)
         SettingsPage(
           name: "Apple specifiek",
           desc: "Widgets, Handoff & Spotlight",
           icon: const Icon(Icons.apple_rounded),
           page: const AppleSettingsPage(),
         ),
-      if (Platform.isAndroid)
+      if (AppPlatform.isAndroid)
         SettingsPage(
           name: "Android specifiek",
           desc: "Automatische stille modus",
@@ -132,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     ]),
     SettingsPageSection(name: "Overig", pages: [
-      if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)
+      if (AppPlatform.isAndroid || AppPlatform.isIOS || AppPlatform.isMacOS)
         SettingsPage(
           name: "Login met Discipulus",
           desc: "Log in op alternatieve applicaties",

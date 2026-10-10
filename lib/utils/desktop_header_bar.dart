@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +32,7 @@ class DesktopHeaderBar {
   /// Updates header bar to match the Layout background color exactly
   /// Overrides the theme's color scheme and uses the provided colors if specified
   static Future<void> updateHeaderBarTheme(ThemeData theme, {Color? background, Color? foreground, Color? border}) async {
-    if (kIsWeb || !Platform.isLinux) return;
+    if (kIsWeb || !AppPlatform.isLinux) return;
     try {
       final colorScheme = theme.colorScheme;
       // Layout uses surface with surfaceTint applied at elevation 1
@@ -60,7 +60,7 @@ class DesktopHeaderBar {
     required Color foreground,
     Color? border,
   }) async {
-    if (kIsWeb || !Platform.isLinux) return;
+    if (kIsWeb || !AppPlatform.isLinux) return;
     try {
       final bg = _colorToHex(background);
       final fg = _colorToHex(foreground);
