@@ -59,6 +59,7 @@ import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/utils/desktop_header_bar.dart';
 import 'package:discipulus/utils/desktop_scroll_behavior.dart';
+import 'package:discipulus/utils/update_checker.dart';
 import 'package:discipulus/widgets/animations/widgets.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/layout.dart';
@@ -180,6 +181,7 @@ class MainAppState extends State<MainApp> {
       await AdService.initialize();
       await checkAccountPermissions();
       await AIService.checkAndEnableLocalAi();
+      UpdateChecker.checkOnLaunch();
     });
   }
 
