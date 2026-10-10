@@ -144,7 +144,7 @@ class _GridDayColumnsPageState extends State<GridDayColumnsPage> {
       widget.days.last.day + 1,
     );
 
-    await _loadEvents();
+    await _loadLocalEvents();
 
     // 2. Fetch fresh data from Magister API in background
     widget.onLoadingChanged?.call(true);
