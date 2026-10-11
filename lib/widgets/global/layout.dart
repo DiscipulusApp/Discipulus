@@ -627,20 +627,18 @@ class LayoutState extends State<Layout>
   }
 
   void _setupGradeListener() {
-    _gradeSubscription?.cancel();
-    if (appSettings.activeProfileUuid == null) return;
+    if (appSettings.activeProfileUuid == null) {
+      _gradeSubscription?.cancel();
+      _gradeSubscription = null;
+      return;
+    }
+    // Don't cancel & recreate if already listening
+    if (_gradeSubscription != null) return;
 
-    _gradeSubscription = isar.grades
-        .filter()
-        .wasRevealedEqualTo(false)
-        .useable()
-        .schoolyear((q) => q.profile((q) => q.uuidEqualTo(activeProfile.uuid)))
-        .watch(fireImmediately: true)
-        .listen((unrevealedGrades) {
-      if (unrevealedGrades.isNotEmpty &&
-          (WidgetsBinding.instance.lifecycleState == null ||
-              WidgetsBinding.instance.lifecycleState ==
-                  AppLifecycleState.resumed)) {
+    // Watch the collection directly instead of an ephemeral linked query
+    _gradeSubscription = isar.grades.watchLazy().listen((_) {
+      if (WidgetsBinding.instance.lifecycleState == null ||
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         checkForNewGradesToReveal();
       }
     });

@@ -366,14 +366,15 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       await discipulusAccount.fill();
 
       LoginLogger.instance.step("Login succesvol voltooid!");
-      // Set active profile and navigate to main screen
-      activeProfile = activeProfile;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
+        final bool isFirstAccount = isar.discipulusAccounts.countSync() == 1;
         Layout.of(context)?.update();
-        Layout.of(context)?.goToPageFromIndex(0);
-        Layout.of(context)?.setState(() {});
-        PostLoginScreen().push(context);
+        if (isFirstAccount) {
+          const PostLoginScreen().push(context);
+        } else {
+          Navigator.of(context).pop();
+        }
       });
     } catch (e, s) {
       LoginLogger.instance.error("Fout bij ophalen/verwerken van account",
