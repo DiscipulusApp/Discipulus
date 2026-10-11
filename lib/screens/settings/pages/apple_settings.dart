@@ -3,7 +3,7 @@ import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
-import 'package:discipulus/screens/settings/pages/live_activity_test_screen.dart';
+
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
