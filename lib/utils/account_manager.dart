@@ -1,3 +1,4 @@
+import 'package:discipulus/core/live_activity_service.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/widgets/global/layout.dart';
 import 'package:isar/isar.dart';
@@ -67,6 +68,10 @@ set activeProfile(Profile profile) {
     if (navKey.currentContext != null) {
       Layout.of(navKey.currentContext!)?.update(profile);
     }
+
+    // Refresh native widgets and live activities for the new profile
+    BackgroundRefresh.updateWidgets();
+    LiveActivityService().update(targetProfile: profile);
   }
 }
 

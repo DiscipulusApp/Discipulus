@@ -1,9 +1,12 @@
+import 'package:discipulus/core/live_activity_service.dart';
 import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/account.dart';
 import 'package:discipulus/models/settings.dart';
+import 'package:discipulus/screens/settings/pages/live_activity_test_screen.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
+import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/list_decoration.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:discipulus/widgets/global/tiles/loading_button.dart';
@@ -32,6 +35,26 @@ class _AppleSettingsPageState extends State<AppleSettingsPage> {
       children: [
         ProfileChangeWidget(
           updateState: (p0) => setState(() {}),
+        ),
+        const ListTitle(child: Text("Live Activiteiten")),
+        SwitchListTile(
+          value: appSettings.useLiveActivities,
+          secondary: const Icon(Icons.bubble_chart_outlined),
+          title: const Text("Live Activiteit voor lessen"),
+          subtitle: const Text(
+              "Toon de huidige les, resterende tijd en volgende bestemming op het toegangsscherm en in het Dynamic Island"),
+          onChanged: (value) async {
+            setState(() {
+              appSettings
+                ..useLiveActivities = value
+                ..save();
+            });
+            if (value) {
+              await LiveActivityService().update();
+            } else {
+              await LiveActivityService().endAllActivities();
+            }
+          },
         ),
         const ListTitle(child: Text("Spotlight")),
         SwitchListTile(

@@ -24,6 +24,7 @@
 		772F03182C48376800106A75 /* EventTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F030C2C48376800106A75 /* EventTile.swift */; };
 		772F03192C48376800106A75 /* SystemMediumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F030D2C48376800106A75 /* SystemMediumView.swift */; };
 		772F031A2C48376800106A75 /* SystemSmallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F030E2C48376800106A75 /* SystemSmallView.swift */; };
+		772F031C2C48376800106A75 /* LessonLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772F031B2C48376800106A75 /* LessonLiveActivity.swift */; };
 		77904DC62C4A37B400D52B52 /* NavigatorIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77904DC52C4A37B400D52B52 /* NavigatorIntents.swift */; };
 		77A298932F6F553E00148DC0 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 77A298912F6F553E00148DC0 /* README.md */; };
 		77A298942F6F553E00148DC0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 77A2988F2F6F553E00148DC0 /* Assets.xcassets */; };
@@ -182,6 +183,7 @@
 		772F030C2C48376800106A75 /* EventTile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventTile.swift; sourceTree = "<group>"; };
 		772F030D2C48376800106A75 /* SystemMediumView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemMediumView.swift; sourceTree = "<group>"; };
 		772F030E2C48376800106A75 /* SystemSmallView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemSmallView.swift; sourceTree = "<group>"; };
+		772F031B2C48376800106A75 /* LessonLiveActivity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LessonLiveActivity.swift; path = ../../darwin/NavigatorWidget/LessonLiveActivity.swift; sourceTree = "<group>"; };
 		77904DC52C4A37B400D52B52 /* NavigatorIntents.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NavigatorIntents.swift; path = ../../darwin/NavigatorWidget/NavigatorIntents.swift; sourceTree = "<group>"; };
 		77A2988A2F6F553E00148DC0 /* WatchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchViewModel.swift; sourceTree = "<group>"; };
 		77A2988C2F6F553E00148DC0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -372,6 +374,7 @@
 				772F03082C48376800106A75 /* NavigatorUtils.swift */,
 				772F03062C48376800106A75 /* NavigatorViews.swift */,
 				772F03092C48376800106A75 /* NavigatorWidget.swift */,
+				772F031B2C48376800106A75 /* LessonLiveActivity.swift */,
 				772F030F2C48376800106A75 /* Views */,
 				77A546B42B84C32F00A362BB /* Assets.xcassets */,
 				77A546B62B84C32F00A362BB /* Info.plist */,
@@ -852,6 +855,7 @@
 				772F03132C48376800106A75 /* NavigatorEntry.swift in Sources */,
 				772F03112C48376800106A75 /* NavigatorEvent.swift in Sources */,
 				772F03152C48376800106A75 /* NavigatorWidget.swift in Sources */,
+				772F031C2C48376800106A75 /* LessonLiveActivity.swift in Sources */,
 				772F031A2C48376800106A75 /* SystemSmallView.swift in Sources */,
 				772F03102C48376800106A75 /* NavigatorProvider.swift in Sources */,
 				772F03182C48376800106A75 /* EventTile.swift in Sources */,

@@ -13,6 +13,7 @@ import device_info_plus
 import dynamic_color
 import file_picker
 import file_selector_macos
+import flutter_app_group_directory
 import flutter_apple_handoff
 import flutter_apple_spotlight
 import flutter_local_ai
@@ -40,6 +41,7 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   DynamicColorPlugin.register(with: registry.registrar(forPlugin: "DynamicColorPlugin"))
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
   FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
+  FlutterAppGroupDirectoryPlugin.register(with: registry.registrar(forPlugin: "FlutterAppGroupDirectoryPlugin"))
   SwiftFlutterAppleHandoffPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleHandoffPlugin"))
   SwiftFlutterAppleSpotlightPlugin.register(with: registry.registrar(forPlugin: "SwiftFlutterAppleSpotlightPlugin"))
   FlutterLocalAiPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalAiPlugin"))

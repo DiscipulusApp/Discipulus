@@ -84,7 +84,9 @@ class BackgroundRefresh {
             profile.settings.absenceNotifications)
           _quickRefreshCalendar(profile, enableNotifcations),
 
-        if (profile.settings.remindNotifications) scheduleReminders(profile)
+        if (profile.settings.remindNotifications ||
+            appSettings.preLessonReminderWhenFree)
+          scheduleReminders(profile)
       ]);
 
       //Updated last refresh time
@@ -95,6 +97,7 @@ class BackgroundRefresh {
 
     // Update the widgets
     await updateWidgets();
+    await LiveActivityService().update();
   }
 
   /// Checks if a refresh should take place

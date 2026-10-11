@@ -493,5 +493,78 @@ Future<void> scheduleReminders(Profile profile) async {
         ),
       )
   ]);
+
+  // Schedule pre-lesson reminders if enabled
+  if (appSettings.preLessonReminderWhenFree) {
+    await _schedulePreLessonReminders(profile);
+  }
+}
+
+/// Schedules reminders 5 minutes before lessons if the user is free before the lesson
+Future<void> _schedulePreLessonReminders(Profile profile) async {
+  final now = DateTime.now();
+  final rangeEnd = now.add(const Duration(days: 7));
+
+  final calendarEvents = await profile.calendarEvents
+      .filter()
+      .duurtHeleDagEqualTo(false)
+      .startGreaterThan(now)
+      .startLessThan(rangeEnd)
+      .sortByStart()
+      .findAll();
+
+  final validEvents = calendarEvents.where((e) => !e.isCanceled).toList();
+  final combined = validEvents.combineEvents();
+
+  for (int i = 0; i < combined.length; i++) {
+    final currentBlock = combined[i];
+    final startTime = currentBlock.first.start;
+    final reminderTime = startTime.subtract(const Duration(minutes: 5));
+
+    if (reminderTime.isBefore(now)) continue;
+
+    // Check if the user is free 5 minutes before this lesson starts.
+    // If there is an earlier lesson on the same day that ends after reminderTime,
+    // the user is not free (back-to-back lessons).
+    bool isFree = true;
+    if (i > 0) {
+      final prevBlock = combined[i - 1];
+      if (prevBlock.first.start.dayOnly == startTime.dayOnly) {
+        if (prevBlock.last.einde.isAfter(reminderTime)) {
+          isFree = false;
+        }
+      }
+    }
+
+    if (isFree) {
+      final subjectName = currentBlock.first.subject.value?.naam.capitalized ??
+          currentBlock.first.title;
+      final location = currentBlock.first.lokatie?.isNotEmpty == true
+          ? "in ${currentBlock.first.lokatie}"
+          : "";
+      final hour = currentBlock.first.lesuurVan != null
+          ? "(${currentBlock.first.lesuurVan}e uur)"
+          : "";
+      final bodyText = [subjectName, location, hour]
+          .where((s) => s.isNotEmpty)
+          .join(" ");
+
+      await NotificationController.createNotification(
+        NativeNotification(
+          id: (currentBlock.first.uuid ^ 0x5EE5).abs(),
+          channel: NotificationChannel.reminders,
+          title: "$subjectName begint over 5 minuten",
+          body: bodyText,
+          payload: NotificationPayload(
+            profile: profile,
+            payload: {
+              "event_uuids": currentBlock.map((e) => e.uuid).toList(),
+            },
+          ),
+        ),
+        time: reminderTime,
+      );
+    }
+  }
 }
 

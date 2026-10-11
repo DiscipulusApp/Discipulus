@@ -1,5 +1,6 @@
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/main.dart';
+import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -127,6 +128,21 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                 ..settings.remindNotifications = value
                 ..save();
             });
+          },
+        ),
+        SwitchListTile(
+          secondary: const Icon(Icons.alarm_on_outlined),
+          title: const Text("Herinnering voor les na tussenur/pauze"),
+          subtitle: const Text(
+              "Ontvang 5 minuten voor het begin van een les een melding als je daarvoor vrij bent"),
+          value: appSettings.preLessonReminderWhenFree,
+          onChanged: (value) {
+            setState(() {
+              appSettings
+                ..preLessonReminderWhenFree = value
+                ..save();
+            });
+            scheduleReminders(activeProfile);
           },
         ),
         FutureBuilder(

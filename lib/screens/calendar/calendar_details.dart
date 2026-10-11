@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/api/models/messages.dart';
+import 'package:discipulus/core/live_activity_service.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/bronnen/bron_tiles.dart';
@@ -118,6 +119,8 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
                   .sync();
               await widget.callback?.call();
               await refresh();
+              await BackgroundRefresh.updateWidgets();
+              await LiveActivityService().update();
             }
           });
     }

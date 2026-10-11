@@ -13,6 +13,17 @@ extension EnvironmentValues {
 }
 
 @main
+struct DiscipulusWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        NavigatorWidget()
+        #if os(iOS) && canImport(ActivityKit)
+        if #available(iOSApplicationExtension 16.1, *) {
+            LessonLiveActivityWidget()
+        }
+        #endif
+    }
+}
+
 struct NavigatorWidget: Widget {
     let kind: String = "NavigatorWidget"
 

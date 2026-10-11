@@ -1,4 +1,6 @@
 import "package:discipulus/api/models/calendar.dart";
+import "package:discipulus/core/live_activity_service.dart";
+import "package:discipulus/main.dart";
 import "package:discipulus/screens/grades/widgets/text_input.dart";
 import "package:discipulus/utils/account_manager.dart";
 import "package:discipulus/widgets/global/bottom_sheet.dart";
@@ -343,7 +345,20 @@ class _CalendarScheduleScreenState extends State<_CalendarScheduleScreen> {
                 : CalendarType.schedule,
           );
 
-      if (!context.mounted) return;
+      // Sync events for the day into local Isar and refresh widgets and live activities
+      final startDay = DateTime(
+        _selectedStartDate.year,
+        _selectedStartDate.month,
+        _selectedStartDate.day,
+      );
+      await activeProfile.getEvents(DateTimeRange(
+        start: startDay,
+        end: startDay.add(const Duration(days: 1)),
+      ));
+      await BackgroundRefresh.updateWidgets();
+      await LiveActivityService().update();
+
+      if (!mounted) return;
       Navigator.pop(context, _selectedStartDate);
     } catch (e) {
       print("Failed to save event $e");

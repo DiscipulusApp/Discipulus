@@ -109,6 +109,7 @@ dependencies:
   package_info_plus: ^9.0.1
   mcp_dart: ^2.4.2
   native_dio_adapter: ^1.8.0
+  live_activities: ^2.5.1
 
   # Unused
   # flutter_carousel_widget: ^2.2.0

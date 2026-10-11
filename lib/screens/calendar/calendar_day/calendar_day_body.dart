@@ -5,6 +5,8 @@ import 'package:discipulus/api/models/activities.dart';
 import 'package:discipulus/api/models/assignments.dart';
 import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/core/handoff.dart';
+import 'package:discipulus/core/live_activity_service.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_bottom_pull_launcher.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
@@ -128,6 +130,8 @@ class _CalendarDayViewBodyState extends State<CalendarDayViewBody>
       nextFullDate = await nextLessonDate(widget.day);
       if (mounted) setState(() {});
     }
+    await BackgroundRefresh.updateWidgets();
+    await LiveActivityService().update();
   }
 
   void onTimer() async {

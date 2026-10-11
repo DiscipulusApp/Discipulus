@@ -366,8 +366,11 @@ class Intents {
             uri.path == "/login" ||
             uri.path.endsWith("/login"));
 
-    final bool isDiscipulusCalendar =
-        uri.hasScheme && uri.scheme == "discipulus" && uri.host == "calendar";
+    final bool isDiscipulusCalendar = uri.hasScheme &&
+        uri.scheme == "discipulus" &&
+        (uri.host == "calendar" ||
+            uri.pathSegments.contains("calendar") ||
+            uri.path == "/calendar");
     final bool isWebCalendar =
         (uri.scheme == "http" || uri.scheme == "https") &&
             (uri.host == "harrydekat.dev" ||
@@ -417,8 +420,7 @@ class Intents {
               .idEqualTo(calendarId)
               .findFirst();
 
-          // If the event does not exist we will try to fetch it using the
-          // id
+          // If the event does not exist we will try to fetch it using the id
           if (event == null) {
             CalendarEvent? newEvent = await profile.account.value?.api
                 .person(personId!)
@@ -439,13 +441,56 @@ class Intents {
           }
 
           if (event != null) {
+            final targetEvent = event;
             activeProfile = profile;
-            CalendarDayView(displayedDay: event.start).push(null);
-            showCalendarEventDetailsSheet(
-              navKey.currentContext!,
-              events: [event],
-            );
+            void openEvent() {
+              final ctx = navKey.currentContext;
+              if (ctx != null && ctx.mounted) {
+                final layout = Layout.of(ctx);
+                if (layout != null) {
+                  layout.goToPage(CalendarDayView(
+                    key: const ValueKey("ALLOWED_ROOT"),
+                    displayedDay: targetEvent.start.dayOnly,
+                  ));
+                } else {
+                  CalendarDayView(displayedDay: targetEvent.start.dayOnly).push(ctx);
+                }
+                showCalendarEventDetailsSheet(
+                  ctx,
+                  events: [targetEvent],
+                );
+              }
+            }
+
+            if (navKey.currentContext == null ||
+                !(navKey.currentContext?.mounted ?? false)) {
+              WidgetsBinding.instance.addPostFrameCallback((_) => openEvent());
+            } else {
+              openEvent();
+            }
+            return;
           }
+        }
+
+        void openCalendar() {
+          final ctx = navKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            final layout = Layout.of(ctx);
+            if (layout != null) {
+              layout.goToPage(const CalendarDayView(
+                key: ValueKey("ALLOWED_ROOT"),
+              ));
+            } else {
+              CalendarDayView().push(ctx);
+            }
+          }
+        }
+
+        if (navKey.currentContext == null ||
+            !(navKey.currentContext?.mounted ?? false)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => openCalendar());
+        } else {
+          openCalendar();
         }
       } catch (_) {}
     }

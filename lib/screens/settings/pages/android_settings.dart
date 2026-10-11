@@ -1,6 +1,8 @@
+import 'package:discipulus/core/live_activity_service.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/settings/pages/live_activity_test_screen.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
@@ -30,6 +32,26 @@ class _AndroidSettingsPageState extends State<AndroidSettingsPage> {
       children: [
         ProfileChangeWidget(
           updateState: (p0) => setState(() {}),
+        ),
+        const ListTitle(child: Text("Live Melding")),
+        SwitchListTile(
+          value: appSettings.useLiveActivities,
+          secondary: const Icon(Icons.notifications_active_outlined),
+          title: const Text("Lopende melding voor huidige les"),
+          subtitle: const Text(
+              "Toon een live melding met resterende lestijd en volgende bestemming of pauze"),
+          onChanged: (value) async {
+            setState(() {
+              appSettings
+                ..useLiveActivities = value
+                ..save();
+            });
+            if (value) {
+              await LiveActivityService().update();
+            } else {
+              await LiveActivityService().endAllActivities();
+            }
+          },
         ),
         const DNDToggleCard(),
         // const SmartAlarmCard(),

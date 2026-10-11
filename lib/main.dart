@@ -25,6 +25,7 @@ import 'package:discipulus/core/handoff.dart';
 import 'package:discipulus/core/notifications.dart';
 import 'package:discipulus/core/routes.dart';
 import 'package:discipulus/core/ad_service.dart';
+import 'package:discipulus/core/live_activity_service.dart';
 import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/mcp/local_ipc.dart';
 import 'package:discipulus/mcp/mcp_server.dart';
@@ -134,7 +135,11 @@ void main(List<String> args) async {
   await NotificationController.init();
 
   if (Platform.isAndroid) await AndroidAlarmManager.initialize();
-  if (Platform.isIOS || Platform.isAndroid) WatchService().init();
+  if (Platform.isIOS || Platform.isAndroid) {
+    WatchService().init();
+    LiveActivityService().init();
+    LiveActivityService().update();
+  }
   if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
     LocalIpcServer().init();
   }
@@ -167,7 +172,7 @@ class MainApp extends StatefulWidget {
       context.findAncestorStateOfType<MainAppState>()!;
 }
 
-class MainAppState extends State<MainApp> {
+class MainAppState extends State<MainApp> with WidgetsBindingObserver {
   // unilink subscription
   late final StreamSubscription _linkSub;
 
@@ -181,8 +186,12 @@ class MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     updateTheme();
     _linkSub = appLinks.uriLinkStream.listen(Intents.uniLinkListener);
+    appLinks.getInitialLink().then((uri) {
+      if (uri != null) Intents.uniLinkListener(uri);
+    });
     Intents.initShareHandler();
 
     Future(() async {
@@ -195,7 +204,15 @@ class MainAppState extends State<MainApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      LiveActivityService().update();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _linkSub.cancel();
     super.dispose();
   }

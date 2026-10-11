@@ -140,6 +140,9 @@ class Settings {
   /// If a user has seen certain tips or not.
   Tips tips = Tips();
 
+  bool preLessonReminderWhenFree = false;
+  bool useLiveActivities = true;
+
   void save() => isar.writeTxnSync(() => isar.settings.putSync(this));
 }
 
