@@ -122,6 +122,24 @@ class _GradesListScreenState extends State<GradesListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Group once per rebuild instead of rebuilding the whole grade list for
+    // every individual SliverChildBuilderDelegate row.
+    final gradeRows = gradesList?.insertDateSeparatorWidget(
+      (grade) => grade.datumIngevoerd,
+      separator: ({required title, required values}) =>
+          ListTitle(child: Text(title), children: [
+        if (values.length > 1) ExpandedStats(grades: values),
+      ]),
+      tile: (grade) => GradeTile(
+        grade: grade,
+        setStateTop: (value) => Future.wait([setChips(), setGrades()])
+            .then((_) { if (mounted) setState(() {}); }),
+      ),
+    ).map((row) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: row,
+    )).toList();
+
     return ScaffoldSkeleton(
       fetch: refresh,
       activity: HandoffActivity.construct(
@@ -157,43 +175,10 @@ class _GradesListScreenState extends State<GradesListScreen> {
             ),
           )
         else
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                List<Widget> children = gradesList!
-                    .insertDateSeparatorWidget(
-                      (e) => e.datumIngevoerd,
-                      separator: ({required title, required values}) =>
-                          ListTitle(child: Text(title), children: [
-                        if (values.length > 1)
-                          ExpandedStats(
-                            grades: values,
-                          )
-                      ]),
-                      tile: (e) => GradeTile(
-                        grade: e,
-                        setStateTop: (p0) =>
-                            Future.wait([setChips(), setGrades()])
-                                .then((value) => setState(() {})),
-                      ),
-                    )
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: e,
-                        ))
-                    .toList();
-                return children[index];
-              },
-              childCount: gradesList!
-                  .insertDateSeparatorWidget(
-                    (e) => e.datumIngevoerd,
-                    separator: ({required title, required values}) =>
-                        ListTitle(child: Text(title), children: []),
-                    tile: (e) => const SizedBox(),
-                  )
-                  .length,
-            ),
-          )
+          SliverList.builder(
+            itemCount: gradeRows!.length,
+            itemBuilder: (context, index) => gradeRows[index],
+          ),
       ],
       children: [
         // StatisticalTilesHeader(

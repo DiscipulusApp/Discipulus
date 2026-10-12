@@ -372,6 +372,49 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
     }
   }
 
+  Future<bool> _confirmToolCall(String name, Map<String, dynamic> arguments) async {
+    if (!mounted) return false;
+    final tool = DiscipulusMcpTools.all.where((item) => item.name == name).firstOrNull;
+    final detail = arguments.entries
+        .map((entry) => '${entry.key}: ${entry.value}')
+        .join('\n');
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('AI-actie bevestigen'),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480, maxHeight: 400),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('De AI wil de volgende actie uitvoeren: ${tool?.readableName ?? name}.'),
+                    if (detail.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      // Always show the complete arguments before approval.
+                      // Truncating them can hide important changes.
+                      SelectableText(detail),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Weigeren'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Toestaan'),
+              ),
+            ],
+          ),
+        ) ?? false;
+  }
+
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
@@ -395,6 +438,7 @@ class _ChatPromptSheetBodyState extends State<ChatPromptSheetBody> {
                 ? GeminiInstructions.textChatter(widget.settings!.text)
                 : GeminiInstructions.generalDiscipulus),
         tools: DiscipulusMcpTools.openAiTools,
+        confirmToolCall: _confirmToolCall,
       );
 
       await for (final chunk in stream) {

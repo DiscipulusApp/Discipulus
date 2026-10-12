@@ -33,6 +33,7 @@ import 'package:discipulus/screens/calendar/absences.dart';
 import 'package:discipulus/screens/settings/settings.dart';
 import 'package:discipulus/screens/studiewijzers/studiewijzers.dart';
 import 'package:discipulus/screens/summary/home.dart';
+import 'package:discipulus/screens/search/search.dart';
 import 'package:flutter/services.dart';
 import 'package:isar/isar.dart';
 
@@ -75,8 +76,7 @@ class Destination {
 List<DestinationSegement> destinations(List<Permission> permissions,
         {bool forceDebug = false}) =>
     [
-      if (false) // (kDebugMode || forceDebug)
-        DestinationSegement(destinations: const [
+      DestinationSegement(destinations: const [
           Destination(
             label: "Samenvatting",
             icon: Icon(Icons.auto_awesome_outlined),
@@ -210,6 +210,13 @@ List<DestinationSegement> destinations(List<Permission> permissions,
           filledIcon: Icon(Icons.settings),
           shortcut: SingleActivator(LogicalKeyboardKey.comma, meta: true),
           view: SettingsScreen(),
+        ),
+        const Destination(
+          label: "Zoeken",
+          icon: Icon(Icons.search_outlined),
+          filledIcon: Icon(Icons.search),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyF, alt: true),
+          view: SearchScreen(),
         ),
       ]),
       if (kDebugMode || forceDebug)

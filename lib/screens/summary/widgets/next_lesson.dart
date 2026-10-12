@@ -22,7 +22,7 @@ class _NextLessonTileState extends State<NextLessonTile> {
 
   Future<void> refresh() async {
     if (_timer != null) _timer!.cancel();
-    nextEvent = (await activeProfile.calendarEvents
+    final updatedEvent = (await activeProfile.calendarEvents
             .filter()
             .duurtHeleDagEqualTo(false)
             .startGreaterThan(
@@ -42,10 +42,15 @@ class _NextLessonTileState extends State<NextLessonTile> {
             .findAll())
         .combineEvents()
         .firstOrNull;
-    if (mounted) setState(() {});
+    // The dashboard can be replaced during an asynchronous query (for example
+    // after a profile switch). Never schedule a timer for a disposed tile.
+    if (!mounted) return;
+    setState(() => nextEvent = updatedEvent);
     if (nextEvent != null) {
-      _timer =
-          Timer(nextEvent!.first.start.difference(DateTime.now()), refresh);
+      final untilStart = nextEvent!.first.start.difference(DateTime.now());
+      _timer = Timer(untilStart > Duration.zero
+          ? untilStart
+          : const Duration(minutes: 1), refresh);
     }
   }
 

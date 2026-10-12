@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:discipulus/main.dart';
 import 'package:discipulus/mcp/local_ipc.dart';
+import 'package:discipulus/mcp/ipc_credentials.dart';
 import 'package:discipulus/mcp/mcp_service.dart';
 import 'package:discipulus/mcp/mcp_tools.dart';
 import 'package:discipulus/utils/app_info.dart';
@@ -26,6 +27,7 @@ class DiscipulusMcpServer {
   ));
 
   late final McpServer _server;
+  String? _ipcToken;
   bool _isarInitialized = false;
   final String version;
 
@@ -48,7 +50,9 @@ class DiscipulusMcpServer {
       if (await _isIpcAlive()) {
         stderr.writeln("Routing '$name' via live desktop IPC");
         final res = await _ipcDio
-            .post('/tool', data: {'tool': name, 'arguments': args});
+            .post('/tool',
+                data: {'tool': name, 'arguments': args},
+                options: Options(headers: {'Authorization': 'Bearer $_ipcToken'}));
         final data = res.data is Map<String, dynamic>
             ? res.data as Map<String, dynamic>
             : (res.data is String
@@ -78,7 +82,10 @@ class DiscipulusMcpServer {
 
   Future<bool> _isIpcAlive() async {
     try {
-      final res = await _ipcDio.get('/status');
+      _ipcToken = await IpcCredentials.read();
+      if (_ipcToken == null) return false;
+      final res = await _ipcDio.get('/status',
+          options: Options(headers: {'Authorization': 'Bearer $_ipcToken'}));
       return res.statusCode == 200;
     } catch (_) {
       return false;

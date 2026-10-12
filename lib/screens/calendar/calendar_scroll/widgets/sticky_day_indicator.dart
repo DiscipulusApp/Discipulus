@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -158,10 +159,12 @@ class DayIndicatorBadge extends StatelessWidget {
     super.key,
     required this.date,
     this.onTap,
+    this.work = const CalendarWorkSummary(),
   });
 
   final DateTime date;
   final VoidCallback? onTap;
+  final CalendarWorkSummary work;
 
   void _handleTap(BuildContext context) {
     HapticFeedback.selectionClick();
@@ -196,8 +199,8 @@ class DayIndicatorBadge extends StatelessWidget {
                 children: [
                   // Circle Day Number Badge
                   Container(
-                    width: 42,
-                    height: 42,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: isToday
@@ -232,6 +235,10 @@ class DayIndicatorBadge extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (!work.isEmpty) ...[
+                    const SizedBox(height: 2),
+                    CalendarWorkBadges(summary: work, iconSize: 13),
+                  ],
                 ],
               ),
             ),

@@ -39,12 +39,14 @@ class AIService {
     required List<AIChatMessage> history,
     required AIChatMessage systemInstruction,
     List<Map<String, dynamic>>? tools,
+    Future<bool> Function(String name, Map<String, dynamic> args)? confirmToolCall,
   }) async {
     final buffer = StringBuffer();
     await for (final chunk in sendMessageStream(
       history: history,
       systemInstruction: systemInstruction,
       tools: tools,
+      confirmToolCall: confirmToolCall,
     )) {
       if (chunk.content != null) {
         buffer.write(chunk.content);
@@ -57,6 +59,7 @@ class AIService {
     required List<AIChatMessage> history,
     required AIChatMessage systemInstruction,
     List<Map<String, dynamic>>? tools,
+    Future<bool> Function(String name, Map<String, dynamic> args)? confirmToolCall,
   }) async* {
     switch (appSettings.aiProvider) {
       case AIProvider.none:
@@ -70,7 +73,8 @@ class AIService {
         throw Exception('Systeem AI is niet beschikbaar op dit apparaat.');
       case AIProvider.openAI:
         if (appSettings.isAiConfigured) {
-          yield* _sendOpenAIStream(history, systemInstruction, tools: tools);
+          yield* _sendOpenAIStream(history, systemInstruction,
+              tools: tools, confirmToolCall: confirmToolCall);
           return;
         }
         throw Exception(
@@ -138,6 +142,7 @@ class AIService {
     AIChatMessage systemInstruction, {
     List<Map<String, dynamic>>? tools,
     int depth = 0,
+    Future<bool> Function(String name, Map<String, dynamic> args)? confirmToolCall,
   }) async* {
     if (depth > 5) {
       yield const AIStreamChunk(
@@ -310,10 +315,13 @@ class AIService {
           isThinking: true,
         );
 
-        final result = await DiscipulusMcpTools.execute(
-          name,
-          args is Map<String, dynamic> ? args : {},
-        );
+        final validatedArgs = args is Map<String, dynamic> ? args : <String, dynamic>{};
+        final needsApproval = DiscipulusMcpTools.confirmationRequired.contains(name);
+        final allowed = !needsApproval ||
+            (confirmToolCall != null && await confirmToolCall(name, validatedArgs));
+        final result = allowed
+            ? await DiscipulusMcpTools.execute(name, validatedArgs)
+            : 'Actie geweigerd: gebruiker heeft deze wijziging niet bevestigd.';
 
         history.add(
           AIChatMessage.tool(
@@ -324,7 +332,7 @@ class AIService {
       }
 
       yield* _sendOpenAIStream(history, systemInstruction,
-          tools: tools, depth: depth + 1);
+          tools: tools, depth: depth + 1, confirmToolCall: confirmToolCall);
       return;
     }
 

@@ -145,17 +145,24 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
 
   /// Whether or not the device is in an offline state
   final ValueNotifier<bool> isOffline = ValueNotifier<bool>(false);
+  final ValueNotifier<String?> refreshError = ValueNotifier<String?>(null);
   late final StreamSubscription<List<ConnectivityResult>> _subscription;
+  ExternalRefresh? _externalRefresh;
+  int _fetchRequestVersion = 0;
+  bool _localFetchRunning = false;
+  int _localFetchType = 0;
 
   void _externalRefreshListener() {
-    if (ExternalRefresh.maybyOf(context)?.isLoadingExternally.value ?? false) {
-      if (mounted) isRefreshing.value = 2;
-    } else {
-      if (mounted) isRefreshing.value = 0;
-    }
+    if (!mounted) return;
+    isRefreshing.value = _localFetchRunning
+        ? _localFetchType
+        : (_externalRefresh?.isLoadingExternally.value ?? false)
+            ? 2
+            : 0;
   }
 
   void _connectivityListener(List<ConnectivityResult> result) {
+    if (!mounted) return;
     if (result.every(
       (e) => e == ConnectivityResult.none,
     )) {
@@ -168,51 +175,67 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
   }
 
   Future<void> _fetch({int type = 2, bool wait = false}) async {
-    // To prevent a DDOS attack due to bored students that just switch between
-    // views, we will only perform the initial fetch after 500ms. This will only
-    // happen when the `wait` property is set to true. After the 500ms we can
-    // check if the widget us still mounted, if so, then we will perform the
-    // fetch.
+    if (widget.fetch == null) return;
+    // A foreground/manual refresh supersedes a pending delayed initial one.
+    final requestVersion = ++_fetchRequestVersion;
     if (wait) {
-      Future.delayed(const Duration(milliseconds: 500), _fetch);
+      await Future<void>.delayed(const Duration(milliseconds: 500));
     }
-    if (mounted && isRefreshing.value == 0) {
-      isRefreshing.value = type;
-      try {
-        await widget.fetch?.call(wait ? wait : isOffline.value);
-      } catch (e) {
-        if (mounted) isRefreshing.value = 0;
-        rethrow;
+    if (!mounted || requestVersion != _fetchRequestVersion ||
+        isRefreshing.value != 0) return;
+    _localFetchRunning = true;
+    _localFetchType = type;
+    isRefreshing.value = type;
+    refreshError.value = null;
+    try {
+      await widget.fetch?.call(isOffline.value);
+    } catch (error) {
+      if (mounted) {
+        // Retain cached content and show a recoverable error to the user.
+        refreshError.value = 'Vernieuwen mislukt. Controleer je verbinding en probeer het opnieuw.';
+        debugPrint('ScaffoldSkeleton refresh failed: $error');
       }
-      if (mounted) isRefreshing.value = 0;
+    } finally {
+      _localFetchRunning = false;
+      if (mounted) _externalRefreshListener();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final current = ExternalRefresh.maybyOf(context);
+    if (current != _externalRefresh) {
+      _externalRefresh?.isLoadingExternally.removeListener(_externalRefreshListener);
+      _externalRefresh = current;
+      current?.isLoadingExternally.addListener(_externalRefreshListener);
+      _externalRefreshListener();
     }
   }
 
   @override
   void initState() {
-    // Setup refreshing indicator
-    ExternalRefresh.maybyOf(context)
-        ?.isLoadingExternally
-        .addListener(_externalRefreshListener);
-
+    super.initState();
     // Setup offline indicator
     _subscription =
         Connectivity().onConnectivityChanged.listen(_connectivityListener);
-    Future(() async =>
-        _connectivityListener(await Connectivity().checkConnectivity()));
+    Connectivity().checkConnectivity().then(
+      _connectivityListener,
+      onError: (Object error) => debugPrint('Connectivity check failed: $error'),
+    );
 
     // Perform the initial fetch
     if (!widget.noInitialFetch) {
       _fetch(wait: !widget.noWait);
     }
-
-    super.initState();
   }
 
   @override
   void dispose() {
+    _externalRefresh?.isLoadingExternally.removeListener(_externalRefreshListener);
     isRefreshing.dispose();
     isOffline.dispose();
+    refreshError.dispose();
     _subscription.cancel();
     super.dispose();
   }
@@ -269,6 +292,7 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
                     child: child,
                   ),
                   child: IconButton(
+                    tooltip: isOffline ? 'Offline: lokale gegevens' : 'Vernieuwen',
                     key: ValueKey(value),
                     icon: isOffline
                         ? const Icon(Icons.wifi_off_outlined)
@@ -342,6 +366,31 @@ class _ScaffoldSkeletonState extends State<ScaffoldSkeleton> {
         // Build the appbar
         _appBarBuilder(context) as Widget,
 
+        // Connection and refresh problems remain visible above cached data.
+        ValueListenableBuilder<bool>(
+          valueListenable: isOffline,
+          builder: (context, offline, _) => SliverToBoxAdapter(
+            child: offline
+                ? _RefreshNotice(
+                    icon: Icons.wifi_off_outlined,
+                    message: 'Je bent offline. Opgeslagen gegevens blijven beschikbaar.',
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ),
+        ValueListenableBuilder<String?>(
+          valueListenable: refreshError,
+          builder: (context, error, _) => SliverToBoxAdapter(
+            child: error == null
+                ? const SizedBox.shrink()
+                : _RefreshNotice(
+                    icon: Icons.error_outline,
+                    message: error,
+                    retry: () => _fetch(),
+                  ),
+          ),
+        ),
+
         // Build the refresh controller
         if (widget.fetch != null)
           CupertinoSliverRefreshControl(
@@ -408,6 +457,42 @@ class ScaffoldSkeletonEmptyLoadingIndicator extends StatelessWidget {
             child: LinearProgressIndicator(
               backgroundColor: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shared, accessible refresh/connection feedback for every ScaffoldSkeleton.
+class _RefreshNotice extends StatelessWidget {
+  const _RefreshNotice({required this.icon, required this.message, this.retry});
+
+  final IconData icon;
+  final String message;
+  final VoidCallback? retry;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Semantics(
+        liveRegion: true,
+        child: Material(
+          color: colors.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                Icon(icon, color: colors.onSurfaceVariant),
+                const SizedBox(width: 10),
+                Expanded(child: Text(message)),
+                if (retry != null)
+                  TextButton(onPressed: retry, child: const Text('Opnieuw')),
+              ],
             ),
           ),
         ),

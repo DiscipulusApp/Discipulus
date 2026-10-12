@@ -41,6 +41,7 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
   bool _isLoading = true;
   bool _isFullSyncing = false;
   String _syncProgressText = "";
+  String? _syncError;
   bool _hasUnsyncedSchoolyears = false;
   bool _hideWithoutHours = true; 
 
@@ -52,33 +53,51 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
   }
 
   Future<void> _loadData() async {
-    _allSchoolyears =
-        await activeProfile.schoolyears.filter().sortByBeginDesc().findAll();
+    try {
+      final schoolyears =
+          await activeProfile.schoolyears.filter().sortByBeginDesc().findAll();
+      final events =
+          await activeProfile.calendarEvents.filter().sortByStart().findAll();
 
-    final events =
-        await activeProfile.calendarEvents.filter().sortByStart().findAll();
+      bool missingYears = false;
+      for (final sy in schoolyears) {
+        final count = events
+            .where((e) =>
+                e.start.isAfter(sy.begin.subtract(const Duration(days: 1))) &&
+                e.start.isBefore(sy.einde.add(const Duration(days: 1))))
+            .length;
+        if (count == 0) {
+          missingYears = true;
+          break;
+        }
+      }
 
-    // Check if any schoolyears have 0 events in the local database
-    bool missingYears = false;
-    for (final sy in _allSchoolyears) {
-      final count = events
-          .where((e) =>
-              e.start.isAfter(sy.begin.subtract(const Duration(days: 1))) &&
-              e.start.isBefore(sy.einde.add(const Duration(days: 1))))
-          .length;
-      if (count == 0) {
-        missingYears = true;
-        break;
+      if (mounted) {
+        setState(() {
+          _allSchoolyears = schoolyears;
+          _allEvents = events;
+          _hasUnsyncedSchoolyears = missingYears;
+          _isLoading = false;
+        });
+      }
+    } catch (error) {
+      debugPrint('Kalenderstatistieken laden mislukt: $error');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _syncError ??= 'De opgeslagen kalendergegevens konden niet worden geladen.';
+        });
       }
     }
+  }
 
-    if (mounted) {
-      setState(() {
-        _allEvents = events;
-        _hasUnsyncedSchoolyears = missingYears;
-        _isLoading = false;
-      });
-    }
+  Future<void> _retryLoad() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _syncError = null;
+    });
+    await _loadData();
   }
 
   Future<void> _performFullCareerFetch({bool force = false}) async {
@@ -106,6 +125,7 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
     setState(() {
       _isFullSyncing = true;
       _syncProgressText = "Schooljaren voorbereiden...";
+      _syncError = null;
     });
 
     try {
@@ -122,13 +142,22 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
           end: sy.einde,
         ));
       }
-    } catch (_) {
+    } catch (error) {
+      if (mounted) {
+        setState(() => _syncError =
+            'Niet alle schooljaren konden worden opgehaald. Probeer de synchronisatie opnieuw.');
+      }
+      debugPrint('Kalenderstatistieken synchronisatie mislukt: $error');
     } finally {
       if (mounted) {
-        await _loadData();
-        setState(() {
-          _isFullSyncing = false;
-        });
+        try {
+          await _loadData();
+        } catch (error) {
+          _syncError ??= 'De lokaal opgeslagen kalendergegevens konden niet worden geladen.';
+          debugPrint('Kalenderstatistieken laden mislukt: $error');
+        } finally {
+          if (mounted) setState(() => _isFullSyncing = false);
+        }
       }
     }
   }
@@ -187,18 +216,34 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
 
     if (_isLoading || _allEvents == null) {
       return ScaffoldSkeleton(
+        // _loadData is already started by initState or the retry button.
+        noInitialFetch: true,
         fetch: _refresh,
         appBar: (isRefreshing, trailingRefreshButton, leading) =>
             SliverAppBar.large(
           title: const Text("Kalender statistieken"),
           leading: leading,
+          actions: [
+            if (trailingRefreshButton != null) trailingRefreshButton,
+          ],
         ),
-        children: const [
-          Center(
-            child: Padding(
-              padding: EdgeInsets.all(48.0),
-              child: CircularProgressIndicator(),
-            ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      const Icon(Icons.error_outline, size: 32),
+                      const SizedBox(height: 12),
+                      Text(_syncError ?? 'Kalendergegevens zijn niet beschikbaar.'),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: _retryLoad,
+                        child: const Text('Opnieuw proberen'),
+                      ),
+                    ],
+                  ),
           ),
         ],
       );
@@ -278,6 +323,20 @@ class _CalendarStatisticsScreenState extends State<CalendarStatisticsScreen> {
         ],
       ),
       children: [
+        if (_syncError != null)
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Card(
+              child: ListTile(
+                leading: const Icon(Icons.error_outline),
+                title: Text(_syncError!),
+                trailing: TextButton(
+                  onPressed: _isFullSyncing ? null : () => _performFullCareerFetch(force: true),
+                  child: const Text('Opnieuw'),
+                ),
+              ),
+            ),
+          ),
         // Statistical Tiles Header
         CalendarStatisticalTilesHeader.general(
           key: const HeaderKey(),

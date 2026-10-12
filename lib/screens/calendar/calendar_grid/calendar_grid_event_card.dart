@@ -2,6 +2,7 @@ import 'package:discipulus/api/models/calendar.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
@@ -25,10 +26,9 @@ class TimeGridEventCard extends StatelessWidget {
     final isCanceled = events.every((e) => e.isCanceled);
     final isChanged = events.any((e) => e.isChanged);
     final isDone = events.every((e) => e.afgerond);
-    final isTest = events.any((e) => e.isTest);
-    final hasHomework = events.any((e) =>
-        e.infoType == InfoType.homework ||
-        (e.inhoud != null && e.inhoud!.trim().isNotEmpty && !e.isTest));
+    final work = CalendarWorkSummary.fromEvents(events);
+    final isTest = work.hasTest;
+    final hasHomework = work.hasHomework;
 
     final showTestColor =
         isTest && (!isDone || appSettings.coloredFinishedTests);
@@ -44,11 +44,10 @@ class TimeGridEventCard extends StatelessWidget {
       subTextColor = textColor.withValues(alpha: 0.85);
     } else if (isDone) {
       bgColor = theme.colorScheme.surfaceContainerHighest
-      .applySurfaceTint(tint: Colors.lightGreenAccent, elevation: 99)
-      .harmonizeWith(theme.colorScheme.primaryContainer);
+          .applySurfaceTint(tint: Colors.lightGreenAccent, elevation: 99)
+          .harmonizeWith(theme.colorScheme.primaryContainer);
       textColor = theme.colorScheme.onSurfaceVariant;
       subTextColor = textColor.withValues(alpha: 0.85);
-      
     } else if (showTestColor) {
       bgColor = theme.colorScheme.tertiaryContainer;
       textColor = theme.colorScheme.onTertiaryContainer;
@@ -95,7 +94,17 @@ class TimeGridEventCard extends StatelessWidget {
             final isNarrow = cardWidth < 55;
 
             final showDetails = cardHeight >= 46 && !isNarrow;
-            final titleMaxLines = cardHeight < 36 ? 1 : (cardHeight >= 64 ? 2 : 1);
+            // In narrow time slots keep enough width for the subject name.
+            // Tests take priority over homework when both flags are present.
+            final showWorkIcons =
+                cardHeight >= 30 && cardWidth >= 70 && !work.isEmpty;
+            final compactWork = CalendarWorkSummary(
+              hasTest: work.hasTest,
+              hasHomework:
+                  work.hasHomework && (!work.hasTest || cardWidth >= 120),
+            );
+            final titleMaxLines =
+                cardHeight < 36 ? 1 : (cardHeight >= 64 ? 2 : 1);
             final titleStyle = (cardHeight < 36
                     ? theme.textTheme.labelSmall
                     : theme.textTheme.labelMedium)
@@ -130,7 +139,18 @@ class TimeGridEventCard extends StatelessWidget {
                                 style: titleStyle,
                               ),
                             ),
-                            if (lesuurText.isNotEmpty && cardHeight >= 32 && !isNarrow)
+                            if (showWorkIcons)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: CalendarWorkBadges(
+                                  summary: compactWork,
+                                  iconSize: 13,
+                                ),
+                              ),
+                            if (lesuurText.isNotEmpty &&
+                                cardHeight >= 32 &&
+                                !isNarrow &&
+                                (!showWorkIcons || cardWidth >= 124))
                               Padding(
                                 padding: const EdgeInsets.only(left: 2),
                                 child: Text(
@@ -148,7 +168,8 @@ class TimeGridEventCard extends StatelessWidget {
                           Text(
                             [
                               "${localStart.formattedTime} - ${localEnd.formattedTime}",
-                              if (first.lokatie != null && first.lokatie!.isNotEmpty)
+                              if (first.lokatie != null &&
+                                  first.lokatie!.isNotEmpty)
                                 first.lokatie!,
                               if (first.docenten?.isNotEmpty == true)
                                 first.docenten!.first.naam ?? "",
@@ -172,9 +193,8 @@ class TimeGridEventCard extends StatelessWidget {
                       width: 5,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: isCanceled
-                            ? textColor
-                            : theme.colorScheme.primary,
+                        color:
+                            isCanceled ? textColor : theme.colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
