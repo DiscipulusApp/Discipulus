@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:discipulus/api/models/calendar.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
@@ -71,11 +73,9 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Table(
         columnWidths: [
-          if (!AppPlatform.isMobile)
-            const FixedColumnWidth(52),
+          if (!AppPlatform.isMobile) const FixedColumnWidth(52),
           const FlexColumnWidth(),
-          if (!AppPlatform.isMobile)
-            const FixedColumnWidth(52)
+          if (!AppPlatform.isMobile) const FixedColumnWidth(52)
         ].asMap(),
         children: [
           TableRow(
@@ -123,23 +123,36 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
     return PageView.builder(
       controller: pageviewController,
       itemBuilder: (context, pageIndex) {
-        return ValueListenableBuilder(
+        return ValueListenableBuilder<DateTime>(
           valueListenable: widget.selectedDay,
-          builder: (context, date, child) {
-            return Row(
+          builder: (context, date, child) => StreamBuilder<void>(
+            stream: isar.calendarEvents.watchLazy(),
+            builder: (context, _) => Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(
                 appSettings.workWeek ? 5 : 7,
                 (index) {
-                  // Get date that should be drawn
-                  DateTime day = indexToDate(
-                      index + (appSettings.workWeek ? 5 : 7) * pageIndex);
+                  final day = indexToDate(
+                    index + (appSettings.workWeek ? 5 : 7) * pageIndex,
+                  );
+                  final isVisible = appSettings.workWeek ||
+                      (day.weekday <= 5 || date.weekday >= 6);
+                  List<CalendarEvent> events;
+                  try {
+                    events = activeProfile.calendarEvents
+                        .filter()
+                        .startBetween(day, day.add(const Duration(days: 1)))
+                        .findAllSync();
+                  } catch (_) {
+                    events = [];
+                  }
 
-                  bool isVisible = appSettings.workWeek ||
-                      (!appSettings.workWeek &&
-                          (day.weekday <= 5 || date.weekday >= 6));
+                  final work = CalendarWorkSummary.fromEvents(events);
+                  final isSpecial = events.any((event) =>
+                      !event.isCanceled &&
+                      event.isTest &&
+                      (appSettings.coloredFinishedTests || !event.afgerond));
 
-                  // Draw widget
                   return Expanded(
                     flex: isVisible ? 1 : 0,
                     child: CustomAnimatedSize(
@@ -147,46 +160,13 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
                         width: isVisible ? null : 0,
                         child: InkWell(
                           onTap: () => widget.selectedDay.value = day,
-                          child: FutureBuilder(
-                            future: Future(() async {
-                              // Check if a day contains a test
-                              List<CalendarEvent> events = await activeProfile
-                                  .calendarEvents
-                                  .filter()
-                                  .startBetween(
-                                      day, day.add(const Duration(days: 1)))
-                                  .findAll();
-                              return {
-                                "count": events.length,
-                                "isSpecial": events
-                                    // If this setting has been turned on, we
-                                    // will only show the special indicator if
-                                    // the  event is not yet marked as done
-                                    .where(
-                                      (e) =>
-                                          appSettings.coloredFinishedTests ||
-                                          (!appSettings.coloredFinishedTests &&
-                                              !e.afgerond),
-                                    )
-                                    .map((e) => e.infoType.index)
-                                    .any(
-                                      (index) => [2, 3, 4, 5].contains(index),
-                                    ),
-                              };
-                            }),
-                            builder: (context, snapshot) {
-                              return DayIndexTile(
-                                key: ValueKey(day.toIso8601String()),
-                                day: day,
-                                selected: day.dayOnly == date.dayOnly,
-                                isEmpty: snapshot.hasData &&
-                                    snapshot.data!["count"] == 0,
-                                isSpecial: snapshot.hasData &&
-                                    snapshot.data!["isSpecial"] == true,
-                                unFinished:
-                                    snapshot.data?["unfinished"] as int?,
-                              );
-                            },
+                          child: DayIndexTile(
+                            key: ValueKey(day.toIso8601String()),
+                            day: day,
+                            selected: day.dayOnly == date.dayOnly,
+                            isEmpty: events.isEmpty,
+                            isSpecial: isSpecial,
+                            work: work,
                           ),
                         ),
                       ),
@@ -194,8 +174,8 @@ class _BottomDaySelectHeaderState extends State<BottomDaySelectHeader> {
                   );
                 },
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -210,6 +190,7 @@ class DayIndexTile extends StatelessWidget {
     this.isSpecial = false,
     this.isEmpty = false,
     this.unFinished,
+    this.work = const CalendarWorkSummary(),
   });
 
   final DateTime day;
@@ -217,6 +198,7 @@ class DayIndexTile extends StatelessWidget {
   final bool isSpecial;
   final bool isEmpty;
   final int? unFinished;
+  final CalendarWorkSummary work;
 
   Color? cardColor(context) {
     return selected
@@ -262,14 +244,12 @@ class DayIndexTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomCard(
       color: cardColor(context),
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
-        child: Wrap(
-          runAlignment: WrapAlignment.center,
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          runSpacing: 4,
-          spacing: 2,
+        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 1),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Badge(
               backgroundColor: containerOnCardColor(context),
@@ -278,7 +258,7 @@ class DayIndexTile extends StatelessWidget {
               label: unFinished != null ? Text(unFinished.toString()) : null,
               alignment: const Alignment(1, 1.5),
               child: CircleAvatar(
-                radius: 18,
+                radius: 17,
                 backgroundColor: containerOnCardColor(context),
                 foregroundColor: onContainerOnCardColor(context),
                 child: Text(
@@ -287,18 +267,24 @@ class DayIndexTile extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(
-              width: 35,
-              child: Center(
-                child: Text(
-                  day.dayNameShort.capitalized,
-                  maxLines: 1,
-                  style: TextStyle(
+            const SizedBox(height: 1),
+            Text(
+              day.dayNameShort.capitalized,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: onCardColor(context),
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
-                ),
+            ),
+            const SizedBox(height: 1),
+            // Reserve space on all days so the weekday never jumps when
+            // homework/test information arrives after a sync.
+            SizedBox(
+              height: 18,
+              child: Center(
+                child: CalendarWorkBadges(summary: work, iconSize: 12),
               ),
-            )
+            ),
           ],
         ),
       ),

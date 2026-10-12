@@ -8,6 +8,7 @@ import 'package:discipulus/screens/calendar/calendar_scroll/widgets/scroll_calen
 import 'package:discipulus/screens/calendar/calendar_scroll/widgets/sticky_day_indicator.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/screens/calendar/widgets/calendar_listtile.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -183,6 +184,7 @@ class _ScrollCalendarDayRowState extends State<ScrollCalendarDayRow> {
                 topPadding: widget.topOffset,
                 child: DayIndicatorBadge(
                   date: widget.day,
+                  work: CalendarWorkSummary.fromEvents(_events),
                   onTap: widget.onDaySelected != null
                       ? () => widget.onDaySelected!(widget.day)
                       : null,

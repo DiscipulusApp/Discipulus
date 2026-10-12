@@ -8,6 +8,7 @@ import 'package:discipulus/core/watch_service.dart';
 import 'package:discipulus/screens/activities/activity_detail.dart';
 import 'package:discipulus/screens/assignments/assignment_details.dart';
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
 import 'package:discipulus/screens/calendar/calendar_details.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
 import 'package:discipulus/utils/extensions.dart';
@@ -284,7 +285,8 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                     Text(
                       widget.event.last.einde.formattedTime,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                 ],
@@ -300,9 +302,14 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                   fontWeight: FontWeight.bold,
                 ),
           ),
-          subtitle: _buildSubtitle(disableTime: true, shortNames: true),
-          trailing: const SizedBox(width: 50), // This is so the title does not overflow into the time
-          minTileHeight: (widget.event.first.lesuurVan != widget.event.last.lesuurTotMet) ? 128 : null,
+          subtitle: _buildEventSubtitle(disableTime: true, shortNames: true),
+          trailing: const SizedBox(
+              width:
+                  50), // This is so the title does not overflow into the time
+          minTileHeight:
+              (widget.event.first.lesuurVan != widget.event.last.lesuurTotMet)
+                  ? 128
+                  : null,
           onTap: widget.onTapOverride ??
               () => showCalendarEventDetailsSheet(
                     context,
@@ -333,9 +340,11 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                       margin: const EdgeInsets.all(8).copyWith(bottom: 0),
                       elevation: 0,
                       child: ListTile(
-                        leading:
-                            shoudlDisplay ? const Icon(Icons.access_time) : null,
-                        title: Text("Start in ${countdown.time} ${countdown.unit}"),
+                        leading: shoudlDisplay
+                            ? const Icon(Icons.access_time)
+                            : null,
+                        title: Text(
+                            "Start in ${countdown.time} ${countdown.unit}"),
                       ),
                     ),
                   );
@@ -346,7 +355,8 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
               columnWidths: [
                 if (widget.event.first.lesuurVan != null)
                   const FixedColumnWidth(48.0),
-                if (widget.size == CalendarEventSize.large || widget.size == null)
+                if (widget.size == CalendarEventSize.large ||
+                    widget.size == null)
                   const FixedColumnWidth(0),
                 const FlexColumnWidth(),
                 const FixedColumnWidth(48.0)
@@ -383,15 +393,15 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                       child: ListTile(
                         dense: widget.size == CalendarEventSize.small,
                         title: Text(widget.event.first.title.capitalized),
-                        subtitle: _buildSubtitle(),
+                        subtitle: _buildEventSubtitle(),
                       ),
                     ),
                     if (widget.navigationTile)
                       TableCell(
                         verticalAlignment: TableCellVerticalAlignment.fill,
                         child: Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8, right: 8, bottom: 8),
+                          padding: const EdgeInsets.only(
+                              top: 8, right: 8, bottom: 8),
                           child: SizedBox(
                             child: IconButton.filledTonal(
                               onPressed: widget.onTapOverride ??
@@ -416,7 +426,8 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                 padding: const EdgeInsets.all(4.0).copyWith(top: 0),
                 child: Table(
                   columnWidths: [
-                    if (widget.event.first.isEditable) const FixedColumnWidth(48.0),
+                    if (widget.event.first.isEditable)
+                      const FixedColumnWidth(48.0),
                     const FlexColumnWidth(),
                   ].asMap(),
                   children: [
@@ -467,7 +478,57 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
     if (mounted) setState(() {});
   }
 
-  Text _buildSubtitle({bool disableTime = false, bool shortNames = false}) {
+  Widget _buildEventSubtitle({
+    bool disableTime = false,
+    bool shortNames = false,
+  }) {
+    final work = CalendarWorkSummary.fromEvents(widget.event);
+    if (work.isEmpty) {
+      return _buildSubtitle(disableTime: disableTime, shortNames: shortNames);
+    }
+    // Preserve the precise Magister test type in the visible badge, instead of
+    // repeating 'Proefwerk' or 'Huiswerk' in the crowded metadata line.
+    String? testLabel;
+    String? testTooltip;
+    if (work.hasTest) {
+      final testEvent = widget.event.firstWhere(
+        (event) => !event.isCanceled && event.isTest,
+      );
+      testTooltip = testEvent.infoType.toName;
+      testLabel = switch (testEvent.infoType) {
+        InfoType.test => 'Proefwerk',
+        InfoType.exam => 'Tentamen',
+        InfoType.writtenExam => 'Toets (SO)',
+        InfoType.oralExam => 'Toets (MO)',
+        _ => 'Toets',
+      };
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildSubtitle(
+          disableTime: disableTime,
+          shortNames: shortNames,
+          hideWorkInfoType: true,
+        ),
+        const SizedBox(height: 5),
+        CalendarWorkBadges(
+          summary: work,
+          showLabels: true,
+          iconSize: 14,
+          testLabel: testLabel,
+          testTooltip: testTooltip,
+        ),
+      ],
+    );
+  }
+
+  Text _buildSubtitle({
+    bool disableTime = false,
+    bool shortNames = false,
+    bool hideWorkInfoType = false,
+  }) {
     return Text(
       maxLines: widget.event.first.lesuurVan == widget.event.last.lesuurTotMet
           ? 1
@@ -489,13 +550,18 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
         // Special things
         if (widget.event.first.isCanceled) widget.event.first.status.toName,
         // Infotype
-        if (widget.event.first.infoType.index != 0)
+        if (widget.event.first.infoType.index != 0 &&
+            !(hideWorkInfoType &&
+                (widget.event.first.isTest ||
+                    widget.event.first.infoType == InfoType.homework)))
           shortNames
               ? widget.event.first.infoType.toShort
               : widget.event.first.infoType.toName,
         // Teacher
         shortNames
-            ? widget.event.first.docenten?.map((e) => e.docentcode).formattedJoin
+            ? widget.event.first.docenten
+                ?.map((e) => e.docentcode)
+                .formattedJoin
             : widget.event.first.docenten?.map((e) => e.naam).formattedJoin,
       ].where((e) => e != null && e != "").join(" • "),
     );

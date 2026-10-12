@@ -1,6 +1,11 @@
+import 'package:discipulus/api/models/calendar.dart';
+import 'package:discipulus/main.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_work_badges.dart';
+import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/card.dart';
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 
 /// Header component combining the week number badge, synchronized PageView of day headers, and the line loader.
 class CalendarGridHeader extends StatelessWidget {
@@ -63,7 +68,7 @@ class CalendarGridHeader extends StatelessWidget {
               // Synchronized Day Headers PageView
               Expanded(
                 child: SizedBox(
-                  height: 58,
+                  height: 68,
                   child: PageView.builder(
                     controller: headerPageController,
                     physics: const NeverScrollableScrollPhysics(),
@@ -112,58 +117,101 @@ class DayHeaderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        for (final day in days)
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => onDayTap?.call(day),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        day.dayNameShort.toUpperCase(),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: _isToday(day)
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _isToday(day)
-                              ? theme.colorScheme.primary
-                              : Colors.transparent,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "${day.day}",
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: _isToday(day)
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurface,
+    // Keep date indicators in sync with the same Isar data as the lesson cards.
+    // Query only the visible days when calendar data changes.
+    return StreamBuilder<void>(
+      stream: isar.calendarEvents.watchLazy(),
+      builder: (context, _) {
+        final start =
+            DateTime(days.first.year, days.first.month, days.first.day);
+        final end =
+            DateTime(days.last.year, days.last.month, days.last.day + 1);
+        List<CalendarEvent> events;
+        try {
+          events = activeProfile.calendarEvents
+              .filter()
+              .startLessThan(end)
+              .and()
+              .eindeGreaterThan(start)
+              .findAllSync();
+        } catch (_) {
+          // The database can be unavailable briefly when switching profiles.
+          events = [];
+        }
+
+        return Row(
+          children: [
+            for (final day in days)
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => onDayTap?.call(day),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            day.dayNameShort.toUpperCase(),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _isToday(day)
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _isToday(day)
+                                  ? theme.colorScheme.primary
+                                  : Colors.transparent,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              "${day.day}",
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: _isToday(day)
+                                    ? theme.colorScheme.onPrimary
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          SizedBox(
+                            height: 19,
+                            child: Center(
+                              child: CalendarWorkBadges(
+                                summary: CalendarWorkSummary.fromEvents(
+                                  events.where((event) {
+                                    final date = event.start.toLocal();
+                                    final finish = event.einde.toLocal();
+                                    final nextDay = DateTime(
+                                        day.year, day.month, day.day + 1);
+                                    return date.isBefore(nextDay) &&
+                                        finish.isAfter(day);
+                                  }),
+                                ),
+                                iconSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
