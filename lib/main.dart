@@ -141,7 +141,7 @@ void main(List<String> args) async {
     LiveActivityService().update();
   }
   if (Platform.isMacOS || Platform.isLinux || Platform.isWindows) {
-    LocalIpcServer().init();
+    await LocalIpcServer().init();
   }
 
 

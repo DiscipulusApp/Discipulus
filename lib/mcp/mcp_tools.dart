@@ -132,6 +132,14 @@ class DiscipulusTool {
 
 /// Registry and Dispatcher for Discipulus MCP Tools.
 class DiscipulusMcpTools {
+  /// AI-initiated changes to local or Magister data require user approval.
+  static const Set<String> confirmationRequired = {
+    'discipulus_edit_event',
+    'discipulus_switch_profile',
+    'discipulus_compose_message',
+    'discipulus_download_file',
+  };
+
   static final List<DiscipulusTool> all = [
     DiscipulusTool(
       name: 'discipulus_get_schedule',
