@@ -6,6 +6,7 @@ import 'package:discipulus/main.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/introduction/expressive_components.dart';
 import 'package:discipulus/screens/settings/pages/discipulus_settings.dart';
+import 'package:discipulus/screens/settings/pages/ai_settings.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/widgets/global/card.dart';
@@ -291,7 +292,7 @@ class _PostLoginScreenState extends State<PostLoginScreen> {
             Icons.navigate_next_rounded,
             color: colorScheme.onSecondaryContainer,
           ),
-          onTap: () => const DiscipulusSettingsPage().push(context),
+          onTap: () => const AiSettingsPage().push(context),
         ),
       ),
       title: "AI & Slimme Hulp",
