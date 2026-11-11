@@ -156,91 +156,101 @@ const SettingsSchema = CollectionSchema(
       name: r'pietjePrecies',
       type: IsarType.bool,
     ),
-    r'saveVirtualFiles': PropertySchema(
+    r'preLessonReminderWhenFree': PropertySchema(
       id: 27,
+      name: r'preLessonReminderWhenFree',
+      type: IsarType.bool,
+    ),
+    r'saveVirtualFiles': PropertySchema(
+      id: 28,
       name: r'saveVirtualFiles',
       type: IsarType.bool,
     ),
     r'sendCrashInfo': PropertySchema(
-      id: 28,
+      id: 29,
       name: r'sendCrashInfo',
       type: IsarType.bool,
     ),
     r'shortBronTitle': PropertySchema(
-      id: 29,
+      id: 30,
       name: r'shortBronTitle',
       type: IsarType.bool,
     ),
     r'showAutoCancelledEvents': PropertySchema(
-      id: 30,
+      id: 31,
       name: r'showAutoCancelledEvents',
       type: IsarType.bool,
     ),
     r'showBronExtension': PropertySchema(
-      id: 31,
+      id: 32,
       name: r'showBronExtension',
       type: IsarType.bool,
     ),
     r'showCalcCardsInGlobalAverageList': PropertySchema(
-      id: 32,
+      id: 33,
       name: r'showCalcCardsInGlobalAverageList',
       type: IsarType.bool,
     ),
     r'showEmptySpaceBetweenLessons': PropertySchema(
-      id: 33,
+      id: 34,
       name: r'showEmptySpaceBetweenLessons',
       type: IsarType.bool,
     ),
     r'subjectSortType': PropertySchema(
-      id: 34,
+      id: 35,
       name: r'subjectSortType',
       type: IsarType.byte,
       enumMap: _SettingssubjectSortTypeEnumValueMap,
     ),
     r'themeVariant': PropertySchema(
-      id: 35,
+      id: 36,
       name: r'themeVariant',
       type: IsarType.byte,
       enumMap: _SettingsthemeVariantEnumValueMap,
     ),
     r'timeGridDefaultDayView': PropertySchema(
-      id: 36,
+      id: 37,
       name: r'timeGridDefaultDayView',
       type: IsarType.bool,
     ),
     r'tips': PropertySchema(
-      id: 37,
+      id: 38,
       name: r'tips',
       type: IsarType.object,
       target: r'Tips',
     ),
     r'useHandoff': PropertySchema(
-      id: 38,
+      id: 39,
       name: r'useHandoff',
       type: IsarType.bool,
     ),
+    r'useLiveActivities': PropertySchema(
+      id: 40,
+      name: r'useLiveActivities',
+      type: IsarType.bool,
+    ),
     r'useMaterialYou': PropertySchema(
-      id: 39,
+      id: 41,
       name: r'useMaterialYou',
       type: IsarType.bool,
     ),
     r'useSideView': PropertySchema(
-      id: 40,
+      id: 42,
       name: r'useSideView',
       type: IsarType.bool,
     ),
     r'useTimeGridCalendar': PropertySchema(
-      id: 41,
+      id: 43,
       name: r'useTimeGridCalendar',
       type: IsarType.bool,
     ),
     r'workWeek': PropertySchema(
-      id: 42,
+      id: 44,
       name: r'workWeek',
       type: IsarType.bool,
     ),
     r'zoomLineGraph': PropertySchema(
-      id: 43,
+      id: 45,
       name: r'zoomLineGraph',
       type: IsarType.bool,
     )
@@ -332,28 +342,30 @@ void _settingsSerialize(
   writer.writeDateTime(offsets[24], object.lastWatchSync);
   writer.writeBool(offsets[25], object.openAfterDownload);
   writer.writeBool(offsets[26], object.pietjePrecies);
-  writer.writeBool(offsets[27], object.saveVirtualFiles);
-  writer.writeBool(offsets[28], object.sendCrashInfo);
-  writer.writeBool(offsets[29], object.shortBronTitle);
-  writer.writeBool(offsets[30], object.showAutoCancelledEvents);
-  writer.writeBool(offsets[31], object.showBronExtension);
-  writer.writeBool(offsets[32], object.showCalcCardsInGlobalAverageList);
-  writer.writeBool(offsets[33], object.showEmptySpaceBetweenLessons);
-  writer.writeByte(offsets[34], object.subjectSortType.index);
-  writer.writeByte(offsets[35], object.themeVariant.index);
-  writer.writeBool(offsets[36], object.timeGridDefaultDayView);
+  writer.writeBool(offsets[27], object.preLessonReminderWhenFree);
+  writer.writeBool(offsets[28], object.saveVirtualFiles);
+  writer.writeBool(offsets[29], object.sendCrashInfo);
+  writer.writeBool(offsets[30], object.shortBronTitle);
+  writer.writeBool(offsets[31], object.showAutoCancelledEvents);
+  writer.writeBool(offsets[32], object.showBronExtension);
+  writer.writeBool(offsets[33], object.showCalcCardsInGlobalAverageList);
+  writer.writeBool(offsets[34], object.showEmptySpaceBetweenLessons);
+  writer.writeByte(offsets[35], object.subjectSortType.index);
+  writer.writeByte(offsets[36], object.themeVariant.index);
+  writer.writeBool(offsets[37], object.timeGridDefaultDayView);
   writer.writeObject<Tips>(
-    offsets[37],
+    offsets[38],
     allOffsets,
     TipsSchema.serialize,
     object.tips,
   );
-  writer.writeBool(offsets[38], object.useHandoff);
-  writer.writeBool(offsets[39], object.useMaterialYou);
-  writer.writeBool(offsets[40], object.useSideView);
-  writer.writeBool(offsets[41], object.useTimeGridCalendar);
-  writer.writeBool(offsets[42], object.workWeek);
-  writer.writeBool(offsets[43], object.zoomLineGraph);
+  writer.writeBool(offsets[39], object.useHandoff);
+  writer.writeBool(offsets[40], object.useLiveActivities);
+  writer.writeBool(offsets[41], object.useMaterialYou);
+  writer.writeBool(offsets[42], object.useSideView);
+  writer.writeBool(offsets[43], object.useTimeGridCalendar);
+  writer.writeBool(offsets[44], object.workWeek);
+  writer.writeBool(offsets[45], object.zoomLineGraph);
 }
 
 Settings _settingsDeserialize(
@@ -406,32 +418,34 @@ Settings _settingsDeserialize(
   object.lastWatchSync = reader.readDateTimeOrNull(offsets[24]);
   object.openAfterDownload = reader.readBool(offsets[25]);
   object.pietjePrecies = reader.readBool(offsets[26]);
-  object.saveVirtualFiles = reader.readBool(offsets[27]);
-  object.sendCrashInfo = reader.readBool(offsets[28]);
-  object.shortBronTitle = reader.readBool(offsets[29]);
-  object.showAutoCancelledEvents = reader.readBool(offsets[30]);
-  object.showBronExtension = reader.readBool(offsets[31]);
-  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[32]);
-  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[33]);
+  object.preLessonReminderWhenFree = reader.readBool(offsets[27]);
+  object.saveVirtualFiles = reader.readBool(offsets[28]);
+  object.sendCrashInfo = reader.readBool(offsets[29]);
+  object.shortBronTitle = reader.readBool(offsets[30]);
+  object.showAutoCancelledEvents = reader.readBool(offsets[31]);
+  object.showBronExtension = reader.readBool(offsets[32]);
+  object.showCalcCardsInGlobalAverageList = reader.readBool(offsets[33]);
+  object.showEmptySpaceBetweenLessons = reader.readBool(offsets[34]);
   object.subjectSortType = _SettingssubjectSortTypeValueEnumMap[
-          reader.readByteOrNull(offsets[34])] ??
+          reader.readByteOrNull(offsets[35])] ??
       SubjectSortType.alphabetical;
   object.themeVariant =
-      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[35])] ??
+      _SettingsthemeVariantValueEnumMap[reader.readByteOrNull(offsets[36])] ??
           ThemeVariant.system;
-  object.timeGridDefaultDayView = reader.readBool(offsets[36]);
+  object.timeGridDefaultDayView = reader.readBool(offsets[37]);
   object.tips = reader.readObjectOrNull<Tips>(
-        offsets[37],
+        offsets[38],
         TipsSchema.deserialize,
         allOffsets,
       ) ??
       Tips();
-  object.useHandoff = reader.readBool(offsets[38]);
-  object.useMaterialYou = reader.readBoolOrNull(offsets[39]);
-  object.useSideView = reader.readBoolOrNull(offsets[40]);
-  object.useTimeGridCalendar = reader.readBool(offsets[41]);
-  object.workWeek = reader.readBool(offsets[42]);
-  object.zoomLineGraph = reader.readBool(offsets[43]);
+  object.useHandoff = reader.readBool(offsets[39]);
+  object.useLiveActivities = reader.readBool(offsets[40]);
+  object.useMaterialYou = reader.readBoolOrNull(offsets[41]);
+  object.useSideView = reader.readBoolOrNull(offsets[42]);
+  object.useTimeGridCalendar = reader.readBool(offsets[43]);
+  object.workWeek = reader.readBool(offsets[44]);
+  object.zoomLineGraph = reader.readBool(offsets[45]);
   return object;
 }
 
@@ -525,33 +539,37 @@ P _settingsDeserializeProp<P>(
     case 33:
       return (reader.readBool(offset)) as P;
     case 34:
+      return (reader.readBool(offset)) as P;
+    case 35:
       return (_SettingssubjectSortTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           SubjectSortType.alphabetical) as P;
-    case 35:
+    case 36:
       return (_SettingsthemeVariantValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ThemeVariant.system) as P;
-    case 36:
-      return (reader.readBool(offset)) as P;
     case 37:
+      return (reader.readBool(offset)) as P;
+    case 38:
       return (reader.readObjectOrNull<Tips>(
             offset,
             TipsSchema.deserialize,
             allOffsets,
           ) ??
           Tips()) as P;
-    case 38:
-      return (reader.readBool(offset)) as P;
     case 39:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 40:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 41:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 42:
-      return (reader.readBool(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 43:
+      return (reader.readBool(offset)) as P;
+    case 44:
+      return (reader.readBool(offset)) as P;
+    case 45:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2207,6 +2225,16 @@ extension SettingsQueryFilter
   }
 
   QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      preLessonReminderWhenFreeEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'preLessonReminderWhenFree',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
       saveVirtualFilesEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -2401,6 +2429,16 @@ extension SettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'useHandoff',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterFilterCondition>
+      useLiveActivitiesEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'useLiveActivities',
         value: value,
       ));
     });
@@ -2825,6 +2863,20 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByPreLessonReminderWhenFree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'preLessonReminderWhenFree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      sortByPreLessonReminderWhenFreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'preLessonReminderWhenFree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> sortBySaveVirtualFiles() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saveVirtualFiles', Sort.asc);
@@ -2962,6 +3014,18 @@ extension SettingsQuerySortBy on QueryBuilder<Settings, Settings, QSortBy> {
   QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseHandoffDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseLiveActivities() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLiveActivities', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> sortByUseLiveActivitiesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLiveActivities', Sort.desc);
     });
   }
 
@@ -3353,6 +3417,20 @@ extension SettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByPreLessonReminderWhenFree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'preLessonReminderWhenFree', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy>
+      thenByPreLessonReminderWhenFreeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'preLessonReminderWhenFree', Sort.desc);
+    });
+  }
+
   QueryBuilder<Settings, Settings, QAfterSortBy> thenBySaveVirtualFiles() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saveVirtualFiles', Sort.asc);
@@ -3490,6 +3568,18 @@ extension SettingsQuerySortThenBy
   QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseHandoffDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'useHandoff', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseLiveActivities() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLiveActivities', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QAfterSortBy> thenByUseLiveActivitiesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'useLiveActivities', Sort.desc);
     });
   }
 
@@ -3724,6 +3814,13 @@ extension SettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Settings, Settings, QDistinct>
+      distinctByPreLessonReminderWhenFree() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'preLessonReminderWhenFree');
+    });
+  }
+
   QueryBuilder<Settings, Settings, QDistinct> distinctBySaveVirtualFiles() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'saveVirtualFiles');
@@ -3791,6 +3888,12 @@ extension SettingsQueryWhereDistinct
   QueryBuilder<Settings, Settings, QDistinct> distinctByUseHandoff() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'useHandoff');
+    });
+  }
+
+  QueryBuilder<Settings, Settings, QDistinct> distinctByUseLiveActivities() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'useLiveActivities');
     });
   }
 
@@ -4006,6 +4109,13 @@ extension SettingsQueryProperty
     });
   }
 
+  QueryBuilder<Settings, bool, QQueryOperations>
+      preLessonReminderWhenFreeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'preLessonReminderWhenFree');
+    });
+  }
+
   QueryBuilder<Settings, bool, QQueryOperations> saveVirtualFilesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'saveVirtualFiles');
@@ -4081,6 +4191,12 @@ extension SettingsQueryProperty
   QueryBuilder<Settings, bool, QQueryOperations> useHandoffProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'useHandoff');
+    });
+  }
+
+  QueryBuilder<Settings, bool, QQueryOperations> useLiveActivitiesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'useLiveActivities');
     });
   }
 
@@ -4182,53 +4298,59 @@ const ProfileSettingsSchema = Schema(
       name: r'remindNotifications',
       type: IsarType.bool,
     ),
-    r'smartAlarmEnabled': PropertySchema(
+    r'sidebarSegments': PropertySchema(
       id: 11,
+      name: r'sidebarSegments',
+      type: IsarType.objectList,
+      target: r'SidebarSegment',
+    ),
+    r'smartAlarmEnabled': PropertySchema(
+      id: 12,
       name: r'smartAlarmEnabled',
       type: IsarType.bool,
     ),
     r'smartAlarmLatestTime': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'smartAlarmLatestTime',
       type: IsarType.dateTime,
     ),
     r'smartAlarmOffset': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'smartAlarmOffset',
       type: IsarType.long,
     ),
     r'spoilerGradeNotfications': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'spoilerGradeNotfications',
       type: IsarType.bool,
     ),
     r'spotlightIndexAssignments': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'spotlightIndexAssignments',
       type: IsarType.bool,
     ),
     r'spotlightIndexMessages': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'spotlightIndexMessages',
       type: IsarType.bool,
     ),
     r'spotlightIndexStudiewijzers': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'spotlightIndexStudiewijzers',
       type: IsarType.bool,
     ),
     r'startingPageIndex': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'startingPageIndex',
       type: IsarType.long,
     ),
     r'sufficientFrom': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'sufficientFrom',
       type: IsarType.double,
     ),
     r'useAutoDND': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'useAutoDND',
       type: IsarType.bool,
     )
@@ -4266,6 +4388,20 @@ int _profileSettingsEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final list = object.sidebarSegments;
+    if (list != null) {
+      bytesCount += 3 + list.length * 3;
+      {
+        final offsets = allOffsets[SidebarSegment]!;
+        for (var i = 0; i < list.length; i++) {
+          final value = list[i];
+          bytesCount +=
+              SidebarSegmentSchema.estimateSize(value, offsets, allOffsets);
+        }
+      }
+    }
+  }
   return bytesCount;
 }
 
@@ -4291,16 +4427,22 @@ void _profileSettingsSerialize(
   writer.writeString(offsets[8], object.mailHeader);
   writer.writeBool(offsets[9], object.messagesNotifications);
   writer.writeBool(offsets[10], object.remindNotifications);
-  writer.writeBool(offsets[11], object.smartAlarmEnabled);
-  writer.writeDateTime(offsets[12], object.smartAlarmLatestTime);
-  writer.writeLong(offsets[13], object.smartAlarmOffset);
-  writer.writeBool(offsets[14], object.spoilerGradeNotfications);
-  writer.writeBool(offsets[15], object.spotlightIndexAssignments);
-  writer.writeBool(offsets[16], object.spotlightIndexMessages);
-  writer.writeBool(offsets[17], object.spotlightIndexStudiewijzers);
-  writer.writeLong(offsets[18], object.startingPageIndex);
-  writer.writeDouble(offsets[19], object.sufficientFrom);
-  writer.writeBool(offsets[20], object.useAutoDND);
+  writer.writeObjectList<SidebarSegment>(
+    offsets[11],
+    allOffsets,
+    SidebarSegmentSchema.serialize,
+    object.sidebarSegments,
+  );
+  writer.writeBool(offsets[12], object.smartAlarmEnabled);
+  writer.writeDateTime(offsets[13], object.smartAlarmLatestTime);
+  writer.writeLong(offsets[14], object.smartAlarmOffset);
+  writer.writeBool(offsets[15], object.spoilerGradeNotfications);
+  writer.writeBool(offsets[16], object.spotlightIndexAssignments);
+  writer.writeBool(offsets[17], object.spotlightIndexMessages);
+  writer.writeBool(offsets[18], object.spotlightIndexStudiewijzers);
+  writer.writeLong(offsets[19], object.startingPageIndex);
+  writer.writeDouble(offsets[20], object.sufficientFrom);
+  writer.writeBool(offsets[21], object.useAutoDND);
 }
 
 ProfileSettings _profileSettingsDeserialize(
@@ -4329,16 +4471,22 @@ ProfileSettings _profileSettingsDeserialize(
   object.mailHeader = reader.readStringOrNull(offsets[8]);
   object.messagesNotifications = reader.readBool(offsets[9]);
   object.remindNotifications = reader.readBool(offsets[10]);
-  object.smartAlarmEnabled = reader.readBool(offsets[11]);
-  object.smartAlarmLatestTime = reader.readDateTimeOrNull(offsets[12]);
-  object.smartAlarmOffset = reader.readLong(offsets[13]);
-  object.spoilerGradeNotfications = reader.readBool(offsets[14]);
-  object.spotlightIndexAssignments = reader.readBool(offsets[15]);
-  object.spotlightIndexMessages = reader.readBool(offsets[16]);
-  object.spotlightIndexStudiewijzers = reader.readBool(offsets[17]);
-  object.startingPageIndex = reader.readLong(offsets[18]);
-  object.sufficientFrom = reader.readDouble(offsets[19]);
-  object.useAutoDND = reader.readBool(offsets[20]);
+  object.sidebarSegments = reader.readObjectList<SidebarSegment>(
+    offsets[11],
+    SidebarSegmentSchema.deserialize,
+    allOffsets,
+    SidebarSegment(),
+  );
+  object.smartAlarmEnabled = reader.readBool(offsets[12]);
+  object.smartAlarmLatestTime = reader.readDateTimeOrNull(offsets[13]);
+  object.smartAlarmOffset = reader.readLong(offsets[14]);
+  object.spoilerGradeNotfications = reader.readBool(offsets[15]);
+  object.spotlightIndexAssignments = reader.readBool(offsets[16]);
+  object.spotlightIndexMessages = reader.readBool(offsets[17]);
+  object.spotlightIndexStudiewijzers = reader.readBool(offsets[18]);
+  object.startingPageIndex = reader.readLong(offsets[19]);
+  object.sufficientFrom = reader.readDouble(offsets[20]);
+  object.useAutoDND = reader.readBool(offsets[21]);
   return object;
 }
 
@@ -4378,13 +4526,18 @@ P _profileSettingsDeserializeProp<P>(
     case 10:
       return (reader.readBool(offset)) as P;
     case 11:
-      return (reader.readBool(offset)) as P;
+      return (reader.readObjectList<SidebarSegment>(
+        offset,
+        SidebarSegmentSchema.deserialize,
+        allOffsets,
+        SidebarSegment(),
+      )) as P;
     case 12:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 13:
-      return (reader.readLong(offset)) as P;
-    case 14:
       return (reader.readBool(offset)) as P;
+    case 13:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 14:
+      return (reader.readLong(offset)) as P;
     case 15:
       return (reader.readBool(offset)) as P;
     case 16:
@@ -4392,10 +4545,12 @@ P _profileSettingsDeserializeProp<P>(
     case 17:
       return (reader.readBool(offset)) as P;
     case 18:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 19:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 20:
+      return (reader.readDouble(offset)) as P;
+    case 21:
       return (reader.readBool(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -5081,6 +5236,113 @@ extension ProfileSettingsQueryFilter
   }
 
   QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sidebarSegments',
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sidebarSegments',
+      ));
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'sidebarSegments',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
       smartAlarmEnabledEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -5401,7 +5663,484 @@ extension ProfileSettingsQueryObject
       return query.object(q, r'favoritePeople');
     });
   }
+
+  QueryBuilder<ProfileSettings, ProfileSettings, QAfterFilterCondition>
+      sidebarSegmentsElement(FilterQuery<SidebarSegment> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'sidebarSegments');
+    });
+  }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const SidebarSegmentSchema = Schema(
+  name: r'SidebarSegment',
+  id: -3912801840854760958,
+  properties: {
+    r'destinations': PropertySchema(
+      id: 0,
+      name: r'destinations',
+      type: IsarType.stringList,
+    ),
+    r'name': PropertySchema(
+      id: 1,
+      name: r'name',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _sidebarSegmentEstimateSize,
+  serialize: _sidebarSegmentSerialize,
+  deserialize: _sidebarSegmentDeserialize,
+  deserializeProp: _sidebarSegmentDeserializeProp,
+);
+
+int _sidebarSegmentEstimateSize(
+  SidebarSegment object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.destinations.length * 3;
+  {
+    for (var i = 0; i < object.destinations.length; i++) {
+      final value = object.destinations[i];
+      bytesCount += value.length * 3;
+    }
+  }
+  {
+    final value = object.name;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _sidebarSegmentSerialize(
+  SidebarSegment object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeStringList(offsets[0], object.destinations);
+  writer.writeString(offsets[1], object.name);
+}
+
+SidebarSegment _sidebarSegmentDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = SidebarSegment(
+    destinations: reader.readStringList(offsets[0]) ?? const [],
+    name: reader.readStringOrNull(offsets[1]),
+  );
+  return object;
+}
+
+P _sidebarSegmentDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension SidebarSegmentQueryFilter
+    on QueryBuilder<SidebarSegment, SidebarSegment, QFilterCondition> {
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'destinations',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'destinations',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'destinations',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'destinations',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'destinations',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      destinationsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'destinations',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'name',
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'name',
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'name',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'name',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'name',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SidebarSegment, SidebarSegment, QAfterFilterCondition>
+      nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'name',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension SidebarSegmentQueryObject
+    on QueryBuilder<SidebarSegment, SidebarSegment, QFilterCondition> {}
 
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types

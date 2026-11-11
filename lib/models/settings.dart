@@ -266,9 +266,23 @@ class ProfileSettings {
   int smartAlarmOffset = 60; // Minutes before the first lesson
   DateTime? smartAlarmLatestTime; // The latest time to wake up
 
+  /// Custom sidebar categories and positioning
+  List<SidebarSegment>? sidebarSegments;
+
   ProfileSettings({
     this.lastRefresh,
     this.mailFooter = "\nMet vriendelijke groeten,\n[naam]",
+  });
+}
+
+@embedded
+class SidebarSegment {
+  String? name;
+  List<String> destinations;
+
+  SidebarSegment({
+    this.name,
+    this.destinations = const [],
   });
 }
 

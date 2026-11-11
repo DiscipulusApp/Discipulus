@@ -72,164 +72,193 @@ class Destination {
 /// Build the destinations for a profile.
 /// The permissions of a profile are required because these can differ per
 /// school and account type.
-List<DestinationSegement> destinations(List<Permission> permissions,
-        {bool forceDebug = false}) =>
-    [
-      if (false) // (kDebugMode || forceDebug)
-        DestinationSegement(destinations: const [
-          Destination(
-            label: "Samenvatting",
-            icon: Icon(Icons.auto_awesome_outlined),
-            filledIcon: Icon(Icons.auto_awesome),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyH, alt: true),
-            view: HomeScreen(),
-          ),
-        ]),
-      DestinationSegement(name: "Actueel", destinations: [
-        if (permissions.hasPermissions(PermissionType.afspraken))
-          const Destination(
-            label: "Kalender",
-            icon: Icon(Icons.calendar_today_outlined),
-            filledIcon: Icon(Icons.calendar_today),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyK, alt: true),
-            view: CalendarDayView(),
-          ),
-        const Destination(
-          label: "Absenties",
-          icon: Icon(Icons.person_remove_alt_1_outlined),
-          filledIcon: Icon(Icons.person_remove_alt_1),
-          shortcut: SingleActivator(LogicalKeyboardKey.keyA, alt: true),
-          view: AbsencesScreen(),
+List<DestinationSegement> destinations(
+  List<Permission> permissions, {
+  bool forceDebug = false,
+  bool useCustomOrder = true,
+}) {
+  final defaultSegments = [
+    if (false) // (kDebugMode || forceDebug)
+      DestinationSegement(destinations: const [
+        Destination(
+          label: "Samenvatting",
+          icon: Icon(Icons.auto_awesome_outlined),
+          filledIcon: Icon(Icons.auto_awesome),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyH, alt: true),
+          view: HomeScreen(),
         ),
-        if (permissions.hasPermissions(PermissionType.berichten))
-          const Destination(
-            label: "Berichten",
-            icon: Icon(Icons.message_outlined),
-            filledIcon: Icon(Icons.message),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyB, alt: true),
-            view: MessagesListScreen(),
-            subviews: [MessageScreen],
-          ),
       ]),
-      DestinationSegement(name: "Cijfers", destinations: [
-        if (permissions.hasPermissions(PermissionType.cijfers))
-          const Destination(
-            label: "Recente cijfers",
-            icon: Icon(Icons.numbers_outlined),
-            filledIcon: Icon(Icons.numbers),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
-            view: GradesListScreen(),
-            subviews: [SubjectGradesScreen],
-          ),
-        if (permissions.hasPermissions(PermissionType.cijfers))
-          Destination(
-            label: "Vak Gemiddelden",
-            icon: const Icon(Icons.book_outlined),
-            filledIcon: const Icon(Icons.book),
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyV, alt: true),
-            view: const SubjectListScreen(),
-            subviews: const [SubjectGradesScreen],
-          ),
-      ]),
-      DestinationSegement(name: "Statistieken", destinations: [
-        if (permissions.hasPermissions(PermissionType.cijfers))
-          Destination(
-            label: "Cijfer Statistieken",
-            icon: const Icon(Icons.bar_chart_outlined),
-            filledIcon: const Icon(Icons.bar_chart_rounded),
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
-            view: const GradesStatisticsScreen(),
-            subviews: const [SubjectGradesScreen],
-          ),
-                  if (permissions.hasPermissions(PermissionType.cijfers))
-          Destination(
-            label: "Kalender Statistieken",
-            icon: const Icon(Icons.pie_chart_outline_outlined),
-            filledIcon: const Icon(Icons.pie_chart_rounded),
-            shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
-            view: const CalendarStatisticsScreen(),
-            subviews: const [CalendarStatisticsScreen],
-          ),
-      ]),
-      DestinationSegement(name: "Elektronische leeromgeving", destinations: [
-        if (permissions.hasPermissions(PermissionType.studiewijzers) ||
-            permissions.hasPermissions(PermissionType.projecten))
-          const Destination(
-            label: "Studiewijzers",
-            icon: Icon(Icons.collections_bookmark_outlined),
-            filledIcon: Icon(Icons.collections_bookmark),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyS, alt: true),
-            view: StudiewijzerListScreen(),
-            subviews: [StudieWijzerScreen],
-          ),
-        if (permissions.hasPermissions(PermissionType.eloOpdracht))
-          const Destination(
-            label: "Opdrachten",
-            icon: Icon(Icons.history_edu_outlined),
-            filledIcon: Icon(Icons.history_edu),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyO, alt: true),
-            view: AssignmentListScreen(),
-          ),
-        if (permissions.hasPermissions(PermissionType.bronnen))
-          const Destination(
-            label: "Externe bronnen",
-            icon: Icon(Icons.cloud_outlined),
-            filledIcon: Icon(Icons.cloud_rounded),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyD, alt: true),
-            view: ExternalBronnenSourcesList(),
-          ),
-        if (permissions.hasPermissions(PermissionType.digitaalLesmateriaal))
-          const Destination(
-            label: "Leermiddelen",
-            icon: Icon(Icons.menu_book_outlined),
-            filledIcon: Icon(Icons.menu_book),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyL, alt: true),
-            view: LeermiddelenScreen(),
-          ),
-      ]),
-      DestinationSegement(name: "Overige", destinations: [
-        if (permissions.hasPermissions(PermissionType.activiteiten))
-          const Destination(
-            label: "Activiteiten",
-            icon: Icon(Icons.local_activity_outlined),
-            filledIcon: Icon(Icons.local_activity),
-            shortcut: SingleActivator(LogicalKeyboardKey.keyA, alt: true),
-            view: ActivitiesScreen(),
-            subviews: [ActivityDetailScreen],
-          ),
+    DestinationSegement(name: "Actueel", destinations: [
+      if (permissions.hasPermissions(PermissionType.afspraken))
         const Destination(
-          label: "Bronnen",
-          icon: Icon(Icons.attach_file_outlined),
-          filledIcon: Icon(Icons.attach_file),
+          label: "Kalender",
+          icon: Icon(Icons.calendar_today_outlined),
+          filledIcon: Icon(Icons.calendar_today),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyK, alt: true),
+          view: CalendarDayView(),
+        ),
+      const Destination(
+        label: "Absenties",
+        icon: Icon(Icons.person_remove_alt_1_outlined),
+        filledIcon: Icon(Icons.person_remove_alt_1),
+        shortcut: SingleActivator(LogicalKeyboardKey.keyA, alt: true),
+        view: AbsencesScreen(),
+      ),
+      if (permissions.hasPermissions(PermissionType.berichten))
+        const Destination(
+          label: "Berichten",
+          icon: Icon(Icons.message_outlined),
+          filledIcon: Icon(Icons.message),
           shortcut: SingleActivator(LogicalKeyboardKey.keyB, alt: true),
-          view: BronnenListScreen(),
+          view: MessagesListScreen(),
+          subviews: [MessageScreen],
+        ),
+    ]),
+    DestinationSegement(name: "Cijfers", destinations: [
+      if (permissions.hasPermissions(PermissionType.cijfers))
+        const Destination(
+          label: "Recente cijfers",
+          icon: Icon(Icons.numbers_outlined),
+          filledIcon: Icon(Icons.numbers),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyC, alt: true),
+          view: GradesListScreen(),
+          subviews: [SubjectGradesScreen],
+        ),
+      if (permissions.hasPermissions(PermissionType.cijfers))
+        Destination(
+          label: "Vak Gemiddelden",
+          icon: const Icon(Icons.book_outlined),
+          filledIcon: const Icon(Icons.book),
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyV, alt: true),
+          view: const SubjectListScreen(),
+          subviews: const [SubjectGradesScreen],
+        ),
+    ]),
+    DestinationSegement(name: "Statistieken", destinations: [
+      if (permissions.hasPermissions(PermissionType.cijfers))
+        Destination(
+          label: "Cijfer Statistieken",
+          icon: const Icon(Icons.bar_chart_outlined),
+          filledIcon: const Icon(Icons.bar_chart_rounded),
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
+          view: const GradesStatisticsScreen(),
+          subviews: const [SubjectGradesScreen],
+        ),
+      if (permissions.hasPermissions(PermissionType.cijfers))
+        Destination(
+          label: "Kalender Statistieken",
+          icon: const Icon(Icons.pie_chart_outline_outlined),
+          filledIcon: const Icon(Icons.pie_chart_rounded),
+          shortcut: const SingleActivator(LogicalKeyboardKey.keyS, alt: true),
+          view: const CalendarStatisticsScreen(),
+          subviews: const [CalendarStatisticsScreen],
+        ),
+    ]),
+    DestinationSegement(name: "Elektronische leeromgeving", destinations: [
+      if (permissions.hasPermissions(PermissionType.studiewijzers) ||
+          permissions.hasPermissions(PermissionType.projecten))
+        const Destination(
+          label: "Studiewijzers",
+          icon: Icon(Icons.collections_bookmark_outlined),
+          filledIcon: Icon(Icons.collections_bookmark),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyS, alt: true),
+          view: StudiewijzerListScreen(),
+          subviews: [StudieWijzerScreen],
+        ),
+      if (permissions.hasPermissions(PermissionType.eloOpdracht))
+        const Destination(
+          label: "Opdrachten",
+          icon: Icon(Icons.history_edu_outlined),
+          filledIcon: Icon(Icons.history_edu),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyO, alt: true),
+          view: AssignmentListScreen(),
+        ),
+      if (permissions.hasPermissions(PermissionType.bronnen))
+        const Destination(
+          label: "Externe bronnen",
+          icon: Icon(Icons.cloud_outlined),
+          filledIcon: Icon(Icons.cloud_rounded),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyD, alt: true),
+          view: ExternalBronnenSourcesList(),
+        ),
+      if (permissions.hasPermissions(PermissionType.digitaalLesmateriaal))
+        const Destination(
+          label: "Leermiddelen",
+          icon: Icon(Icons.menu_book_outlined),
+          filledIcon: Icon(Icons.menu_book),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyL, alt: true),
+          view: LeermiddelenScreen(),
+        ),
+    ]),
+    DestinationSegement(name: "Overige", destinations: [
+      if (permissions.hasPermissions(PermissionType.activiteiten))
+        const Destination(
+          label: "Activiteiten",
+          icon: Icon(Icons.local_activity_outlined),
+          filledIcon: Icon(Icons.local_activity),
+          shortcut: SingleActivator(LogicalKeyboardKey.keyA, alt: true),
+          view: ActivitiesScreen(),
+          subviews: [ActivityDetailScreen],
+        ),
+      const Destination(
+        label: "Bronnen",
+        icon: Icon(Icons.attach_file_outlined),
+        filledIcon: Icon(Icons.attach_file),
+        shortcut: SingleActivator(LogicalKeyboardKey.keyB, alt: true),
+        view: BronnenListScreen(),
+      ),
+      const Destination(
+        label: "Instellingen",
+        icon: Icon(Icons.settings_outlined),
+        filledIcon: Icon(Icons.settings),
+        shortcut: SingleActivator(LogicalKeyboardKey.comma, meta: true),
+        view: SettingsScreen(),
+      ),
+    ]),
+    if (kDebugMode || forceDebug)
+      DestinationSegement(name: "Debug", destinations: [
+        const Destination(
+          icon: Icon(Icons.interests),
+          filledIcon: Icon(Icons.interests_outlined),
+          label: "Post Login",
+          view: PostLoginScreen(),
         ),
         const Destination(
-          label: "Instellingen",
-          icon: Icon(Icons.settings_outlined),
-          filledIcon: Icon(Icons.settings),
-          shortcut: SingleActivator(LogicalKeyboardKey.comma, meta: true),
-          view: SettingsScreen(),
+          icon: Icon(Icons.screen_lock_landscape_outlined),
+          filledIcon: Icon(Icons.screen_lock_landscape),
+          label: "Scroll intro",
+          view: VerticalIntroductionScreen(
+            key: ValueKey("TRANSPARENT"),
+          ),
         ),
-      ]),
-      if (kDebugMode || forceDebug)
-        DestinationSegement(name: "Debug", destinations: [
-          const Destination(
-            icon: Icon(Icons.interests),
-            filledIcon: Icon(Icons.interests_outlined),
-            label: "Post Login",
-            view: PostLoginScreen(),
-          ),
-          const Destination(
-            icon: Icon(Icons.screen_lock_landscape_outlined),
-            filledIcon: Icon(Icons.screen_lock_landscape),
-            label: "Scroll intro",
-            view: VerticalIntroductionScreen(
-              key: ValueKey("TRANSPARENT"),
-            ),
-          ),
-        ])
-    ].where((s) => s.destinations.isNotEmpty).toList();
+      ])
+  ].where((s) => s.destinations.isNotEmpty).toList();
+
+  final customSegments = activeProfileNullable?.settings.sidebarSegments;
+  if (!useCustomOrder || customSegments == null || customSegments.isEmpty) {
+    return defaultSegments;
+  }
+
+  final allDestinations = {
+    for (var d in defaultSegments.expand((s) => s.destinations)) d.label: d,
+  };
+
+  return [
+    for (var seg in customSegments)
+      DestinationSegement(
+        name: seg.name?.trim().isEmpty == true ? null : seg.name?.trim(),
+        destinations: [
+          for (var label in seg.destinations)
+            if (allDestinations.remove(label) case final dest?) dest,
+        ],
+      ),
+    if (allDestinations.isNotEmpty)
+      DestinationSegement(
+        name: "Overige",
+        destinations: allDestinations.values.toList(),
+      ),
+  ].where((s) => s.destinations.isNotEmpty).toList();
+}
 
 /// Returns all destination labels for the given permissions, or all known permissions if omitted.
 List<String> destinationLabels([List<Permission>? permissions]) {

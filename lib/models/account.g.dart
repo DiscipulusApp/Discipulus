@@ -1143,7 +1143,8 @@ const ProfileSchema = CollectionSchema(
   },
   embeddedSchemas: {
     r'ProfileSettings': ProfileSettingsSchema,
-    r'Contact': ContactSchema
+    r'Contact': ContactSchema,
+    r'SidebarSegment': SidebarSegmentSchema
   },
   getId: _profileGetId,
   getLinks: _profileGetLinks,

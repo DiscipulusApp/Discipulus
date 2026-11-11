@@ -9,6 +9,7 @@ import 'package:discipulus/models/account_extension.dart';
 import 'package:discipulus/models/settings.dart';
 import 'package:discipulus/screens/introduction/expressive_intro.dart';
 import 'package:discipulus/screens/introduction/vertical_intro.dart';
+import 'package:discipulus/widgets/global/input_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/widgets/global/avatars.dart';
@@ -154,6 +155,7 @@ class _DiscipulusSettingsPageState extends State<DiscipulusSettingsPage> {
             });
           },
         ),
+        SidebarSettingsWidget(onChanged: () => setState(() {})),
         ListTile(
           title: const Text("Startpagina"),
           leading: const Icon(Icons.brightness_auto),
@@ -488,6 +490,229 @@ class _PersonalColorSettingState extends State<PersonalColorSetting> {
           ],
         )
       ],
+    );
+  }
+}
+
+class SidebarSettingsWidget extends StatefulWidget {
+  const SidebarSettingsWidget({super.key, this.onChanged});
+
+  final VoidCallback? onChanged;
+
+  @override
+  State<SidebarSettingsWidget> createState() => _SidebarSettingsWidgetState();
+}
+
+typedef _SidebarEntry = ({bool isHeader, int? segIndex, String label});
+
+class _SidebarSettingsWidgetState extends State<SidebarSettingsWidget> {
+  bool isExpanded = false;
+
+  void _save(List<SidebarSegment>? segments) {
+    setState(() {
+      activeProfile
+        ..settings.sidebarSegments = segments
+        ..save();
+    });
+    Layout.of(context)?.update();
+    context.setNormalWindowState();
+    widget.onChanged?.call();
+  }
+
+  List<SidebarSegment> _getSegments(List<DestinationSegement> defaultSegments) {
+    final saved = activeProfile.settings.sidebarSegments;
+    if (saved == null || saved.isEmpty) {
+      return [
+        for (var s in defaultSegments)
+          SidebarSegment(
+            name: s.name,
+            destinations: [for (var d in s.destinations) d.label],
+          ),
+      ];
+    }
+
+    final placed = {for (var s in saved) ...s.destinations};
+    final missing = [
+      for (var d in defaultSegments.expand((s) => s.destinations))
+        if (!placed.contains(d.label)) d.label,
+    ];
+
+    return [
+      for (var s in saved)
+        SidebarSegment(name: s.name, destinations: List.from(s.destinations)),
+      if (missing.isNotEmpty)
+        SidebarSegment(name: "Overige", destinations: missing),
+    ];
+  }
+
+  List<SidebarSegment> _fromEntries(List<_SidebarEntry> entries) {
+    final result = <SidebarSegment>[];
+    for (final entry in entries) {
+      if (entry.isHeader) {
+        result.add(SidebarSegment(name: entry.label, destinations: []));
+      } else {
+        if (result.isEmpty) {
+          result.add(SidebarSegment(name: null, destinations: []));
+        }
+        result.last.destinations = [...result.last.destinations, entry.label];
+      }
+    }
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultSegments = destinations(
+      activeProfile.account.value!.permissions,
+      useCustomOrder: false,
+    );
+    final allDestinations = {
+      for (var d in defaultSegments.expand((s) => s.destinations)) d.label: d,
+    };
+    final segments = _getSegments(defaultSegments);
+    final entries = <_SidebarEntry>[
+      for (final (i, seg) in segments.indexed) ...[
+        if (seg.name != null || i > 0)
+          (isHeader: true, segIndex: i, label: seg.name ?? ""),
+        for (final d in seg.destinations)
+          if (allDestinations.containsKey(d))
+            (isHeader: false, segIndex: null, label: d),
+      ],
+    ];
+
+    return Padding(
+      padding: isExpanded ? const EdgeInsets.symmetric(horizontal: 12, vertical: 4) : EdgeInsets.zero,
+      child: CustomCard(
+        color: isExpanded ? null : Colors.transparent,
+        child: ExpansionTile(
+          shape: const Border(),
+          leading: const Icon(Icons.view_sidebar_outlined),
+          title: const Text("Zijbalk indeling"),
+          subtitle: const Text("Pas categorieën en de volgorde aan"),
+          onExpansionChanged: (expanded) {
+            setState(() {
+              isExpanded = expanded;
+            });
+          },
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      icon: const Icon(Icons.add),
+                      label: const Text("Categorie toevoegen"),
+                      onPressed: () async {
+                        final name = await showTextInputDialog(
+                          context,
+                          title: "Nieuwe categorie",
+                          hint: "Naam van categorie",
+                        );
+                        if (name != null && name.trim().isNotEmpty) {
+                          _save([
+                            ...segments,
+                            SidebarSegment(
+                              name: name.trim(),
+                              destinations: [],
+                            ),
+                          ]);
+                        }
+                      },
+                    ),
+                  ),
+                  if (activeProfile.settings.sidebarSegments != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.restore),
+                      tooltip: "Standaard herstellen",
+                      onPressed: () => _save(null),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: entries.length,
+              onReorderItem: (oldIndex, newIndex) {
+                final updated = List<_SidebarEntry>.from(entries);
+                final item = updated.removeAt(oldIndex);
+                updated.insert(newIndex, item);
+                _save(_fromEntries(updated));
+              },
+              itemBuilder: (context, index) {
+                final entry = entries[index];
+                if (entry.isHeader) {
+                  return ListTile(
+                    key: ValueKey("header_${entry.segIndex}"),
+                    dense: true,
+                    title: Text(
+                      entry.label.isEmpty ? "(Geen titel)" : entry.label,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          onPressed: () async {
+                            final newName = await showTextInputDialog(
+                              context,
+                              title: "Categorie hernoemen",
+                              prefill: entry.label,
+                              emptyOnEmpty: true,
+                            );
+                            if (newName != null) {
+                              segments[entry.segIndex!].name = newName.trim();
+                              _save(segments);
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          onPressed: () {
+                            final updated = List<_SidebarEntry>.from(entries)
+                              ..removeAt(index);
+                            _save(_fromEntries(updated));
+                          },
+                        ),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Icon(Icons.drag_handle, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final dest = allDestinations[entry.label]!;
+                return ListTile(
+                  key: ValueKey("dest_${entry.label}"),
+                  dense: true,
+                  leading: dest.icon,
+                  title: Text(dest.label),
+                  trailing: ReorderableDragStartListener(
+                    index: index,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(Icons.drag_handle, size: 20),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
