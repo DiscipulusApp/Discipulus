@@ -415,10 +415,7 @@ class _CalendarEventDetailsState extends State<CalendarEventDetails> {
           ListTile(
             leading: const Icon(Icons.person_remove),
             title: Text(
-                "Je was deze les ${(event.afwezigheid?.geoorloofd ?? true) ? "geoorloofd" : "ongeoorloofd"} absent"),
-            subtitle: Text(
-                "${event.afwezigheid!.code}: ${event.afwezigheid!.omschrijving.capitalized}"),
-          ),
+                "${event.afwezigheid!.code}: ${event.afwezigheid!.omschrijving.capitalized}")),
       ]
     ];
   }
