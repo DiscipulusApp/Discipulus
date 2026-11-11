@@ -342,13 +342,10 @@ class CalendarEvent {
     var res = (await profile.value!.account.value!.api.dio.get(selfUrl!)).data;
     var bijlagen = List<Bron>.from(res["Bijlagen"].map((x) =>
         Bron.fromMap(x..["BronSoort"] = 1)..profile.value = profile.value));
-    var newEvent = CalendarEvent.fromMap(res, selfUrl: selfUrl)
-      ..profile.value = profile.value;
+    var newEvent = CalendarEvent.fromMap(res, selfUrl: selfUrl);
 
-    // Preserve existing absence if the new one is null
-    if (newEvent.afwezigheid == null && afwezigheid != null) {
-      newEvent.afwezigheid = afwezigheid;
-    }
+    aangemaakt = newEvent.aangemaakt;
+    gewijzigd = newEvent.gewijzigd;
 
     bronnen.addAll(bijlagen);
     isar.writeTxnSync(() {
