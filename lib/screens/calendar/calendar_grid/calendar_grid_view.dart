@@ -11,6 +11,7 @@ import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_hour_axi
 import 'package:discipulus/screens/calendar/calendar_grid/calendar_grid_page.dart';
 import 'package:discipulus/screens/calendar/calendar_schedule.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_keyboard_navigation.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:flutter/material.dart';
@@ -387,6 +388,34 @@ class _CalendarGridViewState extends State<CalendarGridView> {
         : "$firstMonth - $lastMonth";
   }
 
+  void _goToPrevious(int days) {
+    if (_activePageController.hasClients) {
+      _activePageController.previousPage(
+        duration: Durations.medium2,
+        curve: Easing.emphasizedDecelerate,
+      );
+    } else {
+      final fdays = _mode == CalendarGridDisplayMode.day ? days : 7;
+      _goToDate(_selectedDate.subtract(Duration(days: fdays)));
+    }
+  }
+
+  void _goToNext(int days) {
+    if (_activePageController.hasClients) {
+      _activePageController.nextPage(
+        duration: Durations.medium2,
+        curve: Easing.emphasizedDecelerate,
+      );
+    } else {
+      final fdays = _mode == CalendarGridDisplayMode.day ? days : 7;
+      _goToDate(_selectedDate.add(Duration(days: fdays)));
+    }
+  }
+
+  void _switchView() {
+    _toggleDayWeekMode(_selectedDate);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -396,7 +425,12 @@ class _CalendarGridViewState extends State<CalendarGridView> {
       1,
     );
 
-    return Scaffold(
+    return CalendarKeyboardNavigation(
+      onPrevious: _goToPrevious,
+      onNext: _goToNext,
+      onToday: () => _goToDate(DateTime.now()),
+      onSwitchView: _switchView,
+      child: Scaffold(
       backgroundColor: unifiedBackground,
       appBar: AppBar(
         backgroundColor: unifiedBackground,
@@ -413,10 +447,20 @@ class _CalendarGridViewState extends State<CalendarGridView> {
             builder: (context, isToday, _) => isToday
                 ? const SizedBox.shrink()
                 : IconButton(
-                    tooltip: "Vandaag",
+                    tooltip: "Vandaag (T)",
                     icon: const Icon(Icons.today),
                     onPressed: () => _goToDate(DateTime.now()),
                   ),
+          ),
+          // Switch between day and week view
+          IconButton(
+            tooltip: _mode == CalendarGridDisplayMode.day
+                ? "Weekweergave (V)"
+                : "Dagweergave (V)",
+            icon: Icon(_mode == CalendarGridDisplayMode.day
+                ? Icons.calendar_view_week
+                : Icons.calendar_view_day),
+            onPressed: _switchView,
           ),
           // Date picker
           IconButton(
@@ -586,6 +630,7 @@ class _CalendarGridViewState extends State<CalendarGridView> {
           ),
         ],
       ),
+    ),
     );
   }
 

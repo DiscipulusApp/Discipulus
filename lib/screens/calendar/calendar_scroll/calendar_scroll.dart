@@ -7,6 +7,7 @@ import 'package:discipulus/screens/calendar/calendar_day/calendar_day.dart';
 import 'package:discipulus/screens/calendar/calendar_schedule.dart';
 import 'package:discipulus/screens/calendar/calendar_scroll/widgets/scroll_calendar_day_row.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_keyboard_navigation.dart';
 import 'package:discipulus/utils/account_manager.dart';
 import 'package:discipulus/utils/extensions.dart';
 import 'package:discipulus/screens/calendar/calendar_scroll/widgets/expandable_filter_fab.dart';
@@ -411,11 +412,36 @@ class _ScrollCalendarState extends State<ScrollCalendar> {
     }
   }
 
+  Future<void> _goToPreviousDay(int days) async {
+    final current = _visibleDay.value;
+    if (appSettings.workWeek && current.weekday == 1) {
+      days = 3;
+    }
+    await scrollToDate(current.subtract(Duration(days: days)));
+  }
+
+  Future<void> _goToNextDay(int days) async {
+    final current = _visibleDay.value;
+    if (appSettings.workWeek && current.weekday == 5) {
+      days = 3;
+    }
+    await scrollToDate(current.add(Duration(days: days)));
+  }
+
+  void _switchView() {
+    _handleDayTap(_visibleDay.value);
+  }
+
   @override
   Widget build(BuildContext context) {
     const double topOffset = 8.0;
 
-    return Scaffold(
+    return CalendarKeyboardNavigation(
+      onPrevious: _goToPreviousDay,
+      onNext: _goToNextDay,
+      onToday: () => scrollToDate(DateTime.now()),
+      onSwitchView: _switchView,
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: context.cs.surface,
         leading: Navigator.of(context).canPop()
@@ -443,11 +469,16 @@ class _ScrollCalendarState extends State<ScrollCalendar> {
             builder: (context, currentDay, _) {
               if (currentDay.isToday) return const SizedBox();
               return IconButton(
-                tooltip: "Vandaag",
+                tooltip: "Vandaag (T)",
                 onPressed: () => scrollToDate(DateTime.now()),
                 icon: const Icon(Icons.today),
               );
             },
+          ),
+          IconButton(
+            tooltip: "Dagweergave (V)",
+            icon: const Icon(Icons.calendar_view_day),
+            onPressed: _switchView,
           ),
           IconButton(
             tooltip: "Kies datum",
@@ -609,6 +640,7 @@ class _ScrollCalendarState extends State<ScrollCalendar> {
       ),
       floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    ),
     );
   }
 }

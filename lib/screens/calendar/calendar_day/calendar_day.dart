@@ -4,7 +4,9 @@ import 'package:discipulus/screens/calendar/calendar_day/calendar_day_body.dart'
 import 'package:discipulus/screens/calendar/calendar_day/calendar_day_header.dart';
 import 'package:discipulus/screens/calendar/calendar_grid_view.dart';
 import 'package:discipulus/screens/calendar/calendar_schedule.dart';
+import 'package:discipulus/screens/calendar/calendar_scroll/calendar_scroll.dart';
 import 'package:discipulus/screens/calendar/ext_calendar.dart';
+import 'package:discipulus/screens/calendar/widgets/calendar_keyboard_navigation.dart';
 import 'package:discipulus/widgets/global/skeletons/default.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -112,6 +114,64 @@ class _CalendarDayViewState extends State<CalendarDayView>
     super.dispose();
   }
 
+  void _goToPreviousDay(int days) {
+    if (pageViewContoller?.hasClients == true) {
+      pageViewContoller!.previousPage(
+        duration: Durations.medium4,
+        curve: Easing.emphasizedDecelerate,
+      );
+    } else if (selectedDay != null) {
+      selectedDay!.value =
+          indexToDate(dateToIndex(selectedDay!.value) - days);
+    }
+  }
+
+  void _goToNextDay(int days) {
+    if (pageViewContoller?.hasClients == true) {
+      pageViewContoller!.nextPage(
+        duration: Durations.medium4,
+        curve: Easing.emphasizedDecelerate,
+      );
+    } else if (selectedDay != null) {
+      selectedDay!.value =
+          indexToDate(dateToIndex(selectedDay!.value) + days);
+    }
+  }
+
+  void _goToToday() {
+    selectedDay?.value = DateTime.now();
+  }
+
+  Future<void> _launchListView(BuildContext context, DateTime day) async {
+    final DateTime? targetDate = await Navigator.of(context).push<DateTime>(
+      PageRouteBuilder<DateTime>(
+        transitionDuration: Durations.short4,
+        reverseTransitionDuration: Durations.short4,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ScrollCalendar(
+          initdate: day,
+          onDaySelected: (selected) => Navigator.of(context).pop(selected),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Easing.emphasizedDecelerate,
+          );
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 1.0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          );
+        },
+      ),
+    );
+    if (targetDate != null && selectedDay != null) {
+      selectedDay!.value = targetDate;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (appSettings.useTimeGridCalendar) {
@@ -126,7 +186,12 @@ class _CalendarDayViewState extends State<CalendarDayView>
     _initDayView();
     final currentSelectedDay = selectedDay!;
 
-    return Scaffold(
+    return CalendarKeyboardNavigation(
+      onPrevious: _goToPreviousDay,
+      onNext: _goToNextDay,
+      onToday: _goToToday,
+      onSwitchView: () => _launchListView(context, currentSelectedDay.value),
+      child: Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverOverlapAbsorber(
@@ -167,13 +232,21 @@ class _CalendarDayViewState extends State<CalendarDayView>
                                 : const SizedBox(),
                           ),
                         ),
-                        if (date.dayOnly != DateTime.now().dayOnly)
+                      if (date.dayOnly != DateTime.now().dayOnly)
                         IconButton(
+                          tooltip: "Vandaag (T)",
                           onPressed: () async =>
                               currentSelectedDay.value = DateTime.now(),
                           icon: const Icon(Icons.today),
                         ),
                       IconButton(
+                        tooltip: "Lijstweergave (V)",
+                        icon: const Icon(Icons.view_agenda_outlined),
+                        onPressed: () =>
+                            _launchListView(context, currentSelectedDay.value),
+                      ),
+                      IconButton(
+                        tooltip: "Kies datum",
                         onPressed: () async {
                           DateTime? date = await showDatePicker(
                             context: context,
@@ -209,6 +282,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
                         icon: const Icon(Icons.date_range),
                       ),
                       IconButton(
+                        tooltip: "Toevoegen",
                         onPressed: () async {
                           DateTime? date = await showScheduleSheet(context);
                           if (date != null) {
@@ -248,6 +322,7 @@ class _CalendarDayViewState extends State<CalendarDayView>
           },
         ),
       ),
+    ),
     );
   }
 }
