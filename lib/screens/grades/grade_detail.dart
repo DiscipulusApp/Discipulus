@@ -103,6 +103,17 @@ class _GradeInformationState extends State<GradeInformation> {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       if (widget.showTile) AbsorbPointer(child: GradeTile(grade: widget.grade)),
       ...[
+        if (!widget.showTile)
+          CustomCard(
+            child: ListTile(
+              leading: const Icon(Icons.short_text_outlined),
+              title: Text("Omschrijving"),
+              subtitle: Text(widget.grade.description ??
+                  widget.grade.ingevoerdDoor ??
+                  widget.grade.docent ??
+                  "Geen omschrijving"),
+            ),
+          ),
         if (widget.grade.isArchived)
           CustomCard(
             child: ListTile(
