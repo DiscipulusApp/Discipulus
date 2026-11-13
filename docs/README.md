@@ -1,3 +1,9 @@
+> [!WARNING]
+> **DISCLAIMER**
+>
+> Deze documentatie is grotendeels geschreven door een LLM.
+> Gebruik is volledig op eigen risico.
+
 # Documentatie van Discipulus
 
 ## Overzicht
@@ -8,13 +14,15 @@ De kern van de app bestaat uit een lokale Isar-database, een aangepaste Magister
 
 ## Scope van het project
 
-Dit is geen generiek Flutter-template. Het is een product dat is gericht op Nederlandse middelbare scholieren die Magister gebruiken, met functionaliteit voor:
+Discipulus is een drop in replacement voor de Officiele Magister applicatie
+met dezelfde functies en zelfs nog meer:
 
 - rooster en agenda
 - cijfers en gemiddelden
 - berichten en bijlagen
 - opdrachten en leermiddelen
 - activiteiten en absenties
+  
 - native platform-integraties
 - offline lokaal opslag
 - MCP-toegang voor externe tools
