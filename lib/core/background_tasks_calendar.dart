@@ -378,7 +378,7 @@ Future<void> scheduleReminders(Profile profile) async {
     DateTime time, {
     required NativeNotification content,
   }) async {
-    NotificationController.createNotification(content, time: time);
+    await NotificationController.createNotification(content, time: time);
   }
 
   // Create assignments notifications
