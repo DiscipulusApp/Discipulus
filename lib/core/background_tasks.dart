@@ -104,7 +104,7 @@ class BackgroundRefresh {
   static bool shouldRefresh({List<Profile>? profiles}) {
     // List of the latest refresh times
     List<DateTime> lastRefreshTimes =
-        [...?profiles?.map((e) => e.settings.lastRefresh)].nonNulls.toList();
+        [...?profiles?.map((e) => e.settings.lastRefresh ?? DateTime(0))];
 
     // If any of these time is more than 30 minutes ago a refresh should take place
     return lastRefreshTimes
@@ -222,7 +222,7 @@ Future<void> _quickRefreshGrades(
             .naam)
         .toSet();
 
-    NotificationController.createNotification(
+    await NotificationController.createNotification(
       NativeNotification(
         id: profile.uuid,
         channel: NotificationChannel.grades,
