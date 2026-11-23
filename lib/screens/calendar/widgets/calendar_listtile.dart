@@ -691,7 +691,16 @@ class _ExpandableEventBodyState extends State<ExpandableEventBody> {
                   constraints: (!_isExpanded && _canExpand)
                       ? widget.constraints
                       : const BoxConstraints(),
-                  child: widget.child,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: (!_isExpanded && _canExpand)
+                        ? () => setState(() => _isExpanded = true)
+                        : null,
+                    child: IgnorePointer(
+                      ignoring: !_isExpanded && _canExpand,
+                      child: widget.child,
+                    ),
+                  ),
                 ),
               ),
               if (_canExpand)
