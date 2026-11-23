@@ -393,6 +393,7 @@ class _SimpleDayViewEventTileState extends State<SimpleDayViewEventTile> {
                           padding:
                               const EdgeInsets.only(top: 8, right: 8, bottom: 8),
                           child: SizedBox(
+                            // button shown next to the tile to open the detail sheet
                             child: IconButton.filledTonal(
                               onPressed: widget.onTapOverride ??
                                   () => showCalendarEventDetailsSheet(
@@ -703,6 +704,7 @@ class _ExpandableEventBodyState extends State<ExpandableEventBody> {
                   ),
                 ),
               ),
+              // render expand button if expansion is possible
               if (_canExpand)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
