@@ -184,24 +184,26 @@ class CalendarGridLineLoader extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: isFetchingNotifier,
       builder: (context, isFetching, _) => ClipRect(
-        child: AnimatedAlign(
-          alignment: Alignment.topCenter,
-          heightFactor: isFetching ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 350),
-          curve: isFetching
-              ? Easing.emphasizedDecelerate
-              : Easing.emphasizedAccelerate,
-          child: SizedBox(
-            height: 3.0,
-            child: LinearProgressIndicator(
-              minHeight: 3.0,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation(
-                theme.colorScheme.primary,
-              ),
-            ),
-          ),
-        ),
+        child: isFetching
+            ? AnimatedAlign(
+                alignment: Alignment.topCenter,
+                heightFactor: isFetching ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 350),
+                curve: isFetching
+                    ? Easing.emphasizedDecelerate
+                    : Easing.emphasizedAccelerate,
+                child: SizedBox(
+                  height: 3.0,
+                  child: LinearProgressIndicator(
+                    minHeight: 3.0,
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation(
+                      theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              )
+            : SizedBox(),
       ),
     );
   }
